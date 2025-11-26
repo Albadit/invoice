@@ -167,7 +167,7 @@ function InvoiceHtml(invoice: any): string {
               <img src="${invoice.company.logo_url}" alt="Logo" class="h-16 mb-4" />
             ` : `
               <div class="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold mb-4">
-                Logo Default Template
+                Logo Demo
               </div>
             `}
             <div class="flex flex-col gap-2 text-right">
