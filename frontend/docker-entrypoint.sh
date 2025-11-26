@@ -17,7 +17,7 @@ for i in $(seq 1 60); do
 done
 
 echo "Running database migrations..."
-npm run db:migrate
+npm run db:seed
 
 echo "Generating TypeScript types..."
 npm run db:generate-types
