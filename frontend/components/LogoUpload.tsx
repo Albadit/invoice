@@ -1,0 +1,191 @@
+'use client';
+
+import { useState, useRef } from 'react';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
+import { Button } from "@heroui/button";
+import { storageApi } from '@/lib/api';
+
+interface LogoUploadProps {
+  logoUrl: string;
+  onLogoUrlChange: (url: string) => void;
+  imageError: boolean;
+  onImageError: (error: boolean) => void;
+}
+
+export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError }: LogoUploadProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await handleFileUpload(files[0]);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await handleFileUpload(files[0]);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    onImageError(false);
+
+    try {
+      const url = await storageApi.uploadLogo(file);
+      onLogoUrlChange(url);
+    } catch (error) {
+      console.error('Failed to upload logo:', error);
+      alert('Failed to upload logo. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleClearLogo = () => {
+    onLogoUrlChange('');
+    onImageError(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors ${
+          isDragging
+            ? 'border-blue-500 bg-blue-50'
+            : 'border-slate-300 bg-slate-50 hover:border-slate-400'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="logo-upload"
+        />
+
+        {isUploading ? (
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
+            <p className="text-sm text-slate-600">Uploading...</p>
+          </div>
+        ) : logoUrl && !imageError ? (
+          <div className="flex items-center justify-center gap-4">
+            <img
+              src={logoUrl}
+              alt="Logo preview"
+              className="h-20 object-contain max-w-xs"
+              onLoad={() => onImageError(false)}
+              onError={() => {
+                console.error('Failed to load image:', logoUrl);
+                onImageError(true);
+              }}
+            />
+            <Button
+              size="sm"
+              color="danger"
+              variant="flat"
+              startContent={<X className="h-4 w-4" />}
+              onClick={handleClearLogo}
+            >
+              Remove
+            </Button>
+          </div>
+        ) : (
+          <div className="text-center">
+            <div className="flex justify-center mb-4">
+              {imageError ? (
+                <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
+                  <X className="h-8 w-8 text-red-500" />
+                </div>
+              ) : (
+                <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-slate-400" />
+                </div>
+              )}
+            </div>
+            
+            {imageError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">⚠️ Failed to load image from URL</p>
+                <p className="text-xs text-red-500 mt-1">Upload a new image or enter a different URL</p>
+              </div>
+            )}
+
+            <p className="text-sm text-slate-700 mb-2">
+              <label htmlFor="logo-upload" className="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold">
+                Click to upload
+              </label>
+              {' '}or drag and drop
+            </p>
+            <p className="text-xs text-slate-500">
+              PNG, JPG, SVG up to 5MB
+            </p>
+          </div>
+        )}
+      </div>
+
+      {logoUrl && imageError && (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="flat"
+            color="danger"
+            startContent={<X className="h-4 w-4" />}
+            onClick={handleClearLogo}
+          >
+            Clear URL
+          </Button>
+          <Button
+            size="sm"
+            variant="flat"
+            color="primary"
+            startContent={<Upload className="h-4 w-4" />}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            Upload New Image
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
