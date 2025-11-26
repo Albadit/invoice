@@ -1,6 +1,7 @@
 import { Chip } from "@heroui/chip";
 import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { invoicesApi } from '@/lib/api';
 
 /**
  * Get status badge component for invoice status
@@ -63,20 +64,7 @@ export async function handleMarkAsPaid(invoiceId: string | number, onSuccess: ()
   }
   
   try {
-    const response = await fetch(`http://127.0.0.1:54321/rest/v1/invoices?id=eq.${invoiceId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ status: 'paid' })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update invoice status');
-    }
-    
+    await invoicesApi.updateStatus(String(invoiceId), 'paid');
     await onSuccess();
   } catch (error) {
     console.error('Failed to mark as paid:', error);
@@ -93,20 +81,7 @@ export async function handleMarkAsPending(invoiceId: string | number, onSuccess:
   }
   
   try {
-    const response = await fetch(`http://127.0.0.1:54321/rest/v1/invoices?id=eq.${invoiceId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ status: 'pending' })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update invoice status');
-    }
-    
+    await invoicesApi.updateStatus(String(invoiceId), 'pending');
     await onSuccess();
   } catch (error) {
     console.error('Failed to mark as pending:', error);
@@ -123,20 +98,7 @@ export async function handleVoid(invoiceId: string | number, onSuccess: () => vo
   }
   
   try {
-    const response = await fetch(`http://127.0.0.1:54321/rest/v1/invoices?id=eq.${invoiceId}`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        'Prefer': 'return=minimal'
-      },
-      body: JSON.stringify({ status: 'cancelled' })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to void invoice');
-    }
-    
+    await invoicesApi.updateStatus(String(invoiceId), 'cancelled');
     await onSuccess();
   } catch (error) {
     console.error('Failed to void invoice:', error);
@@ -154,69 +116,24 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
   
   try {
     // Fetch the invoice to duplicate
-    const response = await fetch(
-      `http://127.0.0.1:54321/rest/v1/invoices?id=eq.${invoiceId}&select=*,invoice_items(*)`,
-      {
-        headers: {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        }
-      }
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch invoice');
-    }
-    
-    const invoices = await response.json();
-    const invoice = invoices[0];
-    
-    if (!invoice) {
-      throw new Error('Invoice not found');
-    }
+    const invoice = await invoicesApi.getById(String(invoiceId));
     
     // Create new invoice (without id, created_at, updated_at)
-    const { id, created_at, updated_at, invoice_items, invoice_number, ...invoiceData } = invoice;
+    const { id, created_at, updated_at, items, currency, company, invoice_number, ...invoiceData } = invoice;
     const newInvoiceData = {
       ...invoiceData,
       status: 'pending',
-      // invoice_number: `${invoice_number}-COPY-${Date.now()}`
     };
     
-    const createResponse = await fetch('http://127.0.0.1:54321/rest/v1/invoices', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        'Prefer': 'return=representation'
-      },
-      body: JSON.stringify(newInvoiceData)
-    });
-    
-    if (!createResponse.ok) {
-      throw new Error('Failed to create duplicate invoice');
-    }
-    
-    const [newInvoice] = await createResponse.json();
-    
-    // Create invoice items for the new invoice
-    if (invoice_items && invoice_items.length > 0) {
-      const newItems = invoice_items.map((item: any) => {
-        const { id, invoice_id, created_at, updated_at, ...itemData } = item;
-        return {
-          ...itemData,
-          invoice_id: newInvoice.id
-        };
-      });
-      
-      await fetch('http://127.0.0.1:54321/rest/v1/invoice_items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-        },
-        body: JSON.stringify(newItems)
-      });
-    }
+    // Create the duplicate invoice with its items
+    const newInvoice = await invoicesApi.create(
+      newInvoiceData as any,
+      items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unit_price: item.unit_price
+      }))
+    );
     
     router.push(`/invoice/${newInvoice.id}/edit`);
   } catch (error) {

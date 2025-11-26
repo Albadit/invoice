@@ -336,7 +336,7 @@ export default function InvoiceEditPage() {
         </div>
       )}
       
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-3xl font-bold">
             {isNewInvoice ? 'New Invoice' : `Edit Invoice ${invoiceNumber}`}
@@ -356,315 +356,314 @@ export default function InvoiceEditPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-[1fr,300px] gap-6 mb-6">
+        <div className="flex max-xl:flex-col gap-6 mb-6 relative">
           <div className="flex flex-col gap-6">
-
             <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-8">
-          <div className="flex justify-between items-start mb-8">
-            <div className="flex-1">
-              {logoUrl ? (
-                <img src={logoUrl} alt="Logo" className="h-16 mb-4" />
-              ) : (
-                <div className="h-16 w-32 bg-slate-200 rounded mb-4 flex items-center justify-center text-slate-500 text-sm">
-                  Logo
-                </div>
-              )}
-            </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-bold text-slate-900 mb-2">INVOICE</h2>
-              {!isNewInvoice && <p className="text-xl text-slate-600">#{invoiceNumber}</p>}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <div className="flex flex-col gap-4">
-              <Input
-                label="Customer Name"
-                labelPlacement="outside"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Customer name"
-                className="font-semibold [&_span]:text-slate-700"
-              />
-              <Input
-                label="Street Address"
-                labelPlacement="outside"
-                value={customerStreet}
-                onChange={(e) => setCustomerStreet(e.target.value)}
-                placeholder="Street address"
-                className="font-semibold [&_span]:text-slate-700"
-              />
-              <Input
-                label="City"
-                labelPlacement="outside"
-                value={customerCity}
-                onChange={(e) => setCustomerCity(e.target.value)}
-                placeholder="City"
-                className="font-semibold [&_span]:text-slate-700"
-              />
-              <Input
-                label="Zip Code"
-                labelPlacement="outside"
-                value={customerZipCode}
-                onChange={(e) => setCustomerZipCode(e.target.value)}
-                placeholder="Zip code"
-                className="font-semibold [&_span]:text-slate-700"
-              />
-              <Input
-                label="Country"
-                labelPlacement="outside"
-                value={customerCountry}
-                onChange={(e) => setCustomerCountry(e.target.value)}
-                placeholder="Country"
-                className="font-semibold [&_span]:text-slate-700"
-              />
-            </div>
-            <div className="flex flex-col gap-4">
-              <DatePicker
-                label="Date"
-                labelPlacement="outside"
-                value={dateCreated}
-                onChange={setDateCreated}
-                showMonthAndYearPickers 
-                className="w-full font-semibold [&_span]:text-slate-700"
-              />
-              <DatePicker
-                label="Due Date"
-                labelPlacement="outside"
-                value={dueDate}
-                onChange={setDueDate}
-                showMonthAndYearPickers 
-                className="w-full font-semibold [&_span]:text-slate-700"
-              />
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <div className="grid grid-cols-12 gap-4 mb-3 font-semibold text-sm text-slate-700">
-              <div className="col-span-5">Item Name</div>
-              <div className="col-span-2">Quantity</div>
-              <div className="col-span-2">Rate</div>
-              <div className="col-span-2 text-right">Amount</div>
-              <div className="col-span-1"></div>
-            </div>
-            {items.map((item, index) => (
-              <div key={index} className="grid grid-cols-12 gap-4 mb-3">
-                <div className="col-span-5">
-                  <Input
-                    value={item.name || ''}
-                    onChange={(e) => updateItem(index, 'name', e.target.value)}
-                    placeholder="Item description"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Input
-                    type="number"
-                    value={String(item.quantity || 1)}
-                    onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Input
-                    type="number"
-                    value={String(item.unit_price || 0)}
-                    onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="col-span-2 flex items-center justify-end font-semibold">
-                  {getCurrencySymbol()}{((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
-                </div>
-                <div className="col-span-1 flex items-center">
-                  <Button
-                    variant="light"
-                    color="danger"
-                    isIconOnly
-                    onClick={() => removeItem(index)}
-                    disabled={items.length === 1}
-                    startContent={<Trash className="h-4 w-4 text-danger" />}
-                  >
-                  </Button>
-                </div>
-              </div>
-            ))}
-            <Button onClick={addItem} className="mt-4"
-              startContent={<Plus className="mr-2 h-4 w-4" />}
-            >
-              Add Item
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6">
-            <div className="flex flex-col gap-4">
-              <Textarea
-                label="Notes"
-                labelPlacement="outside"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Additional notes"
-                className="min-h-[100px] font-semibold [&_span]:text-slate-700"
-              />
-              <Textarea
-                label="Terms & Conditions"
-                labelPlacement="outside"
-                value={terms}
-                onChange={(e) => setTerms(e.target.value)}
-                placeholder="Payment terms and conditions"
-                className="min-h-[100px] font-semibold [&_span]:text-slate-700"
-              />
-            </div>
-
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold text-slate-700">Subtotal</span>
-                <span className="text-lg font-semibold">
-                  {getCurrencySymbol()}{getSubtotal().toFixed(2)}
-                </span>
-              </div>
-
-              {showDiscount ? (
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-700">Discount</span>
-                    <Button
-                      variant="flat"
-                      onClick={() => setDiscountType(discountType === 'percent' ? 'fixed' : 'percent')}
-                      className="min-w-12"
-                    >
-                      {discountType === 'percent' ? '%' : getCurrencySymbol()}
-                    </Button>
-                    <Input
-                      type="number"
-                      value={String(discountAmount || 0)}
-                      onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                      min="0"
-                      step="0.01"
-                    />
-                    <Button
-                      variant="light"
-                      color="danger"
-                      isIconOnly
-                      onClick={removeDiscount}
-                      startContent={<Trash className="h-4 w-4 text-danger" />}
-                    />
-                  </div>
-                  <span className="text-lg font-semibold">
-                    -{getCurrencySymbol()}{getDiscountAmount().toFixed(2)}
-                  </span>
-                </div>
-              ) : null}
-
-              {showTax ? (
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-700">Tax</span>
-                    <Button
-                      variant="flat"
-                      onClick={() => setTaxType(taxType === 'percent' ? 'fixed' : 'percent')}
-                      className="min-w-12"
-                    >
-                      {taxType === 'percent' ? '%' : getCurrencySymbol()}
-                    </Button>
-                    <Input
-                      type="number"
-                      value={String(taxAmount || 0)}
-                      onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                      min="0"
-                      step="0.01"
-                    />
-                    <Button
-                      variant="light"
-                      color="danger"
-                      isIconOnly
-                      onClick={removeTax}
-                      startContent={<Trash className="h-4 w-4 text-danger" />}
-                    />
-                  </div>
-                  <span className="text-lg font-semibold">
-                    {getCurrencySymbol()}{getTaxAmount().toFixed(2)}
-                  </span>
-                </div>
-              ) : null}
-
-              {showShipping ? (
-                <div className="flex justify-between items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-slate-700">Shipping</span>
-                    <Input
-                      type="number"
-                      value={String(shippingAmount || 0)}
-                      onChange={(e) => setShippingAmount(parseFloat(e.target.value) || 0)}
-                      className="w-24"
-                      min="0"
-                      step="0.01"
-                    />
-                    <Button
-                      variant="light"
-                      color="danger"
-                      isIconOnly
-                      onClick={removeShipping}
-                      startContent={<Trash className="h-4 w-4 text-danger" />}
-                    />
-                  </div>
-                  <span className="text-lg font-semibold">
-                    {getCurrencySymbol()}{(shippingAmount || 0).toFixed(2)}
-                  </span>
-                </div>
-              ) : null}
-
-              {(!showDiscount || !showTax || !showShipping) && (
-                <div className="flex gap-2 pt-2">
-                  {!showDiscount && (
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      onClick={addDiscount}
-                      startContent={<Plus className="h-4 w-4" />}
-                    >
-                      Add Discount
-                    </Button>
-                  )}
-                  {!showTax && (
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      onClick={addTax}
-                      startContent={<Plus className="h-4 w-4" />}
-                    >
-                      Add Tax
-                    </Button>
-                  )}
-                  {!showShipping && (
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      onClick={addShipping}
-                      startContent={<Plus className="h-4 w-4" />}
-                    >
-                      Add Shipping
-                    </Button>
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex-1">
+                  {logoUrl ? (
+                    <img src={logoUrl} alt="Logo" className="h-16 mb-4" />
+                  ) : (
+                    <div className="h-16 w-32 bg-slate-200 rounded mb-4 flex items-center justify-center text-slate-500 text-sm">
+                      Logo
+                    </div>
                   )}
                 </div>
-              )}
+                <div className="text-right">
+                  <h2 className="text-3xl font-bold text-slate-900 mb-2">INVOICE</h2>
+                  {!isNewInvoice && <p className="text-xl text-slate-600">#{invoiceNumber}</p>}
+                </div>
+              </div>
 
-              <div className="flex justify-between items-center pt-2 border-t">
-                <span className="text-xl font-bold text-slate-900">Total</span>
-                <span className="text-2xl font-bold text-slate-900">
-                  {getCurrencySymbol()}{getTotal().toFixed(2)}
-                </span>
+              <div className="grid grid-cols-2 gap-6 mb-8">
+                <div className="flex flex-col gap-4">
+                  <Input
+                    label="Customer Name"
+                    labelPlacement="outside"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    placeholder="Customer name"
+                    className="font-semibold [&_span]:text-slate-700"
+                  />
+                  <Input
+                    label="Street Address"
+                    labelPlacement="outside"
+                    value={customerStreet}
+                    onChange={(e) => setCustomerStreet(e.target.value)}
+                    placeholder="Street address"
+                    className="font-semibold [&_span]:text-slate-700"
+                  />
+                  <Input
+                    label="City"
+                    labelPlacement="outside"
+                    value={customerCity}
+                    onChange={(e) => setCustomerCity(e.target.value)}
+                    placeholder="City"
+                    className="font-semibold [&_span]:text-slate-700"
+                  />
+                  <Input
+                    label="Zip Code"
+                    labelPlacement="outside"
+                    value={customerZipCode}
+                    onChange={(e) => setCustomerZipCode(e.target.value)}
+                    placeholder="Zip code"
+                    className="font-semibold [&_span]:text-slate-700"
+                  />
+                  <Input
+                    label="Country"
+                    labelPlacement="outside"
+                    value={customerCountry}
+                    onChange={(e) => setCustomerCountry(e.target.value)}
+                    placeholder="Country"
+                    className="font-semibold [&_span]:text-slate-700"
+                  />
+                </div>
+                <div className="flex flex-col gap-4">
+                  <DatePicker
+                    label="Date"
+                    labelPlacement="outside"
+                    value={dateCreated}
+                    onChange={setDateCreated}
+                    showMonthAndYearPickers 
+                    className="w-full font-semibold [&_span]:text-slate-700"
+                  />
+                  <DatePicker
+                    label="Due Date"
+                    labelPlacement="outside"
+                    value={dueDate}
+                    onChange={setDueDate}
+                    showMonthAndYearPickers 
+                    className="w-full font-semibold [&_span]:text-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <div className="grid grid-cols-12 gap-4 mb-3 font-semibold text-sm text-slate-700">
+                  <div className="col-span-5">Item Name</div>
+                  <div className="col-span-2">Quantity</div>
+                  <div className="col-span-2">Rate</div>
+                  <div className="col-span-2 text-right">Amount</div>
+                  <div className="col-span-1"></div>
+                </div>
+                {items.map((item, index) => (
+                  <div key={index} className="grid grid-cols-12 gap-4 mb-3">
+                    <div className="col-span-5">
+                      <Input
+                        value={item.name || ''}
+                        onChange={(e) => updateItem(index, 'name', e.target.value)}
+                        placeholder="Item description"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        value={String(item.quantity || 1)}
+                        onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <Input
+                        type="number"
+                        value={String(item.unit_price || 0)}
+                        onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div className="col-span-2 flex items-center justify-end font-semibold">
+                      {getCurrencySymbol()}{((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
+                    </div>
+                    <div className="col-span-1 flex items-center">
+                      <Button
+                        variant="light"
+                        color="danger"
+                        isIconOnly
+                        onClick={() => removeItem(index)}
+                        disabled={items.length === 1}
+                        startContent={<Trash className="h-4 w-4 text-danger" />}
+                      >
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                <Button onClick={addItem} className="mt-4"
+                  startContent={<Plus className="mr-2 h-4 w-4" />}
+                >
+                  Add Item
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div className="flex flex-col gap-4">
+                  <Textarea
+                    label="Notes"
+                    labelPlacement="outside"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Additional notes"
+                    className="min-h-[100px] font-semibold [&_span]:text-slate-700"
+                  />
+                  <Textarea
+                    label="Terms & Conditions"
+                    labelPlacement="outside"
+                    value={terms}
+                    onChange={(e) => setTerms(e.target.value)}
+                    placeholder="Payment terms and conditions"
+                    className="min-h-[100px] font-semibold [&_span]:text-slate-700"
+                  />
+                </div>
+
+
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-slate-700">Subtotal</span>
+                    <span className="text-lg font-semibold">
+                      {getCurrencySymbol()}{getSubtotal().toFixed(2)}
+                    </span>
+                  </div>
+
+                  {showDiscount ? (
+                    <div className="flex justify-between items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-700">Discount</span>
+                        <Button
+                          variant="flat"
+                          onClick={() => setDiscountType(discountType === 'percent' ? 'fixed' : 'percent')}
+                          className="min-w-12"
+                        >
+                          {discountType === 'percent' ? '%' : getCurrencySymbol()}
+                        </Button>
+                        <Input
+                          type="number"
+                          value={String(discountAmount || 0)}
+                          onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          min="0"
+                          step="0.01"
+                        />
+                        <Button
+                          variant="light"
+                          color="danger"
+                          isIconOnly
+                          onClick={removeDiscount}
+                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                        />
+                      </div>
+                      <span className="text-lg font-semibold">
+                        -{getCurrencySymbol()}{getDiscountAmount().toFixed(2)}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {showTax ? (
+                    <div className="flex justify-between items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-700">Tax</span>
+                        <Button
+                          variant="flat"
+                          onClick={() => setTaxType(taxType === 'percent' ? 'fixed' : 'percent')}
+                          className="min-w-12"
+                        >
+                          {taxType === 'percent' ? '%' : getCurrencySymbol()}
+                        </Button>
+                        <Input
+                          type="number"
+                          value={String(taxAmount || 0)}
+                          onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          min="0"
+                          step="0.01"
+                        />
+                        <Button
+                          variant="light"
+                          color="danger"
+                          isIconOnly
+                          onClick={removeTax}
+                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                        />
+                      </div>
+                      <span className="text-lg font-semibold">
+                        {getCurrencySymbol()}{getTaxAmount().toFixed(2)}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {showShipping ? (
+                    <div className="flex justify-between items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-700">Shipping</span>
+                        <Input
+                          type="number"
+                          value={String(shippingAmount || 0)}
+                          onChange={(e) => setShippingAmount(parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          min="0"
+                          step="0.01"
+                        />
+                        <Button
+                          variant="light"
+                          color="danger"
+                          isIconOnly
+                          onClick={removeShipping}
+                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                        />
+                      </div>
+                      <span className="text-lg font-semibold">
+                        {getCurrencySymbol()}{(shippingAmount || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  ) : null}
+
+                  {(!showDiscount || !showTax || !showShipping) && (
+                    <div className="flex gap-2 pt-2">
+                      {!showDiscount && (
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          onClick={addDiscount}
+                          startContent={<Plus className="h-4 w-4" />}
+                        >
+                          Add Discount
+                        </Button>
+                      )}
+                      {!showTax && (
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          onClick={addTax}
+                          startContent={<Plus className="h-4 w-4" />}
+                        >
+                          Add Tax
+                        </Button>
+                      )}
+                      {!showShipping && (
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          onClick={addShipping}
+                          startContent={<Plus className="h-4 w-4" />}
+                        >
+                          Add Shipping
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2 border-t">
+                    <span className="text-xl font-bold text-slate-900">Total</span>
+                    <span className="text-2xl font-bold text-slate-900">
+                      {getCurrencySymbol()}{getTotal().toFixed(2)}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6">
+          <div className="min-w-xs h-fit sticky top-8 bg-white rounded-xl shadow-xs border border-slate-200 p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">Company</h3>
             <div className="flex flex-col gap-4 mb-6">
               <Select
