@@ -171,12 +171,12 @@ export default function InvoicesPage() {
           <p className="text-slate-600">Manage and track all your invoices</p>
         </div>
         <div className="flex gap-3">
-          <Button startContent={<Upload className="h-4 w-4" />}>
+          {/* <Button startContent={<Upload className="h-4 w-4" />}>
             Import
           </Button>
           <Button startContent={<Download className="h-4 w-4" />} >
             Export
-          </Button>
+          </Button> */}
           <Button startContent={<Settings className="h-4 w-4" />}
             onClick={() => router.push('/settings')}
           >
