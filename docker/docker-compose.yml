@@ -37,7 +37,6 @@ services:
       analytics:
         condition: service_healthy
 
-
   # ======================
   # SUPABASE BACKEND
   # ======================
