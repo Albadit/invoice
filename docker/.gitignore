@@ -1,5 +1,5 @@
 # Docker volumes
-volumes/db/data/**
+volumes/db/data/
 volumes/storage
 .env
 test.http
