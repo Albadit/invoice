@@ -639,10 +639,6 @@ function evaluateTemplate(template: string, context: any): string {
   const contextValues = Object.values(context);
 
   try {
-    // Save for debugging
-    const fs = require('fs');
-    fs.writeFileSync('c:/Users/ardit/Desktop/invoice/transformed-debug.txt', template);
-    
     // Create a function that evaluates the template as a template literal
     // We pass the template string directly, which already contains ${...} expressions
     const templateFunction = new Function(

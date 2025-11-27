@@ -46,7 +46,7 @@ export default function InvoiceTestPage() {
   return (
     <>
       <section className="bg-gray-300 py-8">
-        <div className="w-[210mm] h-[297mm] mx-auto *:p-12">
+        <div className="w-full max-w-[210mm] min-h-[297mm] mx-auto *:p-12">
 <div className="w-full h-full bg-white flex flex-col gap-8">
   {/* Header */}
   <div className="flex flex-col gap-4">

@@ -9,6 +9,35 @@ name: invoice-app
 
 services:
   # ======================
+  # FRONTEND - Next.js App
+  # ======================
+  web:
+    container_name: invoice-nextjs
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_PORT=${POSTGRES_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - NEXT_PUBLIC_SUPABASE_URL=http://kong:8000
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
+    restart: unless-stopped
+    depends_on:
+      kong:
+        condition: service_started
+      db:
+        condition: service_healthy
+      studio:
+        condition: service_started
+      analytics:
+        condition: service_healthy
+
+  # ======================
   # SUPABASE BACKEND
   # ======================
   studio:
@@ -464,7 +493,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./volumes/logs/vector.yml:/etc/vector/vector.yml:ro,z
-      - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro,z
+      - ${DOCKER_SOCKET_LOCATION}:${DOCKER_SOCKET_LOCATION}:ro
     healthcheck:
       test:
         [
@@ -541,35 +570,6 @@ services:
         "-c",
         "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
       ]
-
-  # ======================
-  # FRONTEND - Next.js App
-  # ======================
-  web:
-    container_name: invoice-nextjs
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - POSTGRES_HOST=${POSTGRES_HOST}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - NEXT_PUBLIC_SUPABASE_URL=http://kong:8000
-      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${ANON_KEY}
-    restart: unless-stopped
-    depends_on:
-      kong:
-        condition: service_started
-      db:
-        condition: service_healthy
-      studio:
-        condition: service_started
-      analytics:
-        condition: service_healthy
 
 volumes:
   db-config:

@@ -1,4 +1,4 @@
--- Insert sample companies with settings
+-- Insert sample companies with settings (only if they don't exist)
 INSERT INTO companies (name, email, phone, street, city, zip_code, country, currency_id, template_id, tax_percent, terms)
 SELECT
     company_data.name,
@@ -20,7 +20,7 @@ FROM (VALUES
 CROSS JOIN currencies cur
 CROSS JOIN (SELECT id FROM templates LIMIT 1) t
 WHERE cur.code = company_data.currency_code
-ON CONFLICT DO NOTHING;
+  AND NOT EXISTS (SELECT 1 FROM companies WHERE name = company_data.name);
 
 -- Insert sample invoice
 INSERT INTO invoices (
@@ -73,7 +73,7 @@ WHERE c.name = 'Acme Corporation'
   AND cur.code = 'USD'
 ON CONFLICT (invoice_number) DO NOTHING;
 
--- Insert invoice items for the sample invoice
+-- Insert invoice items for the sample invoice (only if invoice exists and items don't)
 INSERT INTO invoice_items (invoice_id, name, quantity, unit_price, sort_order)
 SELECT 
     i.id,
@@ -90,4 +90,7 @@ FROM (
     ('API Integration', 10.00, 55.00, 3),
     ('Database Setup & Configuration', 1.00, 1000.00, 4)
 ) AS item(name, quantity, unit_price, sort_order)
-ON CONFLICT DO NOTHING;
+WHERE NOT EXISTS (
+    SELECT 1 FROM invoice_items 
+    WHERE invoice_id = i.id AND name = item.name
+);

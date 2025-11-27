@@ -82,13 +82,34 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
     }
   };
 
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) {
+          await handleFileUpload(file);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleClickToUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="space-y-4">
       <div
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors ${
+        onPaste={handlePaste}
+        onClick={handleClickToUpload}
+        tabIndex={0}
+        className={`relative border-2 border-dashed rounded-lg p-8 transition-colors cursor-pointer ${
           isDragging
             ? 'border-blue-500 bg-blue-50'
             : 'border-slate-300 bg-slate-50 hover:border-slate-400'
@@ -109,7 +130,7 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
             <p className="text-sm text-slate-600">Uploading...</p>
           </div>
         ) : logoUrl && !imageError ? (
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
             <img
               src={logoUrl}
               alt="Logo preview"
@@ -152,13 +173,16 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
             )}
 
             <p className="text-sm text-slate-700 mb-2">
-              <label htmlFor="logo-upload" className="cursor-pointer text-blue-600 hover:text-blue-700 font-semibold">
+              <span className="text-blue-600 font-semibold">
                 Click to upload
-              </label>
+              </span>
               {' '}or drag and drop
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mb-1">
               PNG, JPG, SVG up to 5MB
+            </p>
+            <p className="text-xs text-slate-400">
+              You can also paste an image (Ctrl+V)
             </p>
           </div>
         )}

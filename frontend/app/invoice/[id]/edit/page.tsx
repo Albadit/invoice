@@ -93,10 +93,14 @@ export default function InvoiceEditPage() {
           setNotes(invoice.notes || '');
           setTerms(invoice.terms || '');
           
-          // Set IDs from invoice
-          setCurrencyId(invoice.currency_id);
-          setCompanyId(invoice.company_id);
-          setTemplateId(invoice.template_id || null);
+          // Set IDs from invoice, but validate they exist in the loaded data
+          const currencyExists = currenciesData.some(c => c.id === invoice.currency_id);
+          const companyExists = companiesData.some(c => c.id === invoice.company_id);
+          const templateExists = invoice.template_id ? templatesData.some(t => t.id === invoice.template_id) : true;
+          
+          setCurrencyId(currencyExists ? invoice.currency_id : (currenciesData[0]?.id || null));
+          setCompanyId(companyExists ? invoice.company_id : (companiesData[0]?.id || ''));
+          setTemplateId(templateExists ? (invoice.template_id || null) : (templatesData[0]?.id || null));
 
           // Set company logo from invoice.company
           setLogoUrl(invoice.company?.logo_url || '');
