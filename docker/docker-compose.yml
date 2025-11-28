@@ -361,7 +361,7 @@ services:
     image: supabase/edge-runtime:v1.69.25
     restart: unless-stopped
     volumes:
-      - ./volumes/functions:/home/deno/functions
+      - ./volumes/functions:/home/deno/functions:Z
     depends_on:
       analytics:
         condition: service_healthy
@@ -435,21 +435,21 @@ services:
     ports:
       - "54322:5432"
     volumes:
-      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql:ro
+      - ./volumes/db/realtime.sql:/docker-entrypoint-initdb.d/migrations/99-realtime.sql
       # Must be superuser to create event trigger
-      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql:ro
+      - ./volumes/db/webhooks.sql:/docker-entrypoint-initdb.d/init-scripts/98-webhooks.sql
       # Must be superuser to alter reserved role
-      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql:ro
+      - ./volumes/db/roles.sql:/docker-entrypoint-initdb.d/init-scripts/99-roles.sql
       # Initialize the database settings with JWT_SECRET and JWT_EXP
-      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql:ro
+      - ./volumes/db/jwt.sql:/docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
       # PGDATA directory is persisted between restarts
       - ./volumes/db/data:/var/lib/postgresql/data
       # Changes required for internal supabase data such as _analytics
-      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql:ro
+      - ./volumes/db/_supabase.sql:/docker-entrypoint-initdb.d/migrations/97-_supabase.sql
       # Changes required for Analytics support
-      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql:ro
+      - ./volumes/db/logs.sql:/docker-entrypoint-initdb.d/migrations/99-logs.sql
       # Changes required for Pooler support
-      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql:ro
+      - ./volumes/db/pooler.sql:/docker-entrypoint-initdb.d/migrations/99-pooler.sql
       # Use named volume to persist pgsodium decryption key between restarts
       - db-config:/etc/postgresql-custom
     healthcheck:
@@ -492,10 +492,7 @@ services:
     image: timberio/vector:0.28.1-alpine
     restart: unless-stopped
     volumes:
-      - type: bind
-        source: ./volumes/logs/vector.yml
-        target: /etc/vector/vector.yml
-        read_only: true
+      - ./volumes/logs/vector.yml:/etc/vector/vector.yml:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     healthcheck:
       test:
@@ -505,12 +502,11 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:9001/health"
+          "http://vector:9001/health"
         ]
       timeout: 5s
-      interval: 10s
-      retries: 5
-      start_period: 10s
+      interval: 5s
+      retries: 3
     environment:
       LOGFLARE_PUBLIC_ACCESS_TOKEN: ${LOGFLARE_PUBLIC_ACCESS_TOKEN}
     command:
