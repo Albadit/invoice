@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { invoicesApi } from '@/lib/api';
+import Image from 'next/image';
+import { invoicesApi } from '@/features/invoice/api';
 import type { InvoiceWithItems } from '@/lib/types';
 
 export default function InvoiceTestPage() {
@@ -52,7 +53,7 @@ export default function InvoiceTestPage() {
   <div className="flex flex-col gap-4">
     <div className="flex justify-between">
       {invoice.company?.logo_url ? (
-        <img src={invoice.company.logo_url} alt="Logo" className="h-16 mb-4" />
+        <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
       ) : (
         <div className="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold mb-4">
           Logo

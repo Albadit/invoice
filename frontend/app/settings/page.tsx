@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { currenciesApi, templatesApi, companiesApi } from '@/lib/api';
+import { currenciesApi, templatesApi, companiesApi } from '@/features/settings/api';
 import type { Currency, Template, Company } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
@@ -10,16 +10,18 @@ import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
 import { ArrowLeft, Save, Edit } from 'lucide-react';
 import { addToast } from "@heroui/toast";
-import { AddCompanyModal } from '@/components/AddCompanyModal';
-import { EditCompanyModal } from '@/components/EditCompanyModal';
-import { ManageCompaniesModal } from '@/components/ManageCompaniesModal';
-import { ManageTemplatesModal } from '@/components/ManageTemplatesModal';
-import { EditTemplateModal } from '@/components/EditTemplateModal';
-import { AddTemplateModal } from '@/components/AddTemplateModal';
-import { ManageCurrenciesModal } from '@/components/ManageCurrenciesModal';
-import { EditCurrencyModal } from '@/components/EditCurrencyModal';
-import { AddCurrencyModal } from '@/components/AddCurrencyModal';
-import { LogoUpload } from '@/components/LogoUpload';
+import {
+  AddCompanyModal,
+  EditCompanyModal,
+  ManageCompaniesModal,
+  ManageTemplatesModal,
+  EditTemplateModal,
+  AddTemplateModal,
+  ManageCurrenciesModal,
+  EditCurrencyModal,
+  AddCurrencyModal,
+  LogoUpload,
+} from '@/features/settings/components';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -45,7 +47,7 @@ export default function SettingsPage() {
   const [isAddCompanyModalOpen, setIsAddCompanyModalOpen] = useState(false);
   const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
   const [isManageCompaniesModalOpen, setIsManageCompaniesModalOpen] = useState(false);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [, setSelectedCompany] = useState<Company | null>(null);
   const [isManageTemplatesModalOpen, setIsManageTemplatesModalOpen] = useState(false);
   const [isEditTemplateModalOpen, setIsEditTemplateModalOpen] = useState(false);
   const [isAddTemplateModalOpen, setIsAddTemplateModalOpen] = useState(false);

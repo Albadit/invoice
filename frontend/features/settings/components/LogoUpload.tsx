@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import Image from 'next/image';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from "@heroui/button";
-import { storageApi } from '@/lib/api';
+import { storageApi } from '@/features/settings/api';
 
 interface LogoUploadProps {
   logoUrl: string;
@@ -131,10 +132,12 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
           </div>
         ) : logoUrl && !imageError ? (
           <div className="flex items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
-            <img
+            <Image
               src={logoUrl}
               alt="Logo preview"
-              className="h-20 object-contain max-w-xs"
+              width={160}
+              height={80}
+              className="h-20 w-auto object-contain max-w-xs"
               onLoad={() => onImageError(false)}
               onError={() => {
                 console.error('Failed to load image:', logoUrl);

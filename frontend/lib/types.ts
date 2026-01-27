@@ -1,4 +1,4 @@
-import type { Database } from '@/supabase/database.types';
+import type { Database } from '@/lib/database.types';
 
 // Base types from Supabase
 export type Invoice = Database['public']['Tables']['invoices']['Row'];

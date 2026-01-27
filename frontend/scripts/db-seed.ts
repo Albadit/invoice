@@ -41,7 +41,7 @@ async function seedDatabase() {
     await client.connect();
     console.log('✅ Connected to database...');
 
-    const supabasePath = path.join(__dirname, '..', 'supabase');
+    const supabasePath = path.join(__dirname, '..', 'db');
 
     // Find all seed files (files starting with 'seed')
     const files = fs.readdirSync(supabasePath);

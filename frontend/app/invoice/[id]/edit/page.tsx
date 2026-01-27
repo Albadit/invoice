@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { invoicesApi, currenciesApi, companiesApi, templatesApi } from '@/lib/api';
+import Image from 'next/image';
+import { invoicesApi } from '@/features/invoice/api';
+import { currenciesApi, companiesApi, templatesApi } from '@/features/settings/api';
 import type { InvoiceItem, Currency, Company, Template } from '@/lib/types';
-import type { InvoicesPost } from '@/supabase/database.types';
+import type { InvoicesPost } from '@/lib/database.types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -145,6 +147,7 @@ export default function InvoiceEditPage() {
     }
     
     initialize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -207,7 +210,7 @@ export default function InvoiceEditPage() {
     setItems(items.filter((_, i) => i !== index));
   }
 
-  function updateItem(index: number, field: string, value: any) {
+  function updateItem(index: number, field: string, value: string | number) {
     const updated = [...items];
     updated[index] = { ...updated[index], [field]: value };
     setItems(updated);
@@ -366,7 +369,7 @@ export default function InvoiceEditPage() {
               <div className="flex justify-between items-start mb-8">
                 <div className="flex-1">
                   {logoUrl ? (
-                    <img src={logoUrl} alt="Logo" className="h-16 mb-4" />
+                    <Image src={logoUrl} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
                   ) : (
                     <div className="h-16 w-32 bg-slate-200 rounded mb-4 flex items-center justify-center text-slate-500 text-sm">
                       Logo

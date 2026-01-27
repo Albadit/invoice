@@ -69,7 +69,7 @@ export function renderInvoiceToHtml(
     // Step 1: Transform JSX to HTML-like template (only if it's JSX format)
     // Check if template is already in template literal format (has ${ but not className=)
     const isTemplateLiteral = tsxTemplate.includes('${') && !tsxTemplate.includes('className=');
-    let htmlTemplate = isTemplateLiteral ? tsxTemplate : transformJsxToHtml(tsxTemplate);
+    const htmlTemplate = isTemplateLiteral ? tsxTemplate : transformJsxToHtml(tsxTemplate);
 
     // Step 2: Create safe evaluation context
     const safeContext = createSafeContext(context);
@@ -167,9 +167,8 @@ function parseJsxExpression(chars: string[], startIndex: number): { content: str
   let braceDepth = 1;
   let parenDepth = 0;
   let bracketDepth = 0;
-  let inString: string | null = null; // null, '"', "'", or '`'
-  let inRegex = false;
-  let expressionChars: string[] = [];
+  let inString: string | null = null;
+  const expressionChars: string[] = [];
   
   // Track what kind of expression this is
   let isMapExpression = false;
@@ -615,7 +614,7 @@ function createSafeContext(context: TemplateContext) {
     formatDate,
 
     // Safe conditional rendering
-    when: (condition: any, truthyValue: string, falsyValue: string = '') => {
+    when: (condition: unknown, truthyValue: string, falsyValue: string = '') => {
       return condition ? truthyValue : falsyValue;
     },
 
@@ -633,7 +632,7 @@ function createSafeContext(context: TemplateContext) {
  * Uses Function constructor to create a sandboxed evaluation environment.
  * The template has access only to the provided context, not to global scope.
  */
-function evaluateTemplate(template: string, context: any): string {
+function evaluateTemplate(template: string, context: Record<string, unknown>): string {
   // Wrap template in a function that returns the evaluated string
   const contextKeys = Object.keys(context);
   const contextValues = Object.values(context);
@@ -714,7 +713,7 @@ export function renderInvoiceToHtmlExplicit(
 /**
  * Replace {variable} patterns with actual values
  */
-function replaceVariables(template: string, variables: Record<string, any>): string {
+function replaceVariables(template: string, variables: Record<string, unknown>): string {
   let result = template;
 
   for (const [key, value] of Object.entries(variables)) {
@@ -729,7 +728,7 @@ function replaceVariables(template: string, variables: Record<string, any>): str
  * Handle conditional rendering patterns
  * Matches: {condition ? <TruthyJSX /> : <FalsyJSX />}
  */
-function handleConditionals(template: string, context: any): string {
+function handleConditionals(template: string, _context: Record<string, unknown>): string {
   // This is a simplified implementation
   // In production, you'd use a proper JSX parser
   return template;
@@ -739,7 +738,7 @@ function handleConditionals(template: string, context: any): string {
  * Handle array mapping patterns
  * Matches: {items.map((item, i) => <JSX key={i}>{item}</JSX>)}
  */
-function handleLoops(template: string, context: any): string {
+function handleLoops(template: string, _context: Record<string, unknown>): string {
   // This is a simplified implementation
   // In production, you'd use a proper JSX parser
   return template;

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Edit, Trash, Plus } from 'lucide-react';

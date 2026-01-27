@@ -218,7 +218,7 @@ export type Json =
     typeDefinitions += `}\n`;
 
     // Write to file
-    const outputPath = path.join(__dirname, '..', 'supabase', 'database.types.ts');
+    const outputPath = path.join(__dirname, '..', 'lib', 'database.types.ts');
     fs.writeFileSync(outputPath, typeDefinitions);
     
     console.log(`✅ Types generated successfully at: ${outputPath}`);

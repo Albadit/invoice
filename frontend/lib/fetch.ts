@@ -80,7 +80,7 @@ export const fetch = {
   /**
    * GET request
    */
-  async get<T = any>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
+  async get<T = unknown>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
       ...options,
       method: 'GET',
@@ -90,9 +90,9 @@ export const fetch = {
   /**
    * POST request
    */
-  async post<T = any>(
+  async post<T = unknown>(
     url: string,
-    body?: any,
+    body?: unknown,
     options?: FetchOptions
   ): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
@@ -105,9 +105,9 @@ export const fetch = {
   /**
    * PUT request
    */
-  async put<T = any>(
+  async put<T = unknown>(
     url: string,
-    body?: any,
+    body?: unknown,
     options?: FetchOptions
   ): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
@@ -120,9 +120,9 @@ export const fetch = {
   /**
    * PATCH request
    */
-  async patch<T = any>(
+  async patch<T = unknown>(
     url: string,
-    body?: any,
+    body?: unknown,
     options?: FetchOptions
   ): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
@@ -135,7 +135,7 @@ export const fetch = {
   /**
    * DELETE request
    */
-  async delete<T = any>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
+  async delete<T = unknown>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
       ...options,
       method: 'DELETE',
@@ -155,7 +155,7 @@ export const fetch = {
   /**
    * OPTIONS request
    */
-  async options<T = any>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
+  async options<T = unknown>(url: string, options?: FetchOptions): Promise<FetchResponse<T>> {
     return baseFetch<T>(url, {
       ...options,
       method: 'OPTIONS',

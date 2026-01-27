@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { invoicesApi, currenciesApi } from '@/lib/api';
-import type { InvoiceWithItems, Currency, Company } from '@/lib/types';
+import { invoicesApi } from '@/features/invoice/api';
+import { currenciesApi } from '@/features/settings/api';
+import type { InvoiceWithItems, Currency } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Tabs, Tab } from "@heroui/tabs";
@@ -23,11 +24,12 @@ import {
 import { Card, CardBody } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
 import { DateRangePicker } from "@heroui/date-picker";
+import type { DateValue } from "@internationalized/date";
 import { useRouter } from 'next/navigation';
-import { EllipsisVertical, Plus, Upload, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, Settings } from 'lucide-react';
+import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, Settings } from 'lucide-react';
 import { format } from 'date-fns';
-import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/utils/invoice-utils';
-import { InvoicePreviewModal } from '@/components/InvoicePreviewModal';
+import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
+import { InvoicePreviewModal } from '@/features/invoice/components';
 
 export default function InvoicesPage() {
   const router = useRouter();
@@ -38,20 +40,25 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
-  const [logoUrl, setLogoUrl] = useState('');
-  
   // Separate filter states for each tab
-  const [activeFilters, setActiveFilters] = useState({
+  const [activeFilters, setActiveFilters] = useState<{
+    searchQuery: string;
+    statusFilter: string;
+    dateRange: { start: DateValue; end: DateValue } | null;
+  }>({
     searchQuery: '',
     statusFilter: 'all',
-    dateRange: null as any
+    dateRange: null
   });
   
-  const [deletedFilters, setDeletedFilters] = useState({
+  const [deletedFilters, setDeletedFilters] = useState<{
+    searchQuery: string;
+    statusFilter: string;
+    dateRange: { start: DateValue; end: DateValue } | null;
+  }>({
     searchQuery: '',
     statusFilter: 'all',
-    dateRange: null as any
+    dateRange: null
   });
   
   // Current filters based on active tab
@@ -61,10 +68,12 @@ export default function InvoicesPage() {
   useEffect(() => {
     loadInvoices();
     loadCurrencies();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   useEffect(() => {
     applyFilters();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [invoices, currentFilters.searchQuery, currentFilters.statusFilter, currentFilters.dateRange]);
 
   async function loadCurrencies() {
@@ -79,10 +88,6 @@ export default function InvoicesPage() {
   async function handleViewInvoice(invoice: InvoiceWithItems) {
     setSelectedInvoice(invoice);
     setIsModalOpen(true);
-    
-    // Use company data from invoice
-    setSelectedCompany(invoice.company || null);
-    setLogoUrl(invoice.company?.logo_url || '');
   }
 
   function handleDownloadPDF(invoiceId: string) {

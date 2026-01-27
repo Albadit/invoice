@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { fontInter } from "@/config/fonts";
-import { Providers } from "@/app/providers";
-import "@/style/globals.css";
+import { Providers } from "@/contexts/HeroProviders";
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: 'Invoice Manager',

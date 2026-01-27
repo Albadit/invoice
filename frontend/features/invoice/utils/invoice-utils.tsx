@@ -1,7 +1,7 @@
 import { Chip } from "@heroui/chip";
 import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
-import { invoicesApi } from '@/lib/api';
+import { invoicesApi } from '@/features/invoice/api';
 
 /**
  * Get status badge component for invoice status
@@ -119,7 +119,8 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
     const invoice = await invoicesApi.getById(String(invoiceId));
     
     // Create new invoice (without id, created_at, updated_at)
-    const { id, created_at, updated_at, items, currency, company, invoice_number, ...invoiceData } = invoice;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_number: _invoice_number, ...invoiceData } = invoice;
     const newInvoiceData = {
       ...invoiceData,
       status: 'pending',
@@ -127,7 +128,7 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
     
     // Create the duplicate invoice with its items
     const newInvoice = await invoicesApi.create(
-      newInvoiceData as any,
+      newInvoiceData as Parameters<typeof invoicesApi.create>[0],
       items.map(item => ({
         name: item.name,
         quantity: item.quantity,

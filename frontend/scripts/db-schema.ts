@@ -41,7 +41,7 @@ async function applySchema() {
     await client.connect();
     console.log('✅ Connected to database...');
 
-    const supabasePath = path.join(__dirname, '..', 'supabase');
+    const supabasePath = path.join(__dirname, '..', 'db');
     console.log(`📁 Looking for schema files in: ${supabasePath}`);
 
     // Find all schema files (files starting with 'schema')

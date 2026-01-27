@@ -1,11 +1,12 @@
 'use client';
 
+import Image from 'next/image';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Download, X } from 'lucide-react';
 import { format } from 'date-fns';
-import type { InvoiceWithItems, Company } from '@/lib/types';
-import { getStatusBadge } from '@/utils/invoice-utils';
+import type { InvoiceWithItems } from '@/lib/types';
+import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
 
 interface InvoicePreviewModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export function InvoicePreviewModal({
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 {invoice.company?.logo_url ? (
-                  <img src={invoice.company.logo_url} alt="Logo" className="h-16 mb-4" />
+                  <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
                 ) : (
                   <div className="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold mb-4">
                     Logo
