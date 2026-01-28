@@ -58,9 +58,9 @@ export default function SettingsPage() {
   const [imageError, setImageError] = useState(false);
 
   // Refs for scrolling to sections
-  const companiesRef = useRef<HTMLElement>(null);
-  const templatesRef = useRef<HTMLElement>(null);
-  const currenciesRef = useRef<HTMLElement>(null);
+  const companiesRef = useRef<HTMLDivElement>(null);
+  const templatesRef = useRef<HTMLDivElement>(null);
+  const currenciesRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {

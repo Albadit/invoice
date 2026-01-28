@@ -24,6 +24,7 @@ import {
 import { Card, CardBody } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
 import { DateRangePicker } from "@heroui/date-picker";
+import { Pagination } from "@heroui/pagination";
 import type { DateValue } from "@internationalized/date";
 import { useRouter } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search } from 'lucide-react';
@@ -40,6 +41,8 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   // Separate filter states for each tab
   const [activeFilters, setActiveFilters] = useState<{
     searchQuery: string;
@@ -152,7 +155,14 @@ export default function InvoicesPage() {
     }
 
     setFilteredInvoices(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }
+
+  // Pagination computed values
+  const totalPages = Math.ceil(filteredInvoices.length / rowsPerPage);
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex);
 
   async function handleDelete(invoiceId: string) {
     if (!confirm('Are you sure you want to permanently delete this invoice? This action cannot be undone.')) {
@@ -169,7 +179,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <main className="min-h-screen max-w-7xl mx-auto flex flex-col gap-5 p-8">
+    <main className="max-w-7xl mx-auto flex flex-col gap-5 p-8">
       <section className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold mb-2">Invoices</h1>
@@ -227,7 +237,7 @@ export default function InvoicesPage() {
         </CardBody>
       </Card>
 
-      <Table aria-label="Invoice table" selectionMode="single">
+      <Table aria-label="Invoice table">
         <TableHeader>
           <TableColumn className="font-semibold">Invoice</TableColumn>
           <TableColumn className="font-semibold">Customer</TableColumn>
@@ -242,7 +252,7 @@ export default function InvoicesPage() {
           loadingContent={<div className="flex justify-center py-12">Loading invoices...</div>}
           emptyContent={<div className="text-center py-12">No invoices found</div>}
         >
-          {filteredInvoices.map((invoice) => (
+          {paginatedInvoices.map((invoice) => (
             <TableRow key={invoice.id}>
               <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
               <TableCell>{invoice.customer_name}</TableCell>
@@ -333,6 +343,40 @@ export default function InvoicesPage() {
           ))}
         </TableBody>
       </Table>
+
+      {/* Pagination Controls */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-default-500">Rows per page:</span>
+          <Select
+            aria-label="Rows per page"
+            className="w-20"
+            size="sm"
+            selectedKeys={[String(rowsPerPage)]}
+            onSelectionChange={(keys) => {
+              const value = Number(Array.from(keys)[0]);
+              setRowsPerPage(value);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectItem key="5">5</SelectItem>
+            <SelectItem key="10">10</SelectItem>
+            <SelectItem key="25">25</SelectItem>
+            <SelectItem key="50">50</SelectItem>
+          </Select>
+          <span className="text-sm text-default-500">
+            Showing {filteredInvoices.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredInvoices.length)} of {filteredInvoices.length}
+          </span>
+        </div>
+        {totalPages > 1 && (
+          <Pagination
+            total={totalPages}
+            page={currentPage}
+            onChange={setCurrentPage}
+            showControls
+          />
+        )}
+      </div>
 
       <InvoicePreviewModal
         isOpen={isModalOpen}
