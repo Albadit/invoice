@@ -1,0 +1,34 @@
+{
+  "title": "Facturen",
+  "createNew": "Nieuwe Factuur Aanmaken",
+  "editInvoice": "Factuur Bewerken",
+  "invoiceNumber": "Factuurnummer",
+  "invoiceDate": "Factuurdatum",
+  "dueDate": "Vervaldatum",
+  "status": {
+    "draft": "Concept",
+    "sent": "Verzonden",
+    "paid": "Betaald",
+    "overdue": "Te laat",
+    "cancelled": "Geannuleerd"
+  },
+  "fields": {
+    "client": "Klant",
+    "company": "Bedrijf",
+    "items": "Artikelen",
+    "description": "Omschrijving",
+    "quantity": "Aantal",
+    "unitPrice": "Eenheidsprijs",
+    "amount": "Bedrag",
+    "subtotal": "Subtotaal",
+    "tax": "BTW",
+    "discount": "Korting",
+    "total": "Totaal"
+  },
+  "messages": {
+    "created": "Factuur succesvol aangemaakt",
+    "updated": "Factuur succesvol bijgewerkt",
+    "deleted": "Factuur succesvol verwijderd",
+    "sent": "Factuur succesvol verzonden"
+  }
+}

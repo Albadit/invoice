@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { currenciesApi, templatesApi, companiesApi } from '@/features/settings/api';
 import type { Currency, Template, Company } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
-import { ArrowLeft, Save, Edit } from 'lucide-react';
+import { Save, Edit } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import {
   AddCompanyModal,
@@ -24,7 +24,6 @@ import {
 } from '@/features/settings/components';
 
 export default function SettingsPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -58,12 +57,36 @@ export default function SettingsPage() {
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   const [imageError, setImageError] = useState(false);
 
+  // Refs for scrolling to sections
+  const companiesRef = useRef<HTMLElement>(null);
+  const templatesRef = useRef<HTMLElement>(null);
+  const currenciesRef = useRef<HTMLElement>(null);
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     loadSettings();
     loadCurrencies();
     loadTemplates();
     loadCompanies();
   }, []);
+
+  // Handle tab query parameter for scrolling
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab && !loading) {
+      const refs: Record<string, React.RefObject<HTMLElement | null>> = {
+        companies: companiesRef,
+        templates: templatesRef,
+        currencies: currenciesRef,
+      };
+      const targetRef = refs[tab];
+      if (targetRef?.current) {
+        setTimeout(() => {
+          targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [searchParams, loading]);
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -514,13 +537,10 @@ export default function SettingsPage() {
     <main className="min-h-screen max-w-4xl mx-auto p-8">
       <section className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-slate-900">Settings</h1>
-          <p className="text-slate-600 mt-1">Customize your invoice preferences</p>
+          <h1 className="text-4xl font-bold text-foreground">Settings</h1>
+          <p className="text-default-500 mt-1">Customize your invoice preferences</p>
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => router.push('/')} startContent={<ArrowLeft className="h-4 w-4" />}>
-            Back
-          </Button>
           <Button
             color="primary"
             onClick={handleSave}
@@ -534,7 +554,7 @@ export default function SettingsPage() {
 
       <Card>
         <CardBody className='flex gap-8 p-6'>
-          <section className="border-b pb-6">
+          <section id="companies" ref={companiesRef} className="border-b pb-6 scroll-mt-24">
             <div className="flex items-center justify-between mb-2">
               <span className="text-base font-semibold">
                 Select Company
@@ -582,10 +602,10 @@ export default function SettingsPage() {
               
               <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-200"></div>
+                  <div className="w-full border-t border-divider"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-slate-500">OR</span>
+                  <span className="px-2 bg-content1 text-default-500">OR</span>
                 </div>
               </div>
 
@@ -607,7 +627,7 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section className="flex flex-col gap-6">
+          <section id="templates" ref={templatesRef} className="flex flex-col gap-6 scroll-mt-24">
             <h2 className="text-2xl font-bold">Invoice Settings</h2>
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -638,7 +658,7 @@ export default function SettingsPage() {
                 ))}
               </Select>
             </div>
-            <div>
+            <div id="currencies" ref={currenciesRef} className="scroll-mt-24">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-base font-semibold">
                   Default Currency
@@ -694,11 +714,9 @@ export default function SettingsPage() {
               <span className="text-base font-semibold">
                 Terms Text
               </span>
-              <p className="text-sm text-slate-600 mb-3">
-                Set default terms and conditions that will appear on new invoices. You can still
-                edit this for individual invoices.
-              </p>
               <Textarea
+                label="Set default terms and conditions that will appear on new invoices. You can still edit this for individual invoices."
+                labelPlacement="outside"
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
                 placeholder="Enter your default terms and conditions..."
@@ -708,8 +726,8 @@ export default function SettingsPage() {
           </section>
         </CardBody>
         <CardFooter className="p-6">
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-900">
+          <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
+            <p className="text-sm text-foreground">
               <strong>Tip:</strong> Include payment terms, late fees, accepted payment methods,
               and any other important information your clients should know.
             </p>

@@ -1,0 +1,42 @@
+{
+  "title": "Settings",
+  "sections": {
+    "companies": "Companies",
+    "templates": "Templates",
+    "currencies": "Currencies",
+    "preferences": "Preferences"
+  },
+  "companies": {
+    "title": "Company Management",
+    "addCompany": "Add Company",
+    "editCompany": "Edit Company",
+    "deleteCompany": "Delete Company",
+    "fields": {
+      "name": "Company Name",
+      "address": "Address",
+      "city": "City",
+      "country": "Country",
+      "phone": "Phone",
+      "email": "Email",
+      "taxId": "Tax ID",
+      "logo": "Logo"
+    }
+  },
+  "templates": {
+    "title": "Invoice Templates",
+    "addTemplate": "Add Template",
+    "editTemplate": "Edit Template",
+    "deleteTemplate": "Delete Template"
+  },
+  "currencies": {
+    "title": "Currency Management",
+    "addCurrency": "Add Currency",
+    "editCurrency": "Edit Currency",
+    "deleteCurrency": "Delete Currency",
+    "fields": {
+      "code": "Currency Code",
+      "name": "Currency Name",
+      "symbol": "Symbol"
+    }
+  }
+}

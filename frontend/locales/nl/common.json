@@ -1,0 +1,44 @@
+{
+  "app": {
+    "title": "Factuur Manager",
+    "description": "Professionele factuurbeheerapplicatie"
+  },
+  "navigation": {
+    "home": "Home",
+    "invoices": "Facturen",
+    "settings": "Instellingen",
+    "companies": "Bedrijven",
+    "templates": "Sjablonen",
+    "currencies": "Valuta's"
+  },
+  "actions": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "delete": "Verwijderen",
+    "edit": "Bewerken",
+    "create": "Aanmaken",
+    "add": "Toevoegen",
+    "close": "Sluiten",
+    "confirm": "Bevestigen",
+    "back": "Terug",
+    "next": "Volgende",
+    "download": "Downloaden",
+    "preview": "Voorbeeld",
+    "print": "Afdrukken"
+  },
+  "common": {
+    "loading": "Laden...",
+    "error": "Er is een fout opgetreden",
+    "noData": "Geen gegevens beschikbaar",
+    "search": "Zoeken",
+    "filter": "Filteren",
+    "sort": "Sorteren",
+    "language": "Taal"
+  },
+  "languages": {
+    "en": "Engels",
+    "nl": "Nederlands",
+    "al": "Albanees",
+    "mk": "Macedonisch"
+  }
+}

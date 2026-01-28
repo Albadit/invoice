@@ -1,0 +1,44 @@
+{
+  "app": {
+    "title": "Menaxheri i Faturave",
+    "description": "Aplikacion profesional për menaxhimin e faturave"
+  },
+  "navigation": {
+    "home": "Kryefaqja",
+    "invoices": "Faturat",
+    "settings": "Cilësimet",
+    "companies": "Kompanitë",
+    "templates": "Shabllonet",
+    "currencies": "Monedhat"
+  },
+  "actions": {
+    "save": "Ruaj",
+    "cancel": "Anulo",
+    "delete": "Fshi",
+    "edit": "Ndrysho",
+    "create": "Krijo",
+    "add": "Shto",
+    "close": "Mbyll",
+    "confirm": "Konfirmo",
+    "back": "Kthehu",
+    "next": "Tjetra",
+    "download": "Shkarko",
+    "preview": "Parashiko",
+    "print": "Printo"
+  },
+  "common": {
+    "loading": "Duke ngarkuar...",
+    "error": "Ndodhi një gabim",
+    "noData": "Nuk ka të dhëna",
+    "search": "Kërko",
+    "filter": "Filtro",
+    "sort": "Rendit",
+    "language": "Gjuha"
+  },
+  "languages": {
+    "en": "Anglisht",
+    "nl": "Holandisht",
+    "al": "Shqip",
+    "mk": "Maqedonisht"
+  }
+}

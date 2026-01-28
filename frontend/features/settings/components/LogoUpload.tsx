@@ -112,8 +112,8 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
         tabIndex={0}
         className={`relative border-2 border-dashed rounded-lg p-8 transition-colors cursor-pointer ${
           isDragging
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-slate-300 bg-slate-50 hover:border-slate-400'
+            ? 'border-primary bg-primary/10'
+            : 'border-default-300 bg-default-100 hover:border-default-400'
         }`}
       >
         <input
@@ -127,8 +127,8 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
 
         {isUploading ? (
           <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent mb-4"></div>
-            <p className="text-sm text-slate-600">Uploading...</p>
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent mb-4"></div>
+            <p className="text-sm text-default-600">Uploading...</p>
           </div>
         ) : logoUrl && !imageError ? (
           <div className="flex items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
@@ -158,33 +158,33 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, imageError, onImageError 
           <div className="text-center">
             <div className="flex justify-center mb-4">
               {imageError ? (
-                <div className="h-16 w-16 rounded-full bg-red-100 flex items-center justify-center">
-                  <X className="h-8 w-8 text-red-500" />
+                <div className="h-16 w-16 rounded-full bg-danger/20 flex items-center justify-center">
+                  <X className="h-8 w-8 text-danger" />
                 </div>
               ) : (
-                <div className="h-16 w-16 rounded-full bg-slate-200 flex items-center justify-center">
-                  <ImageIcon className="h-8 w-8 text-slate-400" />
+                <div className="h-16 w-16 rounded-full bg-default-200 flex items-center justify-center">
+                  <ImageIcon className="h-8 w-8 text-default-400" />
                 </div>
               )}
             </div>
             
             {imageError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">⚠️ Failed to load image from URL</p>
-                <p className="text-xs text-red-500 mt-1">Upload a new image or enter a different URL</p>
+              <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg">
+                <p className="text-sm text-danger">⚠️ Failed to load image from URL</p>
+                <p className="text-xs text-danger/80 mt-1">Upload a new image or enter a different URL</p>
               </div>
             )}
 
-            <p className="text-sm text-slate-700 mb-2">
-              <span className="text-blue-600 font-semibold">
+            <p className="text-sm text-foreground mb-2">
+              <span className="text-primary font-semibold">
                 Click to upload
               </span>
               {' '}or drag and drop
             </p>
-            <p className="text-xs text-slate-500 mb-1">
+            <p className="text-xs text-default-500 mb-1">
               PNG, JPG, SVG up to 5MB
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-default-400">
               You can also paste an image (Ctrl+V)
             </p>
           </div>

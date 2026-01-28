@@ -1,0 +1,34 @@
+{
+  "title": "Faturat",
+  "createNew": "Krijo Faturë të Re",
+  "editInvoice": "Ndrysho Faturën",
+  "invoiceNumber": "Numri i Faturës",
+  "invoiceDate": "Data e Faturës",
+  "dueDate": "Data e Afatit",
+  "status": {
+    "draft": "Draft",
+    "sent": "Dërguar",
+    "paid": "Paguar",
+    "overdue": "Vonuar",
+    "cancelled": "Anuluar"
+  },
+  "fields": {
+    "client": "Klienti",
+    "company": "Kompania",
+    "items": "Artikujt",
+    "description": "Përshkrimi",
+    "quantity": "Sasia",
+    "unitPrice": "Çmimi për Njësi",
+    "amount": "Shuma",
+    "subtotal": "Nëntotali",
+    "tax": "Tatimi",
+    "discount": "Zbritja",
+    "total": "Totali"
+  },
+  "messages": {
+    "created": "Fatura u krijua me sukses",
+    "updated": "Fatura u përditësua me sukses",
+    "deleted": "Fatura u fshi me sukses",
+    "sent": "Fatura u dërgua me sukses"
+  }
+}

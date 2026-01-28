@@ -1,0 +1,44 @@
+{
+  "app": {
+    "title": "Invoice Manager",
+    "description": "Professional invoice management application"
+  },
+  "navigation": {
+    "home": "Home",
+    "invoices": "Invoices",
+    "settings": "Settings",
+    "companies": "Companies",
+    "templates": "Templates",
+    "currencies": "Currencies"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "download": "Download",
+    "preview": "Preview",
+    "print": "Print"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "noData": "No data available",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "language": "Language"
+  },
+  "languages": {
+    "en": "English",
+    "nl": "Dutch",
+    "al": "Albanian",
+    "mk": "Macedonian"
+  }
+}

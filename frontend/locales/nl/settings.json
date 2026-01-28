@@ -1,0 +1,42 @@
+{
+  "title": "Instellingen",
+  "sections": {
+    "companies": "Bedrijven",
+    "templates": "Sjablonen",
+    "currencies": "Valuta's",
+    "preferences": "Voorkeuren"
+  },
+  "companies": {
+    "title": "Bedrijfsbeheer",
+    "addCompany": "Bedrijf Toevoegen",
+    "editCompany": "Bedrijf Bewerken",
+    "deleteCompany": "Bedrijf Verwijderen",
+    "fields": {
+      "name": "Bedrijfsnaam",
+      "address": "Adres",
+      "city": "Stad",
+      "country": "Land",
+      "phone": "Telefoon",
+      "email": "E-mail",
+      "taxId": "BTW-nummer",
+      "logo": "Logo"
+    }
+  },
+  "templates": {
+    "title": "Factuursjablonen",
+    "addTemplate": "Sjabloon Toevoegen",
+    "editTemplate": "Sjabloon Bewerken",
+    "deleteTemplate": "Sjabloon Verwijderen"
+  },
+  "currencies": {
+    "title": "Valutabeheer",
+    "addCurrency": "Valuta Toevoegen",
+    "editCurrency": "Valuta Bewerken",
+    "deleteCurrency": "Valuta Verwijderen",
+    "fields": {
+      "code": "Valutacode",
+      "name": "Valutanaam",
+      "symbol": "Symbool"
+    }
+  }
+}

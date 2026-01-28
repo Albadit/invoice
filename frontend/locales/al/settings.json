@@ -1,0 +1,42 @@
+{
+  "title": "Cilësimet",
+  "sections": {
+    "companies": "Kompanitë",
+    "templates": "Shabllonet",
+    "currencies": "Monedhat",
+    "preferences": "Preferencat"
+  },
+  "companies": {
+    "title": "Menaxhimi i Kompanive",
+    "addCompany": "Shto Kompani",
+    "editCompany": "Ndrysho Kompani",
+    "deleteCompany": "Fshi Kompani",
+    "fields": {
+      "name": "Emri i Kompanisë",
+      "address": "Adresa",
+      "city": "Qyteti",
+      "country": "Shteti",
+      "phone": "Telefoni",
+      "email": "Email",
+      "taxId": "Numri Fiskal",
+      "logo": "Logo"
+    }
+  },
+  "templates": {
+    "title": "Shabllonet e Faturave",
+    "addTemplate": "Shto Shabllon",
+    "editTemplate": "Ndrysho Shabllon",
+    "deleteTemplate": "Fshi Shabllon"
+  },
+  "currencies": {
+    "title": "Menaxhimi i Monedhave",
+    "addCurrency": "Shto Monedhë",
+    "editCurrency": "Ndrysho Monedhë",
+    "deleteCurrency": "Fshi Monedhë",
+    "fields": {
+      "code": "Kodi i Monedhës",
+      "name": "Emri i Monedhës",
+      "symbol": "Simboli"
+    }
+  }
+}

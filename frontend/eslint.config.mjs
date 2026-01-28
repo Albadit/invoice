@@ -32,6 +32,8 @@ const eslintConfig = defineConfig([
             "config/**/*",
             "styles/**/*",
             "public/**/*",
+            "locales/**/*",
+            "proxy.ts",
           ]
         },
         

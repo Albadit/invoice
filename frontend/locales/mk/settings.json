@@ -1,0 +1,42 @@
+{
+  "title": "Поставки",
+  "sections": {
+    "companies": "Компании",
+    "templates": "Шаблони",
+    "currencies": "Валути",
+    "preferences": "Преференции"
+  },
+  "companies": {
+    "title": "Управување со Компании",
+    "addCompany": "Додади Компанија",
+    "editCompany": "Уреди Компанија",
+    "deleteCompany": "Избриши Компанија",
+    "fields": {
+      "name": "Име на Компанија",
+      "address": "Адреса",
+      "city": "Град",
+      "country": "Држава",
+      "phone": "Телефон",
+      "email": "Е-пошта",
+      "taxId": "Даночен Број",
+      "logo": "Лого"
+    }
+  },
+  "templates": {
+    "title": "Шаблони за Фактури",
+    "addTemplate": "Додади Шаблон",
+    "editTemplate": "Уреди Шаблон",
+    "deleteTemplate": "Избриши Шаблон"
+  },
+  "currencies": {
+    "title": "Управување со Валути",
+    "addCurrency": "Додади Валута",
+    "editCurrency": "Уреди Валута",
+    "deleteCurrency": "Избриши Валута",
+    "fields": {
+      "code": "Код на Валута",
+      "name": "Име на Валута",
+      "symbol": "Симбол"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "title": "Invoices",
+  "createNew": "Create New Invoice",
+  "editInvoice": "Edit Invoice",
+  "invoiceNumber": "Invoice Number",
+  "invoiceDate": "Invoice Date",
+  "dueDate": "Due Date",
+  "status": {
+    "draft": "Draft",
+    "sent": "Sent",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled"
+  },
+  "fields": {
+    "client": "Client",
+    "company": "Company",
+    "items": "Items",
+    "description": "Description",
+    "quantity": "Quantity",
+    "unitPrice": "Unit Price",
+    "amount": "Amount",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "discount": "Discount",
+    "total": "Total"
+  },
+  "messages": {
+    "created": "Invoice created successfully",
+    "updated": "Invoice updated successfully",
+    "deleted": "Invoice deleted successfully",
+    "sent": "Invoice sent successfully"
+  }
+}

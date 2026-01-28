@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { fontInter } from "@/config/fonts";
 import { Providers } from "@/contexts/HeroProviders";
+import { LocaleProvider } from "@/contexts/LocaleProvider";
+import { SidebarProvider, SidebarLayout } from "@/components/layout";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -13,7 +15,13 @@ export default function RootLayout({ children, }: Readonly<{ children: React.Rea
     <html lang="en" suppressHydrationWarning>
       <body className={`${fontInter.className} antialiased`}>
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          {children}
+          <LocaleProvider>
+            <SidebarProvider>
+              <SidebarLayout>
+                {children}
+              </SidebarLayout>
+            </SidebarProvider>
+          </LocaleProvider>
         </Providers>
       </body>
     </html>

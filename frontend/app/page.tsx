@@ -26,7 +26,7 @@ import { Select, SelectItem } from "@heroui/select";
 import { DateRangePicker } from "@heroui/date-picker";
 import type { DateValue } from "@internationalized/date";
 import { useRouter } from 'next/navigation';
-import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, Settings } from 'lucide-react';
+import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { InvoicePreviewModal } from '@/features/invoice/components';
@@ -173,33 +173,22 @@ export default function InvoicesPage() {
       <section className="flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold mb-2">Invoices</h1>
-          <p className="text-slate-600">Manage and track all your invoices</p>
-        </div>
-        <div className="flex gap-3">
-          {/* <Button startContent={<Upload className="h-4 w-4" />}>
-            Import
-          </Button>
-          <Button startContent={<Download className="h-4 w-4" />} >
-            Export
-          </Button> */}
-          <Button startContent={<Settings className="h-4 w-4" />}
-            onClick={() => router.push('/settings')}
-          >
-            Settings
-          </Button>
-          <Button color="primary" variant="solid"
-            onClick={() => router.push('/invoice/new/edit')}
-            startContent={<Plus className="mr-2 h-4 w-4" />}
-          >
-            New Invoice
-          </Button>
+          <p className="text-default-500">Manage and track all your invoices</p>
         </div>
       </section>
-
-      <Tabs size="lg" selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
-        <Tab key="active" title="Active Invoices"/>
-        <Tab key="deleted" title="Cancelled Invoices"/>
-      </Tabs>
+      
+      <div className="flex flex-row justify-between">
+        <Tabs size="lg" selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
+          <Tab key="active" title="Active Invoices"/>
+          <Tab key="deleted" title="Cancelled Invoices"/>
+        </Tabs>
+        <Button color="primary" variant="solid"
+          onClick={() => router.push('/invoice/new/edit')}
+          startContent={<Plus className="mr-2 h-4 w-4" />}
+        >
+          New Invoice
+        </Button>
+      </div>
 
       <Card>
         <CardBody className='flex flex-col md:grid md:grid-cols-4 gap-4'>
@@ -238,7 +227,7 @@ export default function InvoicesPage() {
         </CardBody>
       </Card>
 
-      <Table aria-label="Invoice table">
+      <Table aria-label="Invoice table" selectionMode="single">
         <TableHeader>
           <TableColumn className="font-semibold">Invoice</TableColumn>
           <TableColumn className="font-semibold">Customer</TableColumn>
@@ -254,7 +243,7 @@ export default function InvoicesPage() {
           emptyContent={<div className="text-center py-12">No invoices found</div>}
         >
           {filteredInvoices.map((invoice) => (
-            <TableRow key={invoice.id} className="hover:bg-slate-50">
+            <TableRow key={invoice.id}>
               <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
               <TableCell>{invoice.customer_name}</TableCell>
               <TableCell>
