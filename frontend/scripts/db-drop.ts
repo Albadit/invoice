@@ -42,15 +42,20 @@ async function dropAllTables() {
     console.log('✅ Connected to database...');
 
     // Drop all tables in the public schema
-    console.log('\n🗑️  Dropping all tables...');
+    console.log('\n🗑️  Dropping all database objects...');
     const dropTablesSQL = `
       DO $$ 
       DECLARE
           r RECORD;
       BEGIN
-          -- Drop all tables
+          -- Drop all tables first (this removes indexes too)
           FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
               EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
+          END LOOP;
+          
+          -- Drop all views
+          FOR r IN (SELECT viewname FROM pg_views WHERE schemaname = 'public') LOOP
+              EXECUTE 'DROP VIEW IF EXISTS public.' || quote_ident(r.viewname) || ' CASCADE';
           END LOOP;
           
           -- Drop all sequences
@@ -58,13 +63,34 @@ async function dropAllTables() {
               EXECUTE 'DROP SEQUENCE IF EXISTS public.' || quote_ident(r.sequence_name) || ' CASCADE';
           END LOOP;
           
-          -- Drop all functions
-          FOR r IN (SELECT routine_name FROM information_schema.routines WHERE routine_schema = 'public' AND routine_type = 'FUNCTION') LOOP
-              EXECUTE 'DROP FUNCTION IF EXISTS public.' || quote_ident(r.routine_name) || ' CASCADE';
+          -- Drop user-defined functions only (exclude extension functions)
+          FOR r IN (
+              SELECT p.proname, pg_get_function_identity_arguments(p.oid) as args
+              FROM pg_proc p
+              JOIN pg_namespace n ON p.pronamespace = n.oid
+              WHERE n.nspname = 'public'
+              AND NOT EXISTS (
+                  SELECT 1 FROM pg_depend d
+                  JOIN pg_extension e ON d.refobjid = e.oid
+                  WHERE d.objid = p.oid AND d.deptype = 'e'
+              )
+          ) LOOP
+              EXECUTE 'DROP FUNCTION IF EXISTS public.' || quote_ident(r.proname) || '(' || r.args || ') CASCADE';
           END LOOP;
           
-          -- Drop all types
-          FOR r IN (SELECT typname FROM pg_type WHERE typnamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')) LOOP
+          -- Drop user-defined types only (exclude extension types and internal types)
+          FOR r IN (
+              SELECT t.typname
+              FROM pg_type t
+              JOIN pg_namespace n ON t.typnamespace = n.oid
+              WHERE n.nspname = 'public'
+              AND t.typtype IN ('e', 'c')  -- enum and composite types only
+              AND NOT EXISTS (
+                  SELECT 1 FROM pg_depend d
+                  JOIN pg_extension e ON d.refobjid = e.oid
+                  WHERE d.objid = t.oid AND d.deptype = 'e'
+              )
+          ) LOOP
               EXECUTE 'DROP TYPE IF EXISTS public.' || quote_ident(r.typname) || ' CASCADE';
           END LOOP;
       END $$;

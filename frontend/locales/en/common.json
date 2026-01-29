@@ -1,4 +1,8 @@
 {
+  "language": {
+    "name": "English",
+    "flag": "https://flagcdn.com/gb.svg"
+  },
   "app": {
     "title": "Invoice Manager",
     "description": "Professional invoice management application"
@@ -6,6 +10,7 @@
   "navigation": {
     "home": "Home",
     "invoices": "Invoices",
+    "newInvoice": "New Invoice",
     "settings": "Settings",
     "companies": "Companies",
     "templates": "Templates",
@@ -34,11 +39,5 @@
     "filter": "Filter",
     "sort": "Sort",
     "language": "Language"
-  },
-  "languages": {
-    "en": "English",
-    "nl": "Dutch",
-    "al": "Albanian",
-    "mk": "Macedonian"
   }
 }

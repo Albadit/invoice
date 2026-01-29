@@ -1,12 +1,27 @@
 {
   "title": "Invoices",
-  "createNew": "Create New Invoice",
+  "subtitle": "Manage and track all your invoices",
+  "createNew": "New Invoice",
   "editInvoice": "Edit Invoice",
+  "newInvoice": "New Invoice",
   "invoiceNumber": "Invoice Number",
   "invoiceDate": "Invoice Date",
   "dueDate": "Due Date",
+  "customer": "Customer",
+  "customerName": "Customer Name",
+  "streetAddress": "Street Address",
+  "city": "City",
+  "zipCode": "Zip Code",
+  "country": "Country",
+  "date": "Date",
+  "tabs": {
+    "active": "Active Invoices",
+    "cancelled": "Cancelled Invoices"
+  },
   "status": {
+    "all": "All Statuses",
     "draft": "Draft",
+    "pending": "Pending",
     "sent": "Sent",
     "paid": "Paid",
     "overdue": "Overdue",
@@ -16,19 +31,83 @@
     "client": "Client",
     "company": "Company",
     "items": "Items",
+    "itemName": "Item Name",
     "description": "Description",
     "quantity": "Quantity",
+    "rate": "Rate",
     "unitPrice": "Unit Price",
     "amount": "Amount",
     "subtotal": "Subtotal",
     "tax": "Tax",
     "discount": "Discount",
-    "total": "Total"
+    "shipping": "Shipping",
+    "total": "Total",
+    "notes": "Notes",
+    "terms": "Terms & Conditions"
+  },
+  "actions": {
+    "addItem": "Add Item",
+    "addDiscount": "Add Discount",
+    "addTax": "Add Tax",
+    "addShipping": "Add Shipping",
+    "downloadPdf": "Download PDF",
+    "markAsPaid": "Mark as Paid",
+    "markAsPending": "Mark as Pending",
+    "duplicate": "Duplicate",
+    "cancel": "Cancel Invoice",
+    "view": "View",
+    "save": "Save Invoice",
+    "saving": "Saving..."
+  },
+  "table": {
+    "invoice": "Invoice",
+    "customer": "Customer",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "total": "Total",
+    "action": "Action"
+  },
+  "pagination": {
+    "rowsPerPage": "Rows per page:",
+    "showing": "Showing {{start}}-{{end}} of {{total}}",
+    "first": "First",
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page {{current}} of {{total}}",
+    "pageLabel": "Page",
+    "ofPages": "of {{total}}",
+    "rows": "rows",
+    "records": "records"
+  },
+  "search": {
+    "placeholder": "Search invoices..."
+  },
+  "preview": {
+    "title": "Invoice Preview",
+    "billTo": "Bill To:",
+    "invoiceDetails": "Invoice Details"
+  },
+  "settings": {
+    "company": "Company",
+    "invoiceSettings": "Invoice Settings",
+    "template": "Template",
+    "currency": "Currency",
+    "selectCompany": "Select company",
+    "selectTemplate": "Select template",
+    "selectCurrency": "Select currency"
   },
   "messages": {
-    "created": "Invoice created successfully",
-    "updated": "Invoice updated successfully",
+    "created": "Invoice Created",
+    "createdDescription": "Your invoice has been created successfully.",
+    "updated": "Invoice Updated",
+    "updatedDescription": "Your invoice has been updated successfully.",
     "deleted": "Invoice deleted successfully",
-    "sent": "Invoice sent successfully"
+    "sent": "Invoice sent successfully",
+    "loading": "Loading invoice...",
+    "loadingInvoices": "Loading invoices...",
+    "noInvoices": "No invoices found",
+    "error": "Error",
+    "saveError": "Failed to save invoice. Please try again."
   }
 }

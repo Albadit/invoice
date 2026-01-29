@@ -1,4 +1,8 @@
 {
+  "language": {
+    "name": "Shqip",
+    "flag": "https://flagcdn.com/al.svg"
+  },
   "app": {
     "title": "Menaxheri i Faturave",
     "description": "Aplikacion profesional për menaxhimin e faturave"
@@ -6,6 +10,7 @@
   "navigation": {
     "home": "Kryefaqja",
     "invoices": "Faturat",
+    "newInvoice": "Faturë e Re",
     "settings": "Cilësimet",
     "companies": "Kompanitë",
     "templates": "Shabllonet",
@@ -34,11 +39,5 @@
     "filter": "Filtro",
     "sort": "Rendit",
     "language": "Gjuha"
-  },
-  "languages": {
-    "en": "Anglisht",
-    "nl": "Holandisht",
-    "al": "Shqip",
-    "mk": "Maqedonisht"
   }
 }

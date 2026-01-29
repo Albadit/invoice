@@ -15,8 +15,10 @@ import { Plus, Trash, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 export default function InvoiceEditPage() {
+  const { t } = useTranslation('invoice');
   const params = useParams();
   const router = useRouter();
   const isNewInvoice = params.id === 'new';
@@ -298,16 +300,16 @@ export default function InvoiceEditPage() {
       if (isNewInvoice) {
         await invoicesApi.create(invoiceData, itemsData);
         addToast({
-          title: "Invoice Created",
-          description: "Your invoice has been created successfully.",
+          title: t('messages.created'),
+          description: t('messages.createdDescription'),
           color: "success"
         });
         router.push('/');
       } else {
         await invoicesApi.update(params.id as string, invoiceData, itemsData);
         addToast({
-          title: "Invoice Updated",
-          description: "Your invoice has been updated successfully.",
+          title: t('messages.updated'),
+          description: t('messages.updatedDescription'),
           color: "success"
         });
         router.push('/');
@@ -315,8 +317,8 @@ export default function InvoiceEditPage() {
     } catch (error) {
       console.error('Failed to save invoice:', error);
       addToast({
-        title: "Error",
-        description: "Failed to save invoice. Please try again.",
+        title: t('messages.error'),
+        description: t('messages.saveError'),
         color: "danger"
       });
     } finally {
@@ -327,7 +329,7 @@ export default function InvoiceEditPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-default-500">Loading invoice...</p>
+        <p className="text-default-500">{t('messages.loading')}</p>
       </div>
     );
   }
@@ -338,7 +340,7 @@ export default function InvoiceEditPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-content1 rounded-lg p-8 flex flex-col items-center gap-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
-            <p className="text-foreground font-semibold">Saving invoice...</p>
+            <p className="text-foreground font-semibold">{t('actions.saving')}...</p>
           </div>
         </div>
       )}
@@ -348,7 +350,7 @@ export default function InvoiceEditPage() {
           <div className="flex flex-col gap-6 flex-1">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">
-                {isNewInvoice ? 'New Invoice' : `Edit Invoice ${invoiceNumber}`}
+                {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceNumber}`}
               </h1>
               <div className="flex flex-row gap-2 items-center">
                 <Button 
@@ -357,7 +359,7 @@ export default function InvoiceEditPage() {
                   disabled={saving}
                   startContent={<Save className="h-4 w-4" />}
                 >
-                  {saving ? 'Saving...' : 'Save Invoice'}
+                  {saving ? t('actions.saving') : t('actions.save')}
                 </Button>
               </div>
             </div>
@@ -381,49 +383,49 @@ export default function InvoiceEditPage() {
               <div className="grid grid-cols-2 gap-6 mb-8">
                 <div className="flex flex-col gap-4">
                   <Input
-                    label="Customer Name"
+                    label={t('customerName')}
                     labelPlacement="outside"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="Customer name"
+                    placeholder={t('customerName')}
                     className="font-semibold [&_span]:text-default-600"
                   />
                   <Input
-                    label="Street Address"
+                    label={t('streetAddress')}
                     labelPlacement="outside"
                     value={customerStreet}
                     onChange={(e) => setCustomerStreet(e.target.value)}
-                    placeholder="Street address"
+                    placeholder={t('streetAddress')}
                     className="font-semibold [&_span]:text-default-600"
                   />
                   <Input
-                    label="City"
+                    label={t('city')}
                     labelPlacement="outside"
                     value={customerCity}
                     onChange={(e) => setCustomerCity(e.target.value)}
-                    placeholder="City"
+                    placeholder={t('city')}
                     className="font-semibold [&_span]:text-default-600"
                   />
                   <Input
-                    label="Zip Code"
+                    label={t('zipCode')}
                     labelPlacement="outside"
                     value={customerZipCode}
                     onChange={(e) => setCustomerZipCode(e.target.value)}
-                    placeholder="Zip code"
+                    placeholder={t('zipCode')}
                     className="font-semibold [&_span]:text-default-600"
                   />
                   <Input
-                    label="Country"
+                    label={t('country')}
                     labelPlacement="outside"
                     value={customerCountry}
                     onChange={(e) => setCustomerCountry(e.target.value)}
-                    placeholder="Country"
+                    placeholder={t('country')}
                     className="font-semibold [&_span]:text-default-600"
                   />
                 </div>
                 <div className="flex flex-col gap-4">
                   <DatePicker
-                    label="Date"
+                    label={t('date')}
                     labelPlacement="outside"
                     value={dateCreated}
                     onChange={setDateCreated}
@@ -431,7 +433,7 @@ export default function InvoiceEditPage() {
                     className="w-full font-semibold [&_span]:text-default-600"
                   />
                   <DatePicker
-                    label="Due Date"
+                    label={t('dueDate')}
                     labelPlacement="outside"
                     value={dueDate}
                     onChange={setDueDate}
@@ -443,10 +445,10 @@ export default function InvoiceEditPage() {
 
               <div className="mb-6">
                 <div className="grid grid-cols-12 gap-4 mb-3 font-semibold text-sm text-default-600">
-                  <div className="col-span-5">Item Name</div>
-                  <div className="col-span-2">Quantity</div>
-                  <div className="col-span-2">Rate</div>
-                  <div className="col-span-2 text-right">Amount</div>
+                  <div className="col-span-5">{t('fields.itemName')}</div>
+                  <div className="col-span-2">{t('fields.quantity')}</div>
+                  <div className="col-span-2">{t('fields.rate')}</div>
+                  <div className="col-span-2 text-right">{t('fields.amount')}</div>
                   <div className="col-span-1"></div>
                 </div>
                 {items.map((item, index) => (
@@ -495,26 +497,26 @@ export default function InvoiceEditPage() {
                 <Button onClick={addItem} className="mt-4"
                   startContent={<Plus className="mr-2 h-4 w-4" />}
                 >
-                  Add Item
+                  {t('actions.addItem')}
                 </Button>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="flex flex-col gap-4">
                   <Textarea
-                    label="Notes"
+                    label={t('fields.notes')}
                     labelPlacement="outside"
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Additional notes"
+                    placeholder={t('fields.notes')}
                     className="min-h-[100px] font-semibold [&_span]:text-default-600"
                   />
                   <Textarea
-                    label="Terms & Conditions"
+                    label={t('fields.terms')}
                     labelPlacement="outside"
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
-                    placeholder="Payment terms and conditions"
+                    placeholder={t('fields.terms')}
                     className="min-h-[100px] font-semibold [&_span]:text-default-600"
                   />
                 </div>
@@ -522,7 +524,7 @@ export default function InvoiceEditPage() {
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="font-semibold text-default-600">Subtotal</span>
+                    <span className="font-semibold text-default-600">{t('fields.subtotal')}</span>
                     <span className="text-lg font-semibold">
                       {getCurrencySymbol()}{getSubtotal().toFixed(2)}
                     </span>
@@ -531,7 +533,7 @@ export default function InvoiceEditPage() {
                   {showDiscount ? (
                     <div className="flex justify-between items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-default-600">Discount</span>
+                        <span className="font-semibold text-default-600">{t('fields.discount')}</span>
                         <Button
                           variant="flat"
                           onClick={() => setDiscountType(discountType === 'percent' ? 'fixed' : 'percent')}
@@ -564,7 +566,7 @@ export default function InvoiceEditPage() {
                   {showTax ? (
                     <div className="flex justify-between items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-default-600">Tax</span>
+                        <span className="font-semibold text-default-600">{t('fields.tax')}</span>
                         <Button
                           variant="flat"
                           onClick={() => setTaxType(taxType === 'percent' ? 'fixed' : 'percent')}
@@ -597,7 +599,7 @@ export default function InvoiceEditPage() {
                   {showShipping ? (
                     <div className="flex justify-between items-center gap-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-semibold text-default-600">Shipping</span>
+                        <span className="font-semibold text-default-600">{t('fields.shipping')}</span>
                         <Input
                           type="number"
                           value={String(shippingAmount || 0)}
@@ -629,7 +631,7 @@ export default function InvoiceEditPage() {
                           onClick={addDiscount}
                           startContent={<Plus className="h-4 w-4" />}
                         >
-                          Add Discount
+                          {t('actions.addDiscount')}
                         </Button>
                       )}
                       {!showTax && (
@@ -639,7 +641,7 @@ export default function InvoiceEditPage() {
                           onClick={addTax}
                           startContent={<Plus className="h-4 w-4" />}
                         >
-                          Add Tax
+                          {t('actions.addTax')}
                         </Button>
                       )}
                       {!showShipping && (
@@ -649,14 +651,14 @@ export default function InvoiceEditPage() {
                           onClick={addShipping}
                           startContent={<Plus className="h-4 w-4" />}
                         >
-                          Add Shipping
+                          {t('actions.addShipping')}
                         </Button>
                       )}
                     </div>
                   )}
 
                   <div className="flex justify-between items-center pt-2 border-t border-default-200">
-                    <span className="text-xl font-bold text-foreground">Total</span>
+                    <span className="text-xl font-bold text-foreground">{t('fields.total')}</span>
                     <span className="text-2xl font-bold text-foreground">
                       {getCurrencySymbol()}{getTotal().toFixed(2)}
                     </span>
@@ -670,17 +672,17 @@ export default function InvoiceEditPage() {
             {/* Spacer to align with invoice card */}
             <div className="h-10 max-xl:hidden" aria-hidden="true" />
             <div className="h-fit sticky top-8 bg-content1 rounded-xl shadow-xs border border-default-200 p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Company</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">{t('settings.company')}</h3>
             <div className="flex flex-col gap-4 mb-6">
               <Select
-                aria-label="Company"
+                aria-label={t('settings.company')}
                 selectionMode="single"
                 selectedKeys={companyId ? new Set([companyId]) : new Set()}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0];
                   if (selected) setCompanyId(String(selected));
                 }}
-                placeholder="Select company"
+                placeholder={t('settings.selectCompany')}
                 classNames={{
                   trigger: "font-semibold"
                 }}
@@ -696,19 +698,19 @@ export default function InvoiceEditPage() {
               </Select>
             </div>
 
-            <h3 className="text-lg font-semibold text-foreground mb-4">Invoice Settings</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">{t('settings.invoiceSettings')}</h3>
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-sm font-medium text-default-600 mb-2 block">Template</label>
+                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.template')}</label>
                 <Select
-                  aria-label="Template"
+                  aria-label={t('settings.template')}
                   selectionMode="single"
                   selectedKeys={templateId ? new Set([templateId]) : new Set()}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     if (selected) setTemplateId(String(selected));
                   }}
-                  placeholder="Select template"
+                  placeholder={t('settings.selectTemplate')}
                   classNames={{
                     trigger: "font-semibold"
                   }}
@@ -725,16 +727,16 @@ export default function InvoiceEditPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-default-600 mb-2 block">Currency</label>
+                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.currency')}</label>
                 <Select
-                  aria-label="Currency"
+                  aria-label={t('settings.currency')}
                   selectionMode="single"
                   selectedKeys={currencyId ? new Set([currencyId]) : new Set()}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     if (selected) setCurrencyId(String(selected));
                   }}
-                  placeholder="Select currency"
+                  placeholder={t('settings.selectCurrency')}
                   classNames={{
                     trigger: "font-semibold"
                   }}

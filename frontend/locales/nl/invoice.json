@@ -1,12 +1,27 @@
 {
   "title": "Facturen",
-  "createNew": "Nieuwe Factuur Aanmaken",
+  "subtitle": "Beheer en volg al uw facturen",
+  "createNew": "Nieuwe Factuur",
   "editInvoice": "Factuur Bewerken",
+  "newInvoice": "Nieuwe Factuur",
   "invoiceNumber": "Factuurnummer",
   "invoiceDate": "Factuurdatum",
   "dueDate": "Vervaldatum",
+  "customer": "Klant",
+  "customerName": "Klantnaam",
+  "streetAddress": "Straatnaam",
+  "city": "Stad",
+  "zipCode": "Postcode",
+  "country": "Land",
+  "date": "Datum",
+  "tabs": {
+    "active": "Actieve Facturen",
+    "cancelled": "Geannuleerde Facturen"
+  },
   "status": {
+    "all": "Alle Statussen",
     "draft": "Concept",
+    "pending": "In Afwachting",
     "sent": "Verzonden",
     "paid": "Betaald",
     "overdue": "Te laat",
@@ -16,19 +31,83 @@
     "client": "Klant",
     "company": "Bedrijf",
     "items": "Artikelen",
+    "itemName": "Artikelnaam",
     "description": "Omschrijving",
     "quantity": "Aantal",
+    "rate": "Tarief",
     "unitPrice": "Eenheidsprijs",
     "amount": "Bedrag",
     "subtotal": "Subtotaal",
     "tax": "BTW",
     "discount": "Korting",
-    "total": "Totaal"
+    "shipping": "Verzending",
+    "total": "Totaal",
+    "notes": "Notities",
+    "terms": "Algemene Voorwaarden"
+  },
+  "actions": {
+    "addItem": "Artikel Toevoegen",
+    "addDiscount": "Korting Toevoegen",
+    "addTax": "BTW Toevoegen",
+    "addShipping": "Verzending Toevoegen",
+    "downloadPdf": "PDF Downloaden",
+    "markAsPaid": "Markeren als Betaald",
+    "markAsPending": "Markeren als In Afwachting",
+    "duplicate": "Dupliceren",
+    "cancel": "Factuur Annuleren",
+    "view": "Bekijken",
+    "save": "Factuur Opslaan",
+    "saving": "Opslaan..."
+  },
+  "table": {
+    "invoice": "Factuur",
+    "customer": "Klant",
+    "date": "Datum",
+    "dueDate": "Vervaldatum",
+    "status": "Status",
+    "total": "Totaal",
+    "action": "Actie"
+  },
+  "pagination": {
+    "rowsPerPage": "Rijen per pagina:",
+    "showing": "Toont {{start}}-{{end}} van {{total}}",
+    "first": "Eerste",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "page": "Pagina {{current}} van {{total}}",
+    "pageLabel": "Pagina",
+    "ofPages": "van {{total}}",
+    "rows": "rijen",
+    "records": "records"
+  },
+  "search": {
+    "placeholder": "Zoek facturen..."
+  },
+  "preview": {
+    "title": "Factuurvoorbeeld",
+    "billTo": "Factureren Aan:",
+    "invoiceDetails": "Factuurgegevens"
+  },
+  "settings": {
+    "company": "Bedrijf",
+    "invoiceSettings": "Factuurinstellingen",
+    "template": "Sjabloon",
+    "currency": "Valuta",
+    "selectCompany": "Selecteer bedrijf",
+    "selectTemplate": "Selecteer sjabloon",
+    "selectCurrency": "Selecteer valuta"
   },
   "messages": {
-    "created": "Factuur succesvol aangemaakt",
-    "updated": "Factuur succesvol bijgewerkt",
+    "created": "Factuur Aangemaakt",
+    "createdDescription": "Je factuur is succesvol aangemaakt.",
+    "updated": "Factuur Bijgewerkt",
+    "updatedDescription": "Je factuur is succesvol bijgewerkt.",
     "deleted": "Factuur succesvol verwijderd",
-    "sent": "Factuur succesvol verzonden"
+    "sent": "Factuur succesvol verzonden",
+    "loading": "Factuur laden...",
+    "loadingInvoices": "Facturen laden...",
+    "noInvoices": "Geen facturen gevonden",
+    "error": "Fout",
+    "saveError": "Kon factuur niet opslaan. Probeer het opnieuw."
   }
 }

@@ -6,12 +6,21 @@ import { invoicesApi } from '@/features/invoice/api';
 /**
  * Get status badge component for invoice status
  */
-export function getStatusBadge(status: InvoiceStatus) {
+export function getStatusBadge(status: InvoiceStatus, statusLabels?: { pending: string; paid: string; overdue: string; cancelled: string }) {
+  const defaultLabels = {
+    pending: 'Pending',
+    paid: 'Paid',
+    overdue: 'Overdue',
+    cancelled: 'Cancelled',
+  };
+  
+  const labels = statusLabels || defaultLabels;
+  
   const statusConfig = {
-    pending: { color: 'warning' as const, text: 'Pending' },
-    paid: { color: 'success' as const, text: 'Paid' },
-    overdue: { color: 'danger' as const, text: 'Overdue' },
-    cancelled: { color: 'default' as const, text: 'Cancelled' },
+    pending: { color: 'warning' as const, text: labels.pending },
+    paid: { color: 'success' as const, text: labels.paid },
+    overdue: { color: 'danger' as const, text: labels.overdue },
+    cancelled: { color: 'default' as const, text: labels.cancelled },
   };
 
   const config = statusConfig[status] || statusConfig.pending;

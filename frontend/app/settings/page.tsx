@@ -22,8 +22,10 @@ import {
   AddCurrencyModal,
   LogoUpload,
 } from '@/features/settings/components';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 export default function SettingsPage() {
+  const { t } = useTranslation('settings');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -174,15 +176,15 @@ export default function SettingsPage() {
       setIsManageCompaniesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Company created successfully",
+        title: t('messages.success'),
+        description: t('companies.messages.created'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to create company:', error);
       addToast({
-        title: "Error",
-        description: "Failed to create company. Please try again.",
+        title: t('messages.error'),
+        description: t('companies.messages.createError'),
         color: "danger"
       });
       throw error;
@@ -229,15 +231,15 @@ export default function SettingsPage() {
       setIsManageCompaniesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Company updated successfully",
+        title: t('messages.success'),
+        description: t('companies.messages.updated'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to update company:', error);
       addToast({
-        title: "Error",
-        description: "Failed to update company. Please try again.",
+        title: t('messages.error'),
+        description: t('companies.messages.updateError'),
         color: "danger"
       });
       throw error;
@@ -269,15 +271,15 @@ export default function SettingsPage() {
       await loadCompanies();
       
       addToast({
-        title: "Success",
-        description: "Company and associated settings deleted successfully",
+        title: t('messages.success'),
+        description: t('companies.messages.deleted'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to delete company:', error);
       addToast({
-        title: "Error",
-        description: "Failed to delete company. It may be in use by invoices.",
+        title: t('messages.error'),
+        description: t('companies.messages.deleteError'),
         color: "danger"
       });
     }
@@ -296,15 +298,15 @@ export default function SettingsPage() {
       setIsManageTemplatesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Template created successfully",
+        title: t('messages.success'),
+        description: t('templates.messages.created'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to create template:', error);
       addToast({
-        title: "Error",
-        description: "Failed to create template. Please try again.",
+        title: t('messages.error'),
+        description: t('templates.messages.createError'),
         color: "danger"
       });
       throw error;
@@ -327,15 +329,15 @@ export default function SettingsPage() {
       setIsManageTemplatesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Template updated successfully",
+        title: t('messages.success'),
+        description: t('templates.messages.updated'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to update template:', error);
       addToast({
-        title: "Error",
-        description: "Failed to update template. Please try again.",
+        title: t('messages.error'),
+        description: t('templates.messages.updateError'),
         color: "danger"
       });
       throw error;
@@ -353,15 +355,15 @@ export default function SettingsPage() {
       await loadTemplates();
       
       addToast({
-        title: "Success",
-        description: "Template deleted successfully",
+        title: t('messages.success'),
+        description: t('templates.messages.deleted'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to delete template:', error);
       addToast({
-        title: "Error",
-        description: "Failed to delete template. It may be in use by invoices.",
+        title: t('messages.error'),
+        description: t('templates.messages.deleteError'),
         color: "danger"
       });
     }
@@ -381,15 +383,15 @@ export default function SettingsPage() {
       setIsManageCurrenciesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Currency created successfully",
+        title: t('messages.success'),
+        description: t('currencies.messages.created'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to create currency:', error);
       addToast({
-        title: "Error",
-        description: "Failed to create currency. Please try again.",
+        title: t('messages.error'),
+        description: t('currencies.messages.createError'),
         color: "danger"
       });
       throw error;
@@ -413,15 +415,15 @@ export default function SettingsPage() {
       setIsManageCurrenciesModalOpen(true);
       
       addToast({
-        title: "Success",
-        description: "Currency updated successfully",
+        title: t('messages.success'),
+        description: t('currencies.messages.updated'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to update currency:', error);
       addToast({
-        title: "Error",
-        description: "Failed to update currency. Please try again.",
+        title: t('messages.error'),
+        description: t('currencies.messages.updateError'),
         color: "danger"
       });
       throw error;
@@ -439,15 +441,15 @@ export default function SettingsPage() {
       await loadCurrencies();
       
       addToast({
-        title: "Success",
-        description: "Currency deleted successfully",
+        title: t('messages.success'),
+        description: t('currencies.messages.deleted'),
         color: "success"
       });
     } catch (error) {
       console.error('Failed to delete currency:', error);
       addToast({
-        title: "Error",
-        description: "Failed to delete currency. It may be in use by invoices.",
+        title: t('messages.error'),
+        description: t('currencies.messages.deleteError'),
         color: "danger"
       });
     }
@@ -491,8 +493,8 @@ export default function SettingsPage() {
   async function handleSave() {
     if (!companyId) {
       addToast({
-        title: "Error",
-        description: "No company selected. Please select a company first.",
+        title: t('messages.error'),
+        description: t('messages.noCompanySelected'),
         color: "danger"
       });
       return;
@@ -508,16 +510,16 @@ export default function SettingsPage() {
         currency_id: currencyId,
       });
       addToast({
-        title: "Settings Saved",
-        description: "Your invoice preferences have been updated successfully.",
+        title: t('messages.settingsSaved'),
+        description: t('messages.settingsSavedDescription'),
         color: "success"
       });
       setCooldown(6);
     } catch (error) {
       console.error('Failed to save settings:', error);
       addToast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
+        title: t('messages.error'),
+        description: t('messages.saveError'),
         color: "danger"
       });
     } finally {
@@ -528,7 +530,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-slate-600">Loading settings...</p>
+        <p className="text-slate-600">{t('loading')}</p>
       </div>
     );
   }
@@ -537,8 +539,8 @@ export default function SettingsPage() {
     <main className="min-h-screen max-w-4xl mx-auto p-8">
       <section className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-foreground">Settings</h1>
-          <p className="text-default-500 mt-1">Customize your invoice preferences</p>
+          <h1 className="text-4xl font-bold text-foreground">{t('title')}</h1>
+          <p className="text-default-500 mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Button
@@ -547,7 +549,7 @@ export default function SettingsPage() {
             disabled={saving || cooldown > 0}
             startContent={<Save className="h-4 w-4" />}
             >
-            {saving ? 'Saving...' : cooldown > 0 ? `Wait ${cooldown}s` : 'Save Changes'}
+            {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
           </Button>
         </div>
       </section>
@@ -557,7 +559,7 @@ export default function SettingsPage() {
           <section id="companies" ref={companiesRef} className="border-b pb-6 scroll-mt-24">
             <div className="flex items-center justify-between mb-2">
               <span className="text-base font-semibold">
-                Select Company
+                {t('companies.selectCompany')}
               </span>
               <Button
                 size="sm"
@@ -566,14 +568,14 @@ export default function SettingsPage() {
                 startContent={<Edit className="h-4 w-4" />}
                 onClick={() => setIsManageCompaniesModalOpen(true)}
               >
-                Manage Companies
+                {t('companies.manageCompanies')}
               </Button>
             </div>
             <Select
-              label="Choose a company for your invoices."
+              label={t('companies.selectDescription')}
               selectedKeys={companyId ? [String(companyId)] : []}
               onSelectionChange={(keys) => handleCompanyChange(String(Array.from(keys)[0]))}
-              placeholder="Select a company"
+              placeholder={t('companies.selectPlaceholder')}
               labelPlacement="outside"
               isRequired
             >
@@ -586,11 +588,11 @@ export default function SettingsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-6">Invoice Logo</h2>
+            <h2 className="text-2xl font-bold mb-6">{t('logo.title')}</h2>
             <div className="space-y-4">
               <div>
                 <span className="text-base font-semibold mb-2 block">
-                  Upload Logo
+                  {t('logo.upload')}
                 </span>
                 <LogoUpload
                   logoUrl={logoUrl}
@@ -605,16 +607,16 @@ export default function SettingsPage() {
                   <div className="w-full border-t border-divider"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-content1 text-default-500">OR</span>
+                  <span className="px-2 bg-content1 text-default-500">{t('logo.or')}</span>
                 </div>
               </div>
 
               <div>
                 <span className="text-base font-semibold">
-                  Logo URL
+                  {t('logo.url')}
                 </span>
                 <Input
-                  label="Enter the URL of your company logo if hosted elsewhere."
+                  label={t('logo.urlDescription')}
                   labelPlacement="outside"
                   value={logoUrl}
                   onChange={(e) => {
@@ -628,11 +630,11 @@ export default function SettingsPage() {
           </section>
 
           <section id="templates" ref={templatesRef} className="flex flex-col gap-6 scroll-mt-24">
-            <h2 className="text-2xl font-bold">Invoice Settings</h2>
+            <h2 className="text-2xl font-bold">{t('invoiceSettings.title')}</h2>
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-base font-semibold">
-                  Template Style
+                  {t('invoiceSettings.templateStyle')}
                 </span>
                 <Button
                   size="sm"
@@ -641,11 +643,11 @@ export default function SettingsPage() {
                   startContent={<Edit className="h-4 w-4" />}
                   onClick={() => setIsManageTemplatesModalOpen(true)}
                 >
-                  Manage Templates
+                  {t('templates.manageTemplates')}
                 </Button>
               </div>
               <Select
-                label="Choose a template style for your invoices (both editing and viewing)."
+                label={t('invoiceSettings.templateDescription')}
                 selectedKeys={templateId ? [String(templateId)] : []}
                 onSelectionChange={(keys) => setTemplateId(String(Array.from(keys)[0]))}
                 labelPlacement="outside"
@@ -661,7 +663,7 @@ export default function SettingsPage() {
             <div id="currencies" ref={currenciesRef} className="scroll-mt-24">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-base font-semibold">
-                  Default Currency
+                  {t('invoiceSettings.defaultCurrency')}
                 </span>
                 <Button
                   size="sm"
@@ -670,11 +672,11 @@ export default function SettingsPage() {
                   startContent={<Edit className="h-4 w-4" />}
                   onClick={() => setIsManageCurrenciesModalOpen(true)}
                 >
-                  Manage Currencies
+                  {t('currencies.manageCurrencies')}
                 </Button>
               </div>
               <Select
-                label="Set the default currency for new invoices."
+                label={t('invoiceSettings.currencyDescription')}
                 selectedKeys={currencyId ? [String(currencyId)] : []}
                 onSelectionChange={(keys) => setCurrencyId(String(Array.from(keys)[0]))}
                 labelPlacement="outside"
@@ -692,10 +694,10 @@ export default function SettingsPage() {
             </div>
             <div>
               <span className="text-base font-semibold">
-                Default Tax (%)
+                {t('invoiceSettings.defaultTax')}
               </span>
               <Input
-                label="Set the default tax percentage for new invoices."
+                label={t('invoiceSettings.taxDescription')}
                 labelPlacement="outside"
                 type="number"
                 value={tax !== null ? String(tax) : ''}
@@ -709,17 +711,17 @@ export default function SettingsPage() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-6">Default Terms & Conditions</h2>
+            <h2 className="text-2xl font-bold mb-6">{t('terms.title')}</h2>
             <div>
               <span className="text-base font-semibold">
-                Terms Text
+                {t('terms.label')}
               </span>
               <Textarea
-                label="Set default terms and conditions that will appear on new invoices. You can still edit this for individual invoices."
+                label={t('terms.description')}
                 labelPlacement="outside"
                 value={terms}
                 onChange={(e) => setTerms(e.target.value)}
-                placeholder="Enter your default terms and conditions..."
+                placeholder={t('terms.placeholder')}
                 className="text-base"
               />
             </div>
@@ -728,8 +730,7 @@ export default function SettingsPage() {
         <CardFooter className="p-6">
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
             <p className="text-sm text-foreground">
-              <strong>Tip:</strong> Include payment terms, late fees, accepted payment methods,
-              and any other important information your clients should know.
+              <strong>{t('terms.tip')}:</strong> {t('terms.tipText')}
             </p>
           </div>
         </CardFooter>

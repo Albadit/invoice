@@ -1,12 +1,27 @@
 {
   "title": "Faturat",
-  "createNew": "Krijo Faturë të Re",
+  "subtitle": "Menaxho dhe gjurmo të gjitha faturat tuaja",
+  "createNew": "Faturë e Re",
   "editInvoice": "Ndrysho Faturën",
+  "newInvoice": "Faturë e Re",
   "invoiceNumber": "Numri i Faturës",
   "invoiceDate": "Data e Faturës",
   "dueDate": "Data e Afatit",
+  "customer": "Klienti",
+  "customerName": "Emri i Klientit",
+  "streetAddress": "Adresa",
+  "city": "Qyteti",
+  "zipCode": "Kodi Postar",
+  "country": "Shteti",
+  "date": "Data",
+  "tabs": {
+    "active": "Faturat Aktive",
+    "cancelled": "Faturat e Anuluara"
+  },
   "status": {
+    "all": "Të Gjitha Statuset",
     "draft": "Draft",
+    "pending": "Në Pritje",
     "sent": "Dërguar",
     "paid": "Paguar",
     "overdue": "Vonuar",
@@ -16,19 +31,83 @@
     "client": "Klienti",
     "company": "Kompania",
     "items": "Artikujt",
+    "itemName": "Emri i Artikullit",
     "description": "Përshkrimi",
     "quantity": "Sasia",
+    "rate": "Tarifa",
     "unitPrice": "Çmimi për Njësi",
     "amount": "Shuma",
     "subtotal": "Nëntotali",
     "tax": "Tatimi",
     "discount": "Zbritja",
-    "total": "Totali"
+    "shipping": "Transporti",
+    "total": "Totali",
+    "notes": "Shënimet",
+    "terms": "Kushtet dhe Afatet"
+  },
+  "actions": {
+    "addItem": "Shto Artikull",
+    "addDiscount": "Shto Zbritje",
+    "addTax": "Shto Tatim",
+    "addShipping": "Shto Transport",
+    "downloadPdf": "Shkarko PDF",
+    "markAsPaid": "Shëno si Paguar",
+    "markAsPending": "Shëno si Në Pritje",
+    "duplicate": "Dupliko",
+    "cancel": "Anulo Faturën",
+    "view": "Shiko",
+    "save": "Ruaj Faturën",
+    "saving": "Duke ruajtur..."
+  },
+  "table": {
+    "invoice": "Fatura",
+    "customer": "Klienti",
+    "date": "Data",
+    "dueDate": "Afati",
+    "status": "Statusi",
+    "total": "Totali",
+    "action": "Veprime"
+  },
+  "pagination": {
+    "rowsPerPage": "Rreshta për faqe:",
+    "showing": "Duke shfaqur {{start}}-{{end}} nga {{total}}",
+    "first": "E para",
+    "previous": "Para",
+    "next": "Tjetër",
+    "page": "Faqja {{current}} nga {{total}}",
+    "pageLabel": "Faqja",
+    "ofPages": "nga {{total}}",
+    "rows": "rreshta",
+    "records": "rekorde"
+  },
+  "search": {
+    "placeholder": "Kërko faturat..."
+  },
+  "preview": {
+    "title": "Pamja e Faturës",
+    "billTo": "Faturuar:",
+    "invoiceDetails": "Detajet e Faturës"
+  },
+  "settings": {
+    "company": "Kompania",
+    "invoiceSettings": "Cilësimet e Faturës",
+    "template": "Shablloni",
+    "currency": "Valuta",
+    "selectCompany": "Zgjidh kompaninë",
+    "selectTemplate": "Zgjidh shabllonin",
+    "selectCurrency": "Zgjidh valutën"
   },
   "messages": {
-    "created": "Fatura u krijua me sukses",
-    "updated": "Fatura u përditësua me sukses",
+    "created": "Fatura u Krijua",
+    "createdDescription": "Fatura juaj u krijua me sukses.",
+    "updated": "Fatura u Përditësua",
+    "updatedDescription": "Fatura juaj u përditësua me sukses.",
     "deleted": "Fatura u fshi me sukses",
-    "sent": "Fatura u dërgua me sukses"
+    "sent": "Fatura u dërgua me sukses",
+    "loading": "Duke ngarkuar faturën...",
+    "loadingInvoices": "Duke ngarkuar faturat...",
+    "noInvoices": "Nuk u gjetën fatura",
+    "error": "Gabim",
+    "saveError": "Dështoi ruajtja e faturës. Provo përsëri."
   }
 }

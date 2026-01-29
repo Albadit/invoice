@@ -1,4 +1,8 @@
 {
+  "language": {
+    "name": "Nederlands",
+    "flag": "https://flagcdn.com/nl.svg"
+  },
   "app": {
     "title": "Factuur Manager",
     "description": "Professionele factuurbeheerapplicatie"
@@ -6,6 +10,7 @@
   "navigation": {
     "home": "Home",
     "invoices": "Facturen",
+    "newInvoice": "Nieuwe Factuur",
     "settings": "Instellingen",
     "companies": "Bedrijven",
     "templates": "Sjablonen",
@@ -34,11 +39,5 @@
     "filter": "Filteren",
     "sort": "Sorteren",
     "language": "Taal"
-  },
-  "languages": {
-    "en": "Engels",
-    "nl": "Nederlands",
-    "al": "Albanees",
-    "mk": "Macedonisch"
   }
 }

@@ -27,11 +27,11 @@ export function InvoicePreviewModal({
     <Modal 
       isOpen={isOpen} 
       onClose={onClose}
-      size="5xl"
+      size="3xl"
       scrollBehavior="inside"
       hideCloseButton
     >
-      <ModalContent className="w-fit">
+      <ModalContent >
         <ModalHeader className="flex justify-between items-center border-b px-6 py-4">
           <h2 className="text-xl font-semibold">Invoice Preview</h2>
           <Button

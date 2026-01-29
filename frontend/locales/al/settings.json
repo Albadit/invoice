@@ -1,42 +1,126 @@
 {
   "title": "Cilësimet",
+  "subtitle": "Personalizo preferencat e faturës",
+  "loading": "Duke ngarkuar cilësimet...",
   "sections": {
     "companies": "Kompanitë",
     "templates": "Shabllonet",
-    "currencies": "Monedhat",
+    "currencies": "Valutat",
     "preferences": "Preferencat"
   },
   "companies": {
-    "title": "Menaxhimi i Kompanive",
+    "title": "Menaxhimi i Kompanisë",
+    "subtitle": "Menaxho informacionin dhe cilësimet e kompanisë",
     "addCompany": "Shto Kompani",
     "editCompany": "Ndrysho Kompani",
     "deleteCompany": "Fshi Kompani",
+    "manageCompanies": "Menaxho Kompanitë",
+    "selectCompany": "Zgjidh Kompani",
+    "selectDescription": "Zgjidh një kompani për faturat e tua.",
+    "selectPlaceholder": "Zgjidh një kompani",
     "fields": {
       "name": "Emri i Kompanisë",
+      "street": "Rruga",
       "address": "Adresa",
       "city": "Qyteti",
+      "zipCode": "Kodi Postar",
       "country": "Shteti",
       "phone": "Telefoni",
       "email": "Email",
       "taxId": "Numri Fiskal",
-      "logo": "Logo"
+      "taxPercent": "TVSH e Paracaktuar %",
+      "logo": "Logo",
+      "terms": "Kushtet e Paracaktuara",
+      "template": "Shablloni i Paracaktuar",
+      "currency": "Valuta e Paracaktuar"
+    },
+    "messages": {
+      "created": "Kompania u krijua me sukses",
+      "updated": "Kompania u përditësua me sukses",
+      "deleted": "Kompania dhe cilësimet e lidhura u fshinë",
+      "createError": "Dështoi krijimi i kompanisë. Provo përsëri.",
+      "updateError": "Dështoi përditësimi i kompanisë. Provo përsëri.",
+      "deleteError": "Dështoi fshirja e kompanisë. Mund të jetë në përdorim nga faturat."
     }
+  },
+  "logo": {
+    "title": "Logo e Faturës",
+    "upload": "Ngarko Logo",
+    "url": "URL e Logos",
+    "urlDescription": "Fut URL-në e logos së kompanisë nëse është e hostuar diku tjetër.",
+    "or": "OSE"
+  },
+  "invoiceSettings": {
+    "title": "Cilësimet e Faturës",
+    "templateStyle": "Stili i Shablonit",
+    "templateDescription": "Zgjidh stilin e shablonit për faturat (redaktim dhe shfaqje).",
+    "defaultCurrency": "Valuta e Paracaktuar",
+    "currencyDescription": "Cakto valutën e paracaktuar për faturat e reja.",
+    "defaultTax": "TVSH e Paracaktuar (%)",
+    "taxDescription": "Cakto përqindjen e TVSH-së së paracaktuar për faturat e reja."
   },
   "templates": {
-    "title": "Shabllonet e Faturave",
+    "title": "Shabllonet e Faturës",
+    "subtitle": "Menaxho shabllonet e faturës",
     "addTemplate": "Shto Shabllon",
     "editTemplate": "Ndrysho Shabllon",
-    "deleteTemplate": "Fshi Shabllon"
+    "deleteTemplate": "Fshi Shabllon",
+    "manageTemplates": "Menaxho Shabllonet",
+    "fields": {
+      "name": "Emri i Shablonit",
+      "content": "Përmbajtja e Shablonit"
+    },
+    "messages": {
+      "created": "Shablloni u krijua me sukses",
+      "updated": "Shablloni u përditësua me sukses",
+      "deleted": "Shablloni u fshi me sukses",
+      "createError": "Dështoi krijimi i shablonit. Provo përsëri.",
+      "updateError": "Dështoi përditësimi i shablonit. Provo përsëri.",
+      "deleteError": "Dështoi fshirja e shablonit. Mund të jetë në përdorim nga faturat."
+    }
   },
   "currencies": {
-    "title": "Menaxhimi i Monedhave",
-    "addCurrency": "Shto Monedhë",
-    "editCurrency": "Ndrysho Monedhë",
-    "deleteCurrency": "Fshi Monedhë",
+    "title": "Menaxhimi i Valutave",
+    "subtitle": "Menaxho valutat e disponueshme",
+    "addCurrency": "Shto Valutë",
+    "editCurrency": "Ndrysho Valutë",
+    "deleteCurrency": "Fshi Valutë",
+    "manageCurrencies": "Menaxho Valutat",
     "fields": {
-      "code": "Kodi i Monedhës",
-      "name": "Emri i Monedhës",
+      "code": "Kodi i Valutës",
+      "name": "Emri i Valutës",
       "symbol": "Simboli"
+    },
+    "messages": {
+      "created": "Valuta u krijua me sukses",
+      "updated": "Valuta u përditësua me sukses",
+      "deleted": "Valuta u fshi me sukses",
+      "createError": "Dështoi krijimi i valutës. Provo përsëri.",
+      "updateError": "Dështoi përditësimi i valutës. Provo përsëri.",
+      "deleteError": "Dështoi fshirja e valutës. Mund të jetë në përdorim nga faturat."
     }
+  },
+  "terms": {
+    "title": "Kushtet e Paracaktuara",
+    "label": "Teksti i Kushteve",
+    "description": "Cakto kushtet që do të shfaqen në faturat e reja. Mund t'i ndryshosh për çdo faturë.",
+    "placeholder": "Fut kushtet e paracaktuara...",
+    "tip": "Këshillë",
+    "tipText": "Përfshi kushtet e pagesës, penalitetet, metodat e pagesës dhe informacione të tjera të rëndësishme për klientët."
+  },
+  "actions": {
+    "save": "Ruaj Ndryshimet",
+    "saving": "Duke ruajtur...",
+    "wait": "Prit",
+    "cancel": "Anulo"
+  },
+  "messages": {
+    "success": "Sukses",
+    "error": "Gabim",
+    "saveSuccess": "Cilësimet u ruajtën me sukses",
+    "saveError": "Dështoi ruajtja e cilësimeve. Provo përsëri.",
+    "settingsSaved": "Cilësimet u Ruajtën",
+    "settingsSavedDescription": "Preferencat e faturës u përditësuan me sukses.",
+    "noCompanySelected": "Asnjë kompani e zgjedhur. Zgjidh një kompani së pari."
   }
 }

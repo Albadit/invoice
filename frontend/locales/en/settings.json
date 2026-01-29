@@ -1,5 +1,7 @@
 {
   "title": "Settings",
+  "subtitle": "Customize your invoice preferences",
+  "loading": "Loading settings...",
   "sections": {
     "companies": "Companies",
     "templates": "Templates",
@@ -8,35 +10,117 @@
   },
   "companies": {
     "title": "Company Management",
+    "subtitle": "Manage your company information and settings",
     "addCompany": "Add Company",
     "editCompany": "Edit Company",
     "deleteCompany": "Delete Company",
+    "manageCompanies": "Manage Companies",
+    "selectCompany": "Select Company",
+    "selectDescription": "Choose a company for your invoices.",
+    "selectPlaceholder": "Select a company",
     "fields": {
       "name": "Company Name",
+      "street": "Street Address",
       "address": "Address",
       "city": "City",
+      "zipCode": "Zip Code",
       "country": "Country",
       "phone": "Phone",
       "email": "Email",
       "taxId": "Tax ID",
-      "logo": "Logo"
+      "taxPercent": "Default Tax %",
+      "logo": "Logo",
+      "terms": "Default Terms & Conditions",
+      "template": "Default Template",
+      "currency": "Default Currency"
+    },
+    "messages": {
+      "created": "Company created successfully",
+      "updated": "Company updated successfully",
+      "deleted": "Company and associated settings deleted successfully",
+      "createError": "Failed to create company. Please try again.",
+      "updateError": "Failed to update company. Please try again.",
+      "deleteError": "Failed to delete company. It may be in use by invoices."
     }
+  },
+  "logo": {
+    "title": "Invoice Logo",
+    "upload": "Upload Logo",
+    "url": "Logo URL",
+    "urlDescription": "Enter the URL of your company logo if hosted elsewhere.",
+    "or": "OR"
+  },
+  "invoiceSettings": {
+    "title": "Invoice Settings",
+    "templateStyle": "Template Style",
+    "templateDescription": "Choose a template style for your invoices (both editing and viewing).",
+    "defaultCurrency": "Default Currency",
+    "currencyDescription": "Set the default currency for new invoices.",
+    "defaultTax": "Default Tax (%)",
+    "taxDescription": "Set the default tax percentage for new invoices."
   },
   "templates": {
     "title": "Invoice Templates",
+    "subtitle": "Manage your invoice templates",
     "addTemplate": "Add Template",
     "editTemplate": "Edit Template",
-    "deleteTemplate": "Delete Template"
+    "deleteTemplate": "Delete Template",
+    "manageTemplates": "Manage Templates",
+    "fields": {
+      "name": "Template Name",
+      "content": "Template Content"
+    },
+    "messages": {
+      "created": "Template created successfully",
+      "updated": "Template updated successfully",
+      "deleted": "Template deleted successfully",
+      "createError": "Failed to create template. Please try again.",
+      "updateError": "Failed to update template. Please try again.",
+      "deleteError": "Failed to delete template. It may be in use by invoices."
+    }
   },
   "currencies": {
     "title": "Currency Management",
+    "subtitle": "Manage available currencies",
     "addCurrency": "Add Currency",
     "editCurrency": "Edit Currency",
     "deleteCurrency": "Delete Currency",
+    "manageCurrencies": "Manage Currencies",
     "fields": {
       "code": "Currency Code",
       "name": "Currency Name",
       "symbol": "Symbol"
+    },
+    "messages": {
+      "created": "Currency created successfully",
+      "updated": "Currency updated successfully",
+      "deleted": "Currency deleted successfully",
+      "createError": "Failed to create currency. Please try again.",
+      "updateError": "Failed to update currency. Please try again.",
+      "deleteError": "Failed to delete currency. It may be in use by invoices."
     }
+  },
+  "terms": {
+    "title": "Default Terms & Conditions",
+    "label": "Terms Text",
+    "description": "Set default terms and conditions that will appear on new invoices. You can still edit this for individual invoices.",
+    "placeholder": "Enter your default terms and conditions...",
+    "tip": "Tip",
+    "tipText": "Include payment terms, late fees, accepted payment methods, and any other important information your clients should know."
+  },
+  "actions": {
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "wait": "Wait",
+    "cancel": "Cancel"
+  },
+  "messages": {
+    "success": "Success",
+    "error": "Error",
+    "saveSuccess": "Settings saved successfully",
+    "saveError": "Failed to save settings. Please try again.",
+    "settingsSaved": "Settings Saved",
+    "settingsSavedDescription": "Your invoice preferences have been updated successfully.",
+    "noCompanySelected": "No company selected. Please select a company first."
   }
 }

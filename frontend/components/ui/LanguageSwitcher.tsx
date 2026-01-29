@@ -1,26 +1,39 @@
 'use client';
 
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@heroui/react';
-import { Globe } from 'lucide-react';
-import { useLocale } from '@/contexts/LocaleProvider';
-import { useTranslation } from '@/lib/i18n/client';
-
-const languageNames: Record<string, string> = {
-  en: 'English',
-  nl: 'Nederlands',
-  al: 'Shqip',
-  mk: 'Македонски',
-};
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Avatar, Skeleton } from '@heroui/react';
+import { useEffect, useState } from 'react';
+import { useLocale, useTranslation } from '@/contexts/LocaleProvider';
 
 export function LanguageSwitcher() {
-  const { locale, setLocale, languages } = useLocale();
-  const { t } = useTranslation(locale, 'common');
+  const { setLocale, languageConfig } = useLocale();
+  const { t, locale } = useTranslation('common');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get current language config
+  const currentLang = languageConfig.find(l => l.key === locale);
+
+  // Show skeleton while hydrating to avoid mismatch
+  if (!mounted) {
+    return (
+      <Button variant="flat" isIconOnly aria-label="Language">
+        <Skeleton className="size-6 rounded-full" />
+      </Button>
+    );
+  }
 
   return (
     <Dropdown>
       <DropdownTrigger>
         <Button variant="flat" isIconOnly aria-label={t('common.language')}>
-          <Globe className="h-5 w-5" />
+          <Avatar 
+            alt={currentLang?.name || 'Language'} 
+            className="size-6" 
+            src={currentLang?.flag} 
+          />
         </Button>
       </DropdownTrigger>
       <DropdownMenu
@@ -29,12 +42,21 @@ export function LanguageSwitcher() {
         selectionMode="single"
         onSelectionChange={(keys) => {
           const selected = Array.from(keys)[0] as string;
-          if (selected) setLocale(selected as typeof locale);
+          if (selected) setLocale(selected);
         }}
       >
-        {languages.map((lang) => (
-          <DropdownItem key={lang}>
-            {languageNames[lang] || lang}
+        {languageConfig.map((lang) => (
+          <DropdownItem 
+            key={lang.key} 
+            startContent={
+              <Avatar 
+                alt={lang.name} 
+                className="size-6" 
+                src={lang.flag} 
+              />
+            }
+          >
+            {lang.name}
           </DropdownItem>
         ))}
       </DropdownMenu>

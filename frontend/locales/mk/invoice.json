@@ -1,12 +1,27 @@
 {
   "title": "Фактури",
-  "createNew": "Креирај Нова Фактура",
+  "subtitle": "Управувајте и следете ги сите ваши фактури",
+  "createNew": "Нова Фактура",
   "editInvoice": "Уреди Фактура",
+  "newInvoice": "Нова Фактура",
   "invoiceNumber": "Број на Фактура",
   "invoiceDate": "Датум на Фактура",
   "dueDate": "Рок на Плаќање",
+  "customer": "Клиент",
+  "customerName": "Име на Клиент",
+  "streetAddress": "Адреса",
+  "city": "Град",
+  "zipCode": "Поштенски Број",
+  "country": "Држава",
+  "date": "Датум",
+  "tabs": {
+    "active": "Активни Фактури",
+    "cancelled": "Откажани Фактури"
+  },
   "status": {
+    "all": "Сите Статуси",
     "draft": "Нацрт",
+    "pending": "Во Очекување",
     "sent": "Испратена",
     "paid": "Платена",
     "overdue": "Задоцнета",
@@ -16,19 +31,83 @@
     "client": "Клиент",
     "company": "Компанија",
     "items": "Ставки",
+    "itemName": "Име на Ставка",
     "description": "Опис",
     "quantity": "Количина",
+    "rate": "Стапка",
     "unitPrice": "Единечна Цена",
     "amount": "Износ",
     "subtotal": "Меѓузбир",
     "tax": "Данок",
     "discount": "Попуст",
-    "total": "Вкупно"
+    "shipping": "Достава",
+    "total": "Вкупно",
+    "notes": "Забелешки",
+    "terms": "Услови и Одредби"
+  },
+  "actions": {
+    "addItem": "Додај Ставка",
+    "addDiscount": "Додај Попуст",
+    "addTax": "Додај Данок",
+    "addShipping": "Додај Достава",
+    "downloadPdf": "Преземи PDF",
+    "markAsPaid": "Означи како Платена",
+    "markAsPending": "Означи како Во Очекување",
+    "duplicate": "Дуплирај",
+    "cancel": "Откажи Фактура",
+    "view": "Прегледај",
+    "save": "Зачувај Фактура",
+    "saving": "Зачувување..."
+  },
+  "table": {
+    "invoice": "Фактура",
+    "customer": "Клиент",
+    "date": "Датум",
+    "dueDate": "Рок",
+    "status": "Статус",
+    "total": "Вкупно",
+    "action": "Акција"
+  },
+  "pagination": {
+    "rowsPerPage": "Редови по страница:",
+    "showing": "Прикажува {{start}}-{{end}} од {{total}}",
+    "first": "Прва",
+    "previous": "Претходна",
+    "next": "Следна",
+    "page": "Страница {{current}} од {{total}}",
+    "pageLabel": "Страница",
+    "ofPages": "од {{total}}",
+    "rows": "редови",
+    "records": "записи"
+  },
+  "search": {
+    "placeholder": "Пребарај фактури..."
+  },
+  "preview": {
+    "title": "Преглед на Фактура",
+    "billTo": "Фактурирај На:",
+    "invoiceDetails": "Детали за Фактура"
+  },
+  "settings": {
+    "company": "Компанија",
+    "invoiceSettings": "Поставки за Фактура",
+    "template": "Шаблон",
+    "currency": "Валута",
+    "selectCompany": "Избери компанија",
+    "selectTemplate": "Избери шаблон",
+    "selectCurrency": "Избери валута"
   },
   "messages": {
-    "created": "Фактурата е успешно креирана",
-    "updated": "Фактурата е успешно ажурирана",
+    "created": "Фактурата е Креирана",
+    "createdDescription": "Вашата фактура е успешно креирана.",
+    "updated": "Фактурата е Ажурирана",
+    "updatedDescription": "Вашата фактура е успешно ажурирана.",
     "deleted": "Фактурата е успешно избришана",
-    "sent": "Фактурата е успешно испратена"
+    "sent": "Фактурата е успешно испратена",
+    "loading": "Се вчитува фактура...",
+    "loadingInvoices": "Се вчитуваат фактури...",
+    "noInvoices": "Не се пронајдени фактури",
+    "error": "Грешка",
+    "saveError": "Неуспешно зачувување на фактурата. Обиди се повторно."
   }
 }

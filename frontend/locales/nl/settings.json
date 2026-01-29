@@ -1,5 +1,7 @@
 {
   "title": "Instellingen",
+  "subtitle": "Pas je factuurvoorkeuren aan",
+  "loading": "Instellingen laden...",
   "sections": {
     "companies": "Bedrijven",
     "templates": "Sjablonen",
@@ -8,35 +10,117 @@
   },
   "companies": {
     "title": "Bedrijfsbeheer",
-    "addCompany": "Bedrijf Toevoegen",
-    "editCompany": "Bedrijf Bewerken",
-    "deleteCompany": "Bedrijf Verwijderen",
+    "subtitle": "Beheer je bedrijfsgegevens en instellingen",
+    "addCompany": "Bedrijf toevoegen",
+    "editCompany": "Bedrijf bewerken",
+    "deleteCompany": "Bedrijf verwijderen",
+    "manageCompanies": "Bedrijven beheren",
+    "selectCompany": "Selecteer bedrijf",
+    "selectDescription": "Kies een bedrijf voor je facturen.",
+    "selectPlaceholder": "Selecteer een bedrijf",
     "fields": {
       "name": "Bedrijfsnaam",
+      "street": "Straat",
       "address": "Adres",
       "city": "Stad",
+      "zipCode": "Postcode",
       "country": "Land",
       "phone": "Telefoon",
       "email": "E-mail",
       "taxId": "BTW-nummer",
-      "logo": "Logo"
+      "taxPercent": "Standaard BTW %",
+      "logo": "Logo",
+      "terms": "Standaard Voorwaarden",
+      "template": "Standaard Sjabloon",
+      "currency": "Standaard Valuta"
+    },
+    "messages": {
+      "created": "Bedrijf succesvol aangemaakt",
+      "updated": "Bedrijf succesvol bijgewerkt",
+      "deleted": "Bedrijf en bijbehorende instellingen verwijderd",
+      "createError": "Kon bedrijf niet aanmaken. Probeer het opnieuw.",
+      "updateError": "Kon bedrijf niet bijwerken. Probeer het opnieuw.",
+      "deleteError": "Kon bedrijf niet verwijderen. Het wordt mogelijk gebruikt door facturen."
     }
+  },
+  "logo": {
+    "title": "Factuurlogo",
+    "upload": "Logo uploaden",
+    "url": "Logo URL",
+    "urlDescription": "Voer de URL in van je bedrijfslogo als het elders gehost wordt.",
+    "or": "OF"
+  },
+  "invoiceSettings": {
+    "title": "Factuurinstellingen",
+    "templateStyle": "Sjabloonstijl",
+    "templateDescription": "Kies een sjabloonstijl voor je facturen (bewerken en bekijken).",
+    "defaultCurrency": "Standaard Valuta",
+    "currencyDescription": "Stel de standaardvaluta in voor nieuwe facturen.",
+    "defaultTax": "Standaard BTW (%)",
+    "taxDescription": "Stel het standaard BTW-percentage in voor nieuwe facturen."
   },
   "templates": {
     "title": "Factuursjablonen",
-    "addTemplate": "Sjabloon Toevoegen",
-    "editTemplate": "Sjabloon Bewerken",
-    "deleteTemplate": "Sjabloon Verwijderen"
+    "subtitle": "Beheer je factuursjablonen",
+    "addTemplate": "Sjabloon toevoegen",
+    "editTemplate": "Sjabloon bewerken",
+    "deleteTemplate": "Sjabloon verwijderen",
+    "manageTemplates": "Sjablonen beheren",
+    "fields": {
+      "name": "Sjabloonnaam",
+      "content": "Sjablooninhoud"
+    },
+    "messages": {
+      "created": "Sjabloon succesvol aangemaakt",
+      "updated": "Sjabloon succesvol bijgewerkt",
+      "deleted": "Sjabloon succesvol verwijderd",
+      "createError": "Kon sjabloon niet aanmaken. Probeer het opnieuw.",
+      "updateError": "Kon sjabloon niet bijwerken. Probeer het opnieuw.",
+      "deleteError": "Kon sjabloon niet verwijderen. Het wordt mogelijk gebruikt door facturen."
+    }
   },
   "currencies": {
     "title": "Valutabeheer",
-    "addCurrency": "Valuta Toevoegen",
-    "editCurrency": "Valuta Bewerken",
-    "deleteCurrency": "Valuta Verwijderen",
+    "subtitle": "Beheer beschikbare valuta's",
+    "addCurrency": "Valuta toevoegen",
+    "editCurrency": "Valuta bewerken",
+    "deleteCurrency": "Valuta verwijderen",
+    "manageCurrencies": "Valuta's beheren",
     "fields": {
       "code": "Valutacode",
       "name": "Valutanaam",
       "symbol": "Symbool"
+    },
+    "messages": {
+      "created": "Valuta succesvol aangemaakt",
+      "updated": "Valuta succesvol bijgewerkt",
+      "deleted": "Valuta succesvol verwijderd",
+      "createError": "Kon valuta niet aanmaken. Probeer het opnieuw.",
+      "updateError": "Kon valuta niet bijwerken. Probeer het opnieuw.",
+      "deleteError": "Kon valuta niet verwijderen. Het wordt mogelijk gebruikt door facturen."
     }
+  },
+  "terms": {
+    "title": "Standaard Voorwaarden",
+    "label": "Voorwaardentekst",
+    "description": "Stel standaard voorwaarden in die op nieuwe facturen verschijnen. Je kunt dit nog per factuur aanpassen.",
+    "placeholder": "Voer je standaard voorwaarden in...",
+    "tip": "Tip",
+    "tipText": "Vermeld betalingsvoorwaarden, boetes, geaccepteerde betaalmethoden en andere belangrijke informatie voor je klanten."
+  },
+  "actions": {
+    "save": "Wijzigingen opslaan",
+    "saving": "Opslaan...",
+    "wait": "Wacht",
+    "cancel": "Annuleren"
+  },
+  "messages": {
+    "success": "Succes",
+    "error": "Fout",
+    "saveSuccess": "Instellingen succesvol opgeslagen",
+    "saveError": "Kon instellingen niet opslaan. Probeer het opnieuw.",
+    "settingsSaved": "Instellingen Opgeslagen",
+    "settingsSavedDescription": "Je factuurvoorkeuren zijn succesvol bijgewerkt.",
+    "noCompanySelected": "Geen bedrijf geselecteerd. Selecteer eerst een bedrijf."
   }
 }

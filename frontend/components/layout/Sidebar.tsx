@@ -19,6 +19,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 // Sidebar Context
 interface SidebarContextType {
@@ -52,50 +53,54 @@ interface SidebarSection {
   items: SidebarItem[];
 }
 
-// Navigation Items
-const sidebarSections: SidebarSection[] = [
-  {
-    key: 'main',
-    items: [
-      {
-        key: 'home',
-        label: 'Invoices',
-        icon: <FileText className="h-5 w-5" />,
-        href: '/',
-      },
-      {
-        key: 'new-invoice',
-        label: 'New Invoice',
-        icon: <Plus className="h-5 w-5" />,
-        href: '/invoice/new/edit',
-      },
-    ],
-  },
-  {
-    key: 'settings',
-    title: 'Settings',
-    items: [
-      {
-        key: 'companies',
-        label: 'Companies',
-        icon: <Building2 className="h-5 w-5" />,
-        href: '/settings?tab=companies',
-      },
-      {
-        key: 'templates',
-        label: 'Templates',
-        icon: <Palette className="h-5 w-5" />,
-        href: '/settings?tab=templates',
-      },
-      {
-        key: 'currencies',
-        label: 'Currencies',
-        icon: <Coins className="h-5 w-5" />,
-        href: '/settings?tab=currencies',
-      },
-    ],
-  },
-];
+// Hook to get translated navigation items
+function useSidebarSections(): SidebarSection[] {
+  const { t } = useTranslation('common');
+  
+  return [
+    {
+      key: 'main',
+      items: [
+        {
+          key: 'home',
+          label: t('navigation.invoices'),
+          icon: <FileText className="h-5 w-5" />,
+          href: '/',
+        },
+        {
+          key: 'new-invoice',
+          label: t('navigation.newInvoice'),
+          icon: <Plus className="h-5 w-5" />,
+          href: '/invoice/new/edit',
+        },
+      ],
+    },
+    {
+      key: 'settings',
+      title: t('navigation.settings'),
+      items: [
+        {
+          key: 'companies',
+          label: t('navigation.companies'),
+          icon: <Building2 className="h-5 w-5" />,
+          href: '/settings?tab=companies',
+        },
+        {
+          key: 'templates',
+          label: t('navigation.templates'),
+          icon: <Palette className="h-5 w-5" />,
+          href: '/settings?tab=templates',
+        },
+        {
+          key: 'currencies',
+          label: t('navigation.currencies'),
+          icon: <Coins className="h-5 w-5" />,
+          href: '/settings?tab=currencies',
+        },
+      ],
+    },
+  ];
+}
 
 // Sidebar Item Component
 function SidebarItemComponent({
@@ -122,7 +127,7 @@ function SidebarItemComponent({
     >
       <span className={cn(isActive && 'text-primary')}>{item.icon}</span>
       {!isCollapsed && (
-        <span className={cn('font-medium', isActive && 'text-primary')}>
+        <span className={cn('font-medium', isActive && 'text-primary')} suppressHydrationWarning>
           {item.label}
         </span>
       )}
@@ -153,7 +158,7 @@ function SidebarSectionComponent({
   return (
     <div className="flex flex-col gap-1">
       {section.title && !isCollapsed && (
-        <p className="px-3 py-2 text-xs font-semibold text-default-500 uppercase tracking-wider">
+        <p className="px-3 py-2 text-xs font-semibold text-default-500 uppercase tracking-wider" suppressHydrationWarning>
           {section.title}
         </p>
       )}
@@ -180,6 +185,7 @@ function SidebarSectionComponent({
 export function Sidebar() {
   const pathname = usePathname();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
+  const sidebarSections = useSidebarSections();
 
   return (
     <>

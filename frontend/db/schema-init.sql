@@ -6,6 +6,7 @@
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";  -- For fast pattern matching (ILIKE)
 
 -- =============================================
 -- Enums
@@ -138,7 +139,22 @@ CREATE TABLE IF NOT EXISTS invoices (
     subtotal_amount DECIMAL(12, 2),
     total_amount DECIMAL(12, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- Full-text search vector (generated, for fast FTS queries)
+    search_tsv tsvector GENERATED ALWAYS AS (
+        to_tsvector('english', 
+            coalesce(invoice_number, '') || ' ' || 
+            coalesce(customer_name, '') || ' ' ||
+            coalesce(customer_city, '') || ' ' ||
+            coalesce(customer_country, '') || ' ' ||
+            coalesce(notes, '')
+        )
+    ) STORED,
+    -- Combined search text for trigram (generated, for ILIKE queries)
+    search_text text GENERATED ALWAYS AS (
+        coalesce(invoice_number, '') || ' ' || 
+        coalesce(customer_name, '')
+    ) STORED
 );
 
 -- Invoice line items table
@@ -158,6 +174,7 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 -- Indexes
 -- =============================================
 
+-- Basic indexes
 CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
 CREATE INDEX IF NOT EXISTS idx_currencies_code ON currencies(code);
 CREATE INDEX IF NOT EXISTS idx_invoices_company_id ON invoices(company_id);
@@ -167,7 +184,25 @@ CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON invoices(invoice_numbe
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_issue_date ON invoices(issue_date);
 CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
+CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON invoices(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice_id ON invoice_items(invoice_id);
+
+-- Composite indexes for fast cursor-based (keyset) pagination
+-- These enable O(1) pagination instead of O(n) offset on 10M+ rows
+CREATE INDEX IF NOT EXISTS idx_invoices_cursor_active ON invoices(created_at DESC, id DESC) WHERE status != 'cancelled';
+CREATE INDEX IF NOT EXISTS idx_invoices_cursor_cancelled ON invoices(created_at DESC, id DESC) WHERE status = 'cancelled';
+CREATE INDEX IF NOT EXISTS idx_invoices_status_cursor ON invoices(status, created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_invoices_date_cursor ON invoices(issue_date, created_at DESC, id DESC);
+
+-- Full-text search (FTS) GIN index for fast word-based search
+-- Enables queries like "payment failed" in ~1-10ms instead of seconds
+CREATE INDEX IF NOT EXISTS idx_invoices_search_tsv_gin ON invoices USING GIN (search_tsv);
+
+-- Trigram (pg_trgm) GIN indexes for fast ILIKE/substring search
+-- Enables queries like "%INV-00%" in ~10-50ms instead of seconds
+CREATE INDEX IF NOT EXISTS idx_invoices_customer_name_trgm ON invoices USING GIN (customer_name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number_trgm ON invoices USING GIN (invoice_number gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_invoices_search_text_trgm ON invoices USING GIN (search_text gin_trgm_ops);
 
 -- =============================================
 -- Views

@@ -29,4 +29,4 @@ export async function getTranslation(
   };
 }
 
-export { type Locale, languages, fallbackLng, defaultNS } from './settings';
+export { type Locale, languages, languageConfig, fallbackLng, defaultNS } from './settings';
