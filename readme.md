@@ -182,19 +182,3 @@ Translation files are located in `frontend/locales/`.
 ## 📖 Architecture
 
 This project follows a **feature-first** architecture with strict dependency rules enforced by `eslint-plugin-boundaries`. See [ARCHITECTURE.md](./ARCHITECTURE.md) for details.
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is private and proprietary.
-
----
-
-Built with ❤️ using Next.js and Supabase
