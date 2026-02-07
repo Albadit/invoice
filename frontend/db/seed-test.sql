@@ -76,7 +76,7 @@ SELECT
     'Payment due within 30 days.',
     (100 + (i % 900))::NUMERIC,
     (100 + (i % 900) + (i % 50))::NUMERIC
-FROM generate_series(1, 300000) AS i
+FROM generate_series(1, 1000) AS i
 CROSS JOIN (SELECT id FROM companies WHERE name = 'Acme Corporation' LIMIT 1) c
 CROSS JOIN (SELECT id FROM currencies WHERE code = 'USD' LIMIT 1) cur
 CROSS JOIN (SELECT id FROM templates LIMIT 1) t
