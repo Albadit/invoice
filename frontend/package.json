@@ -15,7 +15,7 @@
     "db:reset": "npm run db:drop && npm run db:migrate"
   },
   "dependencies": {
-    "@heroui/react": "^2.8.7",
+    "@heroui/react": "^2.8.8",
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
     "@supabase/ssr": "^0.8.0",

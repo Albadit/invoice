@@ -1,17 +1,19 @@
 'use client';
 
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Avatar, Skeleton } from '@heroui/react';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { useLocale, useTranslation } from '@/contexts/LocaleProvider';
 
 export function LanguageSwitcher() {
   const { setLocale, languageConfig } = useLocale();
   const { t, locale } = useTranslation('common');
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  
+  // Use useSyncExternalStore to check if mounted (recommended React pattern)
+  const mounted = useSyncExternalStore(
+    () => () => {}, // subscribe (no-op since we don't need updates)
+    () => true,      // getSnapshot (client)
+    () => false      // getServerSnapshot (server)
+  );
 
   // Get current language config
   const currentLang = languageConfig.find(l => l.key === locale);
