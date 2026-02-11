@@ -13,7 +13,8 @@ export default function InvoiceTestPage() {
   useEffect(() => {
     async function fetchInvoice() {
       try {
-        const invoices = await invoicesApi.getAll();
+        const res = await invoicesApi.getAll();
+        const invoices = res.data;
         if (invoices.length > 0) {
           const firstInvoice = invoices[0];
           setInvoice(firstInvoice);

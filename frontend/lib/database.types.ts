@@ -1,5 +1,5 @@
 // Auto-generated TypeScript types from PostgreSQL database
-// Generated on: 2025-11-26T21:26:25.768Z
+// Generated on: 2026-02-11T12:32:25.987Z
 
 export type Json =
   | string
@@ -79,6 +79,8 @@ export interface Invoices {
   total_amount: number | null
   created_at: string | null
   updated_at: string | null
+  search_tsv: unknown | null
+  search_text: string | null
 }
 
 export interface Templates {
