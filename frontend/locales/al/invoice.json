@@ -86,7 +86,13 @@
   "preview": {
     "title": "Pamja e Faturës",
     "billTo": "Faturuar:",
-    "invoiceDetails": "Detajet e Faturës"
+    "invoiceDetails": "Detajet e Faturës",
+    "invoiceTitle": "FATURË",
+    "date": "Data:",
+    "issueDate": "Data e Lëshimit:",
+    "dueDate": "Data e Afatit:",
+    "status": "Statusi:",
+    "close": "Mbyll"
   },
   "settings": {
     "company": "Kompania",
@@ -95,7 +101,9 @@
     "currency": "Valuta",
     "selectCompany": "Zgjidh kompaninë",
     "selectTemplate": "Zgjidh shabllonin",
-    "selectCurrency": "Zgjidh valutën"
+    "selectCurrency": "Zgjidh valutën",
+    "language": "Gjuha",
+    "selectLanguage": "Zgjidh gjuhën"
   },
   "messages": {
     "created": "Fatura u Krijua",

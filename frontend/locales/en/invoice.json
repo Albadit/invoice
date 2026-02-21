@@ -86,7 +86,13 @@
   "preview": {
     "title": "Invoice Preview",
     "billTo": "Bill To:",
-    "invoiceDetails": "Invoice Details"
+    "invoiceDetails": "Invoice Details",
+    "invoiceTitle": "INVOICE",
+    "date": "Date:",
+    "issueDate": "Issue Date:",
+    "dueDate": "Due Date:",
+    "status": "Status:",
+    "close": "Close"
   },
   "settings": {
     "company": "Company",
@@ -95,7 +101,9 @@
     "currency": "Currency",
     "selectCompany": "Select company",
     "selectTemplate": "Select template",
-    "selectCurrency": "Select currency"
+    "selectCurrency": "Select currency",
+    "language": "Language",
+    "selectLanguage": "Select language"
   },
   "messages": {
     "created": "Invoice Created",

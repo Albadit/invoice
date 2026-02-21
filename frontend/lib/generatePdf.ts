@@ -58,9 +58,10 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
 
   try {
     // Launch Puppeteer browser
-    // For production/serverless, use puppeteer-core with @sparticuz/chromium
+    // Uses system Chromium in Docker (set via PUPPETEER_EXECUTABLE_PATH)
     browser = await puppeteer.launch({
       headless: true,
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',

@@ -15,10 +15,11 @@ import { Plus, Trash, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
-import { useTranslation } from '@/contexts/LocaleProvider';
+import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 
 export default function InvoiceEditPage() {
   const { t } = useTranslation('invoice');
+  const { languageConfig } = useLocale();
   const params = useParams();
   const router = useRouter();
   const isNewInvoice = params.id === 'new';
@@ -42,6 +43,7 @@ export default function InvoiceEditPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>('en');
   const [items, setItems] = useState<Partial<InvoiceItem>[]>([
     { name: '', quantity: 1, unit_price: 0 },
   ]);
@@ -105,6 +107,7 @@ export default function InvoiceEditPage() {
           setCurrencyId(currencyExists ? invoice.currency_id : (currenciesData[0]?.id || null));
           setCompanyId(companyExists ? invoice.company_id : (companiesData[0]?.id || ''));
           setTemplateId(templateExists ? (invoice.template_id || null) : (templatesData[0]?.id || null));
+          setLanguage(invoice.language || 'en');
 
           // Set company logo from invoice.company
           setLogoUrl(invoice.company?.logo_url || '');
@@ -284,6 +287,7 @@ export default function InvoiceEditPage() {
         shipping_total_amount: showShipping ? shippingAmount : null,
         notes: notes || null,
         terms: terms || null,
+        language: language,
         subtotal_amount: getSubtotal(),
         total_amount: getTotal(),
       };
@@ -747,6 +751,45 @@ export default function InvoiceEditPage() {
                       textValue={`${currency.code} - ${currency.symbol}`}
                     >
                       {currency.code} - {currency.symbol}
+                    </SelectItem>
+                  ))}
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.language')}</label>
+                <Select
+                  aria-label={t('settings.language')}
+                  selectionMode="single"
+                  selectedKeys={new Set([language])}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0];
+                    if (selected) setLanguage(String(selected));
+                  }}
+                  placeholder={t('settings.selectLanguage')}
+                  classNames={{
+                    trigger: "font-semibold"
+                  }}
+                  renderValue={(items) => {
+                    const selected = languageConfig.find(l => l.key === language);
+                    if (!selected) return null;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <img src={selected.flag} alt={selected.name} className="w-5 h-4 object-cover rounded-sm" />
+                        <span>{selected.name}</span>
+                      </div>
+                    );
+                  }}
+                >
+                  {languageConfig.map((lang) => (
+                    <SelectItem 
+                      key={lang.key} 
+                      textValue={lang.name}
+                      startContent={
+                        <img src={lang.flag} alt={lang.name} className="w-5 h-4 object-cover rounded-sm" />
+                      }
+                    >
+                      {lang.name}
                     </SelectItem>
                   ))}
                 </Select>

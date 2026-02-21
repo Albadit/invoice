@@ -11,11 +11,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Load environment variables from .env file
-config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load environment variables from .env file in the same directory
+config({ path: path.join(__dirname, '.env') });
 
 // Database connection configuration
 interface DBConfig {

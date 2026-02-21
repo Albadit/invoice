@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     shipping_total_amount DECIMAL(12, 2),
     notes TEXT,
     terms TEXT,
+    language TEXT DEFAULT 'en',
     subtotal_amount DECIMAL(12, 2),
     total_amount DECIMAL(12, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

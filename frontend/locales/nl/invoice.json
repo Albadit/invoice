@@ -86,7 +86,13 @@
   "preview": {
     "title": "Factuurvoorbeeld",
     "billTo": "Factureren Aan:",
-    "invoiceDetails": "Factuurgegevens"
+    "invoiceDetails": "Factuurgegevens",
+    "invoiceTitle": "FACTUUR",
+    "date": "Datum:",
+    "issueDate": "Uitgiftedatum:",
+    "dueDate": "Vervaldatum:",
+    "status": "Status:",
+    "close": "Sluiten"
   },
   "settings": {
     "company": "Bedrijf",
@@ -95,7 +101,9 @@
     "currency": "Valuta",
     "selectCompany": "Selecteer bedrijf",
     "selectTemplate": "Selecteer sjabloon",
-    "selectCurrency": "Selecteer valuta"
+    "selectCurrency": "Selecteer valuta",
+    "language": "Taal",
+    "selectLanguage": "Selecteer taal"
   },
   "messages": {
     "created": "Factuur Aangemaakt",

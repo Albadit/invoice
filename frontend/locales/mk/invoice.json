@@ -86,7 +86,13 @@
   "preview": {
     "title": "Преглед на Фактура",
     "billTo": "Фактурирај На:",
-    "invoiceDetails": "Детали за Фактура"
+    "invoiceDetails": "Детали за Фактура",
+    "invoiceTitle": "ФАКТУРА",
+    "date": "Датум:",
+    "issueDate": "Датум на Издавање:",
+    "dueDate": "Рок на Плаќање:",
+    "status": "Статус:",
+    "close": "Затвори"
   },
   "settings": {
     "company": "Компанија",
@@ -95,7 +101,9 @@
     "currency": "Валута",
     "selectCompany": "Избери компанија",
     "selectTemplate": "Избери шаблон",
-    "selectCurrency": "Избери валута"
+    "selectCurrency": "Избери валута",
+    "language": "Јазик",
+    "selectLanguage": "Избери јазик"
   },
   "messages": {
     "created": "Фактурата е Креирана",

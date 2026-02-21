@@ -1,9 +1,40 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 import { generatePdf } from '@/lib/generatePdf';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/settings/api';
 import { renderInvoiceToHtml } from '@/lib/renderTemplate';
 import type { InvoiceWithItems, InvoiceItem } from '@/lib/types';
+
+type Translations = Record<string, unknown>;
+
+function loadTranslations(lang: string): Translations {
+  const filePath = path.join(process.cwd(), 'locales', lang, 'invoice.json');
+  try {
+    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  } catch {
+    const fallback = path.join(process.cwd(), 'locales', 'en', 'invoice.json');
+    try {
+      return JSON.parse(fs.readFileSync(fallback, 'utf-8'));
+    } catch {
+      return {};
+    }
+  }
+}
+
+function tl(translations: Translations, key: string): string {
+  const parts = key.split('.');
+  let current: unknown = translations;
+  for (const part of parts) {
+    if (current && typeof current === 'object') {
+      current = (current as Record<string, unknown>)[part];
+    } else {
+      return key;
+    }
+  }
+  return typeof current === 'string' ? current : key;
+}
 
 /**
  * Wrap rendered invoice HTML in a complete HTML document with styles
@@ -64,6 +95,9 @@ export async function GET(
       return new NextResponse('Invoice not found', { status: 404 });
     }
 
+    // Load translations for the invoice's language
+    const labels = loadTranslations(invoice.language || 'en');
+
     // Fetch template info
     let template = null;
     if (invoice.template_id) {
@@ -88,11 +122,11 @@ export async function GET(
       } catch (error) {
         // Fallback to default template if rendering fails
         console.error('Error rendering custom template, using default:', error);
-        html = InvoiceHtml(invoice);
+        html = InvoiceHtml(invoice, labels);
       }
     } else {
       // Use default template
-      html = InvoiceHtml(invoice);
+      html = InvoiceHtml(invoice, labels);
     }
     
     // Generate PDF on the server (no CSS needed - Tailwind is included in HTML)
@@ -140,7 +174,7 @@ export async function GET(
  * @param currency - The currency data with symbol and code
  * @returns HTML string
  */
-function InvoiceHtml(invoice: InvoiceWithItems): string {
+function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
   // Get currency symbol
 
   // Default template
@@ -173,7 +207,7 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
               </div>
             `}
             <div class="flex flex-col gap-2 text-right">
-              <h2 class="text-4xl font-bold text-slate-900">INVOICE</h2>
+              <h2 class="text-4xl font-bold text-slate-900">${tl(labels, 'preview.invoiceTitle')}</h2>
               <p class="text-2xl text-slate-600 font-semibold">#${invoice.invoice_number}</p>
             </div>
           </div>
@@ -190,13 +224,13 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
             <div class="flex flex-col gap-1">
               ${invoice.issue_date ? `
                 <div class="flex justify-end gap-3">
-                  <span class="text-sm font-semibold text-gray-600">Issue Date:</span>
+                  <span class="text-sm font-semibold text-gray-600">${tl(labels, 'preview.issueDate')}</span>
                   <span class="text-sm text-gray-900">${invoice.issue_date}</span>
                 </div>
               ` : ''}
               ${invoice.due_date ? `
                 <div class="flex justify-end gap-3">
-                  <span class="text-sm font-semibold text-gray-600">Due Date:</span>
+                  <span class="text-sm font-semibold text-gray-600">${tl(labels, 'preview.dueDate')}</span>
                   <span class="text-sm text-gray-900">${invoice.due_date}</span>
                 </div>
               ` : ''}
@@ -208,7 +242,7 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
 
         <!-- Bill To -->
         <div class="flex flex-col">
-          <h3 class="text-xs font-bold uppercase text-gray-600 mb-2">Bill To:</h3>
+          <h3 class="text-xs font-bold uppercase text-gray-600 mb-2">${tl(labels, 'preview.billTo')}</h3>
           <p class="text-lg font-semibold text-gray-900">${invoice.customer_name}</p>
           ${invoice.customer_street ? `<p class="text-sm text-gray-600">${invoice.customer_street}</p>` : ''}
           ${invoice.customer_city ? `<p class="text-sm text-gray-600">${invoice.customer_city}</p>` : ''}
@@ -218,10 +252,10 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
         <!-- Items Table -->
         <div class="flex flex-col gap-4">
           <div class="grid grid-cols-12 border-b-2 py-3 border-slate-900">
-            <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">Item</div>
-            <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-center">Quantity</div>
-            <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-right">Rate</div>
-            <div class="col-span-3 text-sm font-bold text-slate-900 uppercase text-right">Amount</div>
+            <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">${tl(labels, 'fields.items')}</div>
+            <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-center">${tl(labels, 'fields.quantity')}</div>
+            <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-right">${tl(labels, 'fields.rate')}</div>
+            <div class="col-span-3 text-sm font-bold text-slate-900 uppercase text-right">${tl(labels, 'fields.amount')}</div>
           </div>
           ${invoice.items.map((item: InvoiceItem) => `
             <div class="grid grid-cols-12">
@@ -237,11 +271,11 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
           <!-- Terms & Notes -->
           <div class="flex flex-col gap-8">
             <div>
-              <h4 class="text-sm font-bold text-gray-900 mb-2">Notes</h4>
+              <h4 class="text-sm font-bold text-gray-900 mb-2">${tl(labels, 'fields.notes')}</h4>
               <p class="text-sm text-gray-600 whitespace-pre-line">${invoice.notes}</p>
             </div>
             <div>
-              <h4 class="text-sm font-bold text-gray-900 mb-2">Terms & Conditions</h4>
+              <h4 class="text-sm font-bold text-gray-900 mb-2">${tl(labels, 'fields.terms')}</h4>
               <p class="text-sm text-gray-600 whitespace-pre-line">${invoice.terms}</p>
             </div>
           </div>
@@ -249,29 +283,29 @@ function InvoiceHtml(invoice: InvoiceWithItems): string {
           <!-- Totals -->
           <div class="flex flex-col gap-4">
             <div class="flex justify-between text-slate-700">
-              <span class="font-semibold text-gray-700">Subtotal:</span>
+              <span class="font-semibold text-gray-700">${tl(labels, 'fields.subtotal')}:</span>
               <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.subtotal_amount ?? 0).toFixed(2)}</span>
             </div>
             ${invoice.discount_amount && invoice.discount_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
-                <span class="text-gray-700">Discount (${invoice.discount_type === 'percent' ? invoice.discount_amount + '%' : invoice.currency.symbol + invoice.discount_amount}):</span>
+                <span class="text-gray-700">${tl(labels, 'fields.discount')} (${invoice.discount_type === 'percent' ? invoice.discount_amount + '%' : invoice.currency.symbol + invoice.discount_amount}):</span>
                 <span class="font-semibold text-gray-900">-${invoice.currency.symbol}${(invoice.discount_amount ?? 0).toFixed(2)}</span>
               </div>
             ` : ''}
             ${invoice.tax_amount && invoice.tax_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
-                <span class="text-gray-700">Tax (${invoice.tax_type === 'percent' ? invoice.tax_amount + '%' : invoice.currency.symbol + invoice.tax_amount}):</span>
+                <span class="text-gray-700">${tl(labels, 'fields.tax')} (${invoice.tax_type === 'percent' ? invoice.tax_amount + '%' : invoice.currency.symbol + invoice.tax_amount}):</span>
                 <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.tax_amount ?? 0).toFixed(2)}</span>
               </div>
             ` : ''}
             ${invoice.shipping_amount && invoice.shipping_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
-                <span class="text-gray-700">Shipping:</span>
+                <span class="text-gray-700">${tl(labels, 'fields.shipping')}:</span>
                 <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.shipping_amount ?? 0).toFixed(2)}</span>
               </div>
             ` : ''}
             <div class="flex justify-between items-center pt-2 border-t">
-              <span class="text-xl font-bold text-gray-900">Total:</span>
+              <span class="text-xl font-bold text-gray-900">${tl(labels, 'fields.total')}:</span>
               <span class="text-2xl font-bold text-gray-900">${invoice.currency.symbol}${(invoice.total_amount ?? 0).toFixed(2)}</span>
             </div>
           </div>

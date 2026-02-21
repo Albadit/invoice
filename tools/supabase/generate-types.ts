@@ -12,11 +12,9 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 // Load environment variables from .env file
-config();
-
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+config({ path: path.join(__dirname, '.env') });
 
 // Database connection configuration
 interface DBConfig {
@@ -41,6 +39,7 @@ interface Column {
   udt_name: string;
   is_nullable: string;
   column_default: string | null;
+  is_generated: string;
 }
 
 interface TableInfo {
@@ -50,7 +49,7 @@ interface TableInfo {
 
 interface EnumRow {
   enum_name: string;
-  enum_values: string[];
+  enum_values: string[] | string;
 }
 
 interface TypeMap {
@@ -74,7 +73,8 @@ async function generateTypes() {
             'data_type', c.data_type,
             'udt_name', c.udt_name,
             'is_nullable', c.is_nullable,
-            'column_default', c.column_default
+            'column_default', c.column_default,
+            'is_generated', c.is_generated
           ) ORDER BY c.ordinal_position
         ) as columns
       FROM information_schema.tables t
@@ -142,7 +142,7 @@ export type Json =
     const enumResult = await client.query<EnumRow>(enumQuery);
     const enums: Record<string, string[]> = {};
 
-    enumResult.rows.forEach((row: any) => {
+    enumResult.rows.forEach((row: EnumRow) => {
       // Parse the array if it comes as a string or handle it as an array
       let enumValues: string[];
       if (typeof row.enum_values === 'string') {
@@ -184,17 +184,45 @@ export type Json =
       typeDefinitions += `}\n\n`;
     });
 
+    // Get primary keys for each table
+    const pkQuery = `
+      SELECT
+        tc.table_name,
+        kcu.column_name
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON tc.constraint_name = kcu.constraint_name
+        AND tc.table_schema = kcu.table_schema
+      WHERE tc.constraint_type = 'PRIMARY KEY'
+        AND tc.table_schema = 'public'
+      ORDER BY tc.table_name, kcu.ordinal_position;
+    `;
+    const pkResult = await client.query<{ table_name: string; column_name: string }>(pkQuery);
+    const primaryKeys: Record<string, string[]> = {};
+    pkResult.rows.forEach(row => {
+      if (!primaryKeys[row.table_name]) primaryKeys[row.table_name] = [];
+      primaryKeys[row.table_name].push(row.column_name);
+    });
+
     // Add REST API operation types
     typeDefinitions += `// Helper types for REST API operations\n`;
     result.rows.forEach((table: TableInfo) => {
       const tableName = table.table_name;
       const interfaceName = toPascalCase(tableName);
+      const pkColumns = primaryKeys[tableName] || ['id'];
+      const pkOmitList = pkColumns.map(c => `'${c}'`).join(' | ');
+      const pkPickList = pkColumns.map(c => `'${c}'`).join(' | ');
       
       typeDefinitions += `export type ${interfaceName}Get = ${interfaceName}\n`;
-      typeDefinitions += `export type ${interfaceName}Post = Omit<${interfaceName}, 'id' | 'created_at' | 'updated_at'>\n`;
+      // Collect generated/computed columns to exclude from Post type
+      const generatedCols = (table.columns || []).filter(
+        (col: Column) => col.is_generated === 'ALWAYS' || col.data_type === 'tsvector' || col.udt_name === 'tsvector'
+      ).map((col: Column) => `'${col.column_name}'`);
+      const omitList = [pkOmitList, "'created_at'", "'updated_at'", ...generatedCols].join(' | ');
+      typeDefinitions += `export type ${interfaceName}Post = Omit<${interfaceName}, ${omitList}>\n`;
       typeDefinitions += `export type ${interfaceName}Put = Omit<${interfaceName}, 'created_at' | 'updated_at'>\n`;
       typeDefinitions += `export type ${interfaceName}Patch = Partial<${interfaceName}Post>\n`;
-      typeDefinitions += `export type ${interfaceName}Delete = Pick<${interfaceName}, 'id'>\n\n`;
+      typeDefinitions += `export type ${interfaceName}Delete = Pick<${interfaceName}, ${pkPickList}>\n\n`;
     });
 
     // Add Database type
@@ -218,7 +246,7 @@ export type Json =
     typeDefinitions += `}\n`;
 
     // Write to file
-    const outputPath = path.join(__dirname, '..', 'lib', 'database.types.ts');
+    const outputPath = path.join(__dirname, '..', '..', 'frontend', 'lib', 'database.types.ts');
     fs.writeFileSync(outputPath, typeDefinitions);
     
     console.log(`✅ Types generated successfully at: ${outputPath}`);

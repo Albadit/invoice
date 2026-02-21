@@ -1,4 +1,5 @@
-FROM node:20-alpine
+# Use Node.js 24 on Alpine Linux (small image)
+FROM node:24-alpine
 
 # Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
@@ -7,31 +8,27 @@ RUN apk add --no-cache \
     freetype \
     harfbuzz \
     ca-certificates \
-    ttf-freefont \
-    dos2unix
+    ttf-freefont
 
-# Set Puppeteer to use installed Chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+# Tell Puppeteer to use the installed Chromium instead of downloading its own
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Set working directory
+# Set working directory inside container
 WORKDIR /app
 
-# Copy application files
+# Build arguments for Supabase (required at build time for Next.js NEXT_PUBLIC_* variables)
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+# Copy all project files into container
 COPY . .
 
-# Copy environment file
-COPY .env.example .env
-
-# Install dependencies
+# Install dependencies from package.json
 RUN npm install
 
-# Fix line endings and make entrypoint script executable
-RUN dos2unix /app/docker-entrypoint.sh && \
-    chmod +x /app/docker-entrypoint.sh
-
-# Build the application
+# Build the Next.js app for production
 RUN npm run build
 
-# Use entrypoint script to handle migrations and startup
-ENTRYPOINT ["/app/docker-entrypoint.sh"]
+# Start the Next.js production server
+CMD ["npm", "start"]

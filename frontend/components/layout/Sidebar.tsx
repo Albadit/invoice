@@ -8,18 +8,15 @@ import { ScrollShadow } from '@heroui/scroll-shadow';
 import { Avatar } from '@heroui/avatar';
 import { cn } from '@/lib/utils';
 import {
-  FileText,
-  Building2,
-  Palette,
-  Coins,
   ChevronLeft,
   ChevronRight,
+  FileText,
   Menu,
   X,
-  Plus,
 } from 'lucide-react';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
+import { sidebarSections } from '@/config/navigation';
 
 // Sidebar Context
 interface SidebarContextType {
@@ -53,53 +50,20 @@ interface SidebarSection {
   items: SidebarItem[];
 }
 
-// Hook to get translated navigation items
+// Hook to get translated navigation items from config
 function useSidebarSections(): SidebarSection[] {
   const { t } = useTranslation('common');
   
-  return [
-    {
-      key: 'main',
-      items: [
-        {
-          key: 'home',
-          label: t('navigation.invoices'),
-          icon: <FileText className="h-5 w-5" />,
-          href: '/',
-        },
-        {
-          key: 'new-invoice',
-          label: t('navigation.newInvoice'),
-          icon: <Plus className="h-5 w-5" />,
-          href: '/invoice/new/edit',
-        },
-      ],
-    },
-    {
-      key: 'settings',
-      title: t('navigation.settings'),
-      items: [
-        {
-          key: 'companies',
-          label: t('navigation.companies'),
-          icon: <Building2 className="h-5 w-5" />,
-          href: '/settings?tab=companies',
-        },
-        {
-          key: 'templates',
-          label: t('navigation.templates'),
-          icon: <Palette className="h-5 w-5" />,
-          href: '/settings?tab=templates',
-        },
-        {
-          key: 'currencies',
-          label: t('navigation.currencies'),
-          icon: <Coins className="h-5 w-5" />,
-          href: '/settings?tab=currencies',
-        },
-      ],
-    },
-  ];
+  return sidebarSections.map((section) => ({
+    key: section.key,
+    title: section.titleKey ? t(section.titleKey) : undefined,
+    items: section.items.map((item) => ({
+      key: item.key,
+      label: t(item.labelKey),
+      icon: <item.icon className="size-5" />,
+      href: item.href,
+    })),
+  }));
 }
 
 // Sidebar Item Component

@@ -1,5 +1,5 @@
 // Auto-generated TypeScript types from PostgreSQL database
-// Generated on: 2026-02-11T12:32:25.987Z
+// Generated on: 2026-02-20T23:24:48.079Z
 
 export type Json =
   | string
@@ -81,6 +81,7 @@ export interface Invoices {
   updated_at: string | null
   search_tsv: unknown | null
   search_text: string | null
+  language: string | null
 }
 
 export interface Templates {
@@ -111,7 +112,7 @@ export type InvoiceItemsPatch = Partial<InvoiceItemsPost>
 export type InvoiceItemsDelete = Pick<InvoiceItems, 'id'>
 
 export type InvoicesGet = Invoices
-export type InvoicesPost = Omit<Invoices, 'id' | 'created_at' | 'updated_at'>
+export type InvoicesPost = Omit<Invoices, 'id' | 'created_at' | 'updated_at' | 'search_tsv' | 'search_text'>
 export type InvoicesPut = Omit<Invoices, 'created_at' | 'updated_at'>
 export type InvoicesPatch = Partial<InvoicesPost>
 export type InvoicesDelete = Pick<Invoices, 'id'>
