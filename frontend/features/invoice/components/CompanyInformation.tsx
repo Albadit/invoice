@@ -28,15 +28,15 @@ export function CompanyInformation({
   onEdit,
 }: CompanyInformationProps) {
   return (
-    <section>
-      <div className="flex items-center justify-between mb-6">
+    <section className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Company Information</h2>
         <div className="flex gap-2">
           <Button 
             color="primary" 
             variant="flat"
             onClick={onEdit}
-            startContent={<Edit className="h-4 w-4" />}
+            startContent={<Edit className="size-4" />}
           >
             Edit
           </Button>
@@ -44,39 +44,39 @@ export function CompanyInformation({
             color="danger" 
             variant="flat"
             onClick={onDelete}
-            startContent={<Trash className="h-4 w-4" />}
+            startContent={<Trash className="size-4" />}
           >
             Delete
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <span className="text-sm font-semibold block mb-2">Company Name</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">Company Name</span>
           <Input value={companyName} isReadOnly />
         </div>
-        <div>
-          <span className="text-sm font-semibold block mb-2">Email</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">Email</span>
           <Input value={companyEmail} isReadOnly />
         </div>
-        <div>
-          <span className="text-sm font-semibold block mb-2">Phone</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">Phone</span>
           <Input value={companyPhone} isReadOnly />
         </div>
-        <div>
-          <span className="text-sm font-semibold block mb-2">Street</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">Street</span>
           <Input value={companyStreet} isReadOnly />
         </div>
-        <div>
-          <span className="text-sm font-semibold block mb-2">City</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">City</span>
           <Input value={companyCity} isReadOnly />
         </div>
-        <div>
-          <span className="text-sm font-semibold block mb-2">Zip Code</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-semibold">Zip Code</span>
           <Input value={companyZipCode} isReadOnly />
         </div>
-        <div className="col-span-2">
-          <span className="text-sm font-semibold block mb-2">Country</span>
+        <div className="col-span-2 flex flex-col gap-2">
+          <span className="text-sm font-semibold">Country</span>
           <Input value={companyCountry} isReadOnly />
         </div>
       </div>

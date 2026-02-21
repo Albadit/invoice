@@ -7,6 +7,7 @@ import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi, companiesApi, templatesApi } from '@/features/settings/api';
 import type { InvoiceItem, Currency, Company, Template } from '@/lib/types';
 import type { InvoicesPost } from '@/lib/database.types';
+import { getCurrencySymbol } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -48,11 +49,6 @@ export default function InvoiceEditPage() {
     { name: '', quantity: 1, unit_price: 0 },
   ]);
 
-  // Get the selected currency symbol
-  const getCurrencySymbol = () => {
-    const currency = currencies.find(c => c.id === currencyId);
-    return currency ? currency.symbol : '$';
-  };
   const [discountType, setDiscountType] = useState<'percent' | 'fixed' | null>(null);
   const [discountAmount, setDiscountAmount] = useState<number | null>(null);
   const [taxType, setTaxType] = useState<'percent' | 'fixed' | null>(null);
@@ -257,7 +253,11 @@ export default function InvoiceEditPage() {
 
   async function handleSave() {
     if (!companyId) {
-      alert('Company ID is required. Please check your settings.');
+      addToast({
+        title: 'Error',
+        description: 'Company ID is required. Please check your settings.',
+        color: 'danger',
+      });
       return;
     }
 
@@ -339,52 +339,53 @@ export default function InvoiceEditPage() {
   }
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-4 sm:p-8">
       {saving && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-content1 rounded-lg p-8 flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
+            <div className="animate-spin rounded-full size-12 border-b-2 border-foreground"></div>
             <p className="text-foreground font-semibold">{t('actions.saving')}...</p>
           </div>
         </div>
       )}
       
       <div className="max-w-7xl mx-auto">
-        <div className="flex max-xl:flex-col gap-6 mb-6 relative">
+        <div className="flex max-xl:flex-col gap-6 relative">
           <div className="flex flex-col gap-6 flex-1">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <h1 className="text-xl sm:text-3xl font-bold">
                 {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceNumber}`}
               </h1>
-              <div className="flex flex-row gap-2 items-center">
+              <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
                 <Button 
                   color="primary"
+                  className="w-full sm:w-auto"
                   onClick={handleSave}
                   disabled={saving}
-                  startContent={<Save className="h-4 w-4" />}
+                  startContent={<Save className="size-4" />}
                 >
                   {saving ? t('actions.saving') : t('actions.save')}
                 </Button>
               </div>
             </div>
-            <div className="bg-content1 rounded-xl shadow-xs border border-default-200 p-8">
-              <div className="flex justify-between items-start mb-8">
-                <div className="flex-1">
+            <div className="bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-8 flex flex-col gap-8">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+                <div>
                   {logoUrl ? (
-                    <Image src={logoUrl} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
+                    <Image src={logoUrl} alt="Logo" width={128} height={64} unoptimized className="h-16 w-auto object-contain" />
                   ) : (
-                    <div className="h-16 w-32 bg-default-200 rounded mb-4 flex items-center justify-center text-default-400 text-sm">
+                    <div className="h-16 w-32 bg-default-200 rounded flex items-center justify-center text-default-400 text-sm">
                       Logo
                     </div>
                   )}
                 </div>
-                <div className="text-right">
-                  <h2 className="text-3xl font-bold text-foreground mb-2">INVOICE</h2>
-                  {!isNewInvoice && <p className="text-xl text-default-500">#{invoiceNumber}</p>}
+                <div className="sm:text-right flex flex-col gap-1">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-foreground">INVOICE</h2>
+                  {!isNewInvoice && <p className="text-lg sm:text-xl text-default-500">#{invoiceNumber}</p>}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6 mb-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-4">
                   <Input
                     label={t('customerName')}
@@ -447,65 +448,73 @@ export default function InvoiceEditPage() {
                 </div>
               </div>
 
-              <div className="mb-6">
-                <div className="grid grid-cols-12 gap-4 mb-3 font-semibold text-sm text-default-600">
-                  <div className="col-span-5">{t('fields.itemName')}</div>
+              <div className="flex flex-col gap-4 sm:gap-3">
+                <div className="hidden sm:grid grid-cols-12 gap-4 font-semibold text-sm text-default-600">
+                  <div className="col-span-5">{t('fields.item')}</div>
                   <div className="col-span-2">{t('fields.quantity')}</div>
                   <div className="col-span-2">{t('fields.rate')}</div>
                   <div className="col-span-2 text-right">{t('fields.amount')}</div>
                   <div className="col-span-1"></div>
                 </div>
                 {items.map((item, index) => (
-                  <div key={index} className="grid grid-cols-12 gap-4 mb-3">
-                    <div className="col-span-5">
+                  <div key={index} className="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 border-b sm:border-0 pb-4 sm:pb-0 border-default-200">
+                    <div className="sm:col-span-5">
                       <Input
+                        label={undefined}
+                        aria-label={t('fields.item')}
                         value={item.name || ''}
                         onChange={(e) => updateItem(index, 'name', e.target.value)}
                         placeholder="Item description"
+                        startContent={<span className="text-xs text-default-400 sm:hidden">{t('fields.item')}</span>}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Input
                         type="number"
+                        aria-label={t('fields.quantity')}
                         value={String(item.quantity || 1)}
                         onChange={(e) => updateItem(index, 'quantity', parseFloat(e.target.value) || 0)}
                         min="0"
                         step="0.01"
+                        startContent={<span className="text-xs text-default-400 sm:hidden">{t('fields.quantity')}</span>}
                       />
                     </div>
-                    <div className="col-span-2">
+                    <div className="sm:col-span-2">
                       <Input
                         type="number"
+                        aria-label={t('fields.rate')}
                         value={String(item.unit_price || 0)}
                         onChange={(e) => updateItem(index, 'unit_price', parseFloat(e.target.value) || 0)}
                         min="0"
                         step="0.01"
+                        startContent={<span className="text-xs text-default-400 sm:hidden">{t('fields.rate')}</span>}
                       />
                     </div>
-                    <div className="col-span-2 flex items-center justify-end font-semibold">
-                      {getCurrencySymbol()}{((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
+                    <div className="sm:col-span-2 flex items-center justify-between sm:justify-end font-semibold">
+                      <span className="text-xs text-default-400 sm:hidden">{t('fields.amount')}</span>
+                      {getCurrencySymbol(currencies, currencyId)}{((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
                     </div>
-                    <div className="col-span-1 flex items-center">
+                    <div className="sm:col-span-1 flex items-center justify-end sm:justify-start">
                       <Button
                         variant="light"
                         color="danger"
                         isIconOnly
                         onClick={() => removeItem(index)}
                         disabled={items.length === 1}
-                        startContent={<Trash className="h-4 w-4 text-danger" />}
+                        startContent={<Trash className="size-4 text-danger" />}
                       >
                       </Button>
                     </div>
                   </div>
                 ))}
-                <Button onClick={addItem} className="mt-4"
-                  startContent={<Plus className="mr-2 h-4 w-4" />}
+                <Button onClick={addItem}
+                  startContent={<Plus className="size-4" />}
                 >
                   {t('actions.addItem')}
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex flex-col gap-4">
                   <Textarea
                     label={t('fields.notes')}
@@ -530,12 +539,12 @@ export default function InvoiceEditPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-default-600">{t('fields.subtotal')}</span>
                     <span className="text-lg font-semibold">
-                      {getCurrencySymbol()}{getSubtotal().toFixed(2)}
+                      {getCurrencySymbol(currencies, currencyId)}{getSubtotal().toFixed(2)}
                     </span>
                   </div>
 
                   {showDiscount ? (
-                    <div className="flex justify-between items-center gap-4">
+                    <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-default-600">{t('fields.discount')}</span>
                         <Button
@@ -543,13 +552,13 @@ export default function InvoiceEditPage() {
                           onClick={() => setDiscountType(discountType === 'percent' ? 'fixed' : 'percent')}
                           className="min-w-12"
                         >
-                          {discountType === 'percent' ? '%' : getCurrencySymbol()}
+                          {discountType === 'percent' ? '%' : getCurrencySymbol(currencies, currencyId)}
                         </Button>
                         <Input
                           type="number"
                           value={String(discountAmount || 0)}
                           onChange={(e) => setDiscountAmount(parseFloat(e.target.value) || 0)}
-                          className="w-24"
+                          className="w-18"
                           min="0"
                           step="0.01"
                         />
@@ -558,17 +567,17 @@ export default function InvoiceEditPage() {
                           color="danger"
                           isIconOnly
                           onClick={removeDiscount}
-                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                          startContent={<Trash className="size-4 text-danger" />}
                         />
                       </div>
-                      <span className="text-lg font-semibold">
-                        -{getCurrencySymbol()}{getDiscountAmount().toFixed(2)}
+                      <span className="text-lg font-semibold ml-auto">
+                        -{getCurrencySymbol(currencies, currencyId)}{getDiscountAmount().toFixed(2)}
                       </span>
                     </div>
                   ) : null}
 
                   {showTax ? (
-                    <div className="flex justify-between items-center gap-4">
+                    <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-default-600">{t('fields.tax')}</span>
                         <Button
@@ -576,13 +585,13 @@ export default function InvoiceEditPage() {
                           onClick={() => setTaxType(taxType === 'percent' ? 'fixed' : 'percent')}
                           className="min-w-12"
                         >
-                          {taxType === 'percent' ? '%' : getCurrencySymbol()}
+                          {taxType === 'percent' ? '%' : getCurrencySymbol(currencies, currencyId)}
                         </Button>
                         <Input
                           type="number"
                           value={String(taxAmount || 0)}
                           onChange={(e) => setTaxAmount(parseFloat(e.target.value) || 0)}
-                          className="w-24"
+                          className="w-18"
                           min="0"
                           step="0.01"
                         />
@@ -591,24 +600,24 @@ export default function InvoiceEditPage() {
                           color="danger"
                           isIconOnly
                           onClick={removeTax}
-                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                          startContent={<Trash className="size-4 text-danger" />}
                         />
                       </div>
-                      <span className="text-lg font-semibold">
-                        {getCurrencySymbol()}{getTaxAmount().toFixed(2)}
+                      <span className="text-lg font-semibold ml-auto">
+                        {getCurrencySymbol(currencies, currencyId)}{getTaxAmount().toFixed(2)}
                       </span>
                     </div>
                   ) : null}
 
                   {showShipping ? (
-                    <div className="flex justify-between items-center gap-4">
+                    <div className="flex flex-wrap justify-between items-center gap-2 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-default-600">{t('fields.shipping')}</span>
                         <Input
                           type="number"
                           value={String(shippingAmount || 0)}
                           onChange={(e) => setShippingAmount(parseFloat(e.target.value) || 0)}
-                          className="w-24"
+                          className="w-18"
                           min="0"
                           step="0.01"
                         />
@@ -617,23 +626,23 @@ export default function InvoiceEditPage() {
                           color="danger"
                           isIconOnly
                           onClick={removeShipping}
-                          startContent={<Trash className="h-4 w-4 text-danger" />}
+                          startContent={<Trash className="size-4 text-danger" />}
                         />
                       </div>
-                      <span className="text-lg font-semibold">
-                        {getCurrencySymbol()}{(shippingAmount || 0).toFixed(2)}
+                      <span className="text-lg font-semibold ml-auto">
+                        {getCurrencySymbol(currencies, currencyId)}{(shippingAmount || 0).toFixed(2)}
                       </span>
                     </div>
                   ) : null}
 
                   {(!showDiscount || !showTax || !showShipping) && (
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       {!showDiscount && (
                         <Button
                           size="sm"
                           variant="flat"
                           onClick={addDiscount}
-                          startContent={<Plus className="h-4 w-4" />}
+                          startContent={<Plus className="size-4" />}
                         >
                           {t('actions.addDiscount')}
                         </Button>
@@ -643,7 +652,7 @@ export default function InvoiceEditPage() {
                           size="sm"
                           variant="flat"
                           onClick={addTax}
-                          startContent={<Plus className="h-4 w-4" />}
+                          startContent={<Plus className="size-4" />}
                         >
                           {t('actions.addTax')}
                         </Button>
@@ -653,7 +662,7 @@ export default function InvoiceEditPage() {
                           size="sm"
                           variant="flat"
                           onClick={addShipping}
-                          startContent={<Plus className="h-4 w-4" />}
+                          startContent={<Plus className="size-4" />}
                         >
                           {t('actions.addShipping')}
                         </Button>
@@ -664,7 +673,7 @@ export default function InvoiceEditPage() {
                   <div className="flex justify-between items-center pt-2 border-t border-default-200">
                     <span className="text-xl font-bold text-foreground">{t('fields.total')}</span>
                     <span className="text-2xl font-bold text-foreground">
-                      {getCurrencySymbol()}{getTotal().toFixed(2)}
+                      {getCurrencySymbol(currencies, currencyId)}{getTotal().toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -672,13 +681,13 @@ export default function InvoiceEditPage() {
             </div>
           </div>
 
-          <div className="min-w-xs flex flex-col gap-6">
+          <div className="w-full xl:min-w-xs xl:max-w-xs flex flex-col gap-6">
             {/* Spacer to align with invoice card */}
             <div className="h-10 max-xl:hidden" aria-hidden="true" />
-            <div className="h-fit sticky top-8 bg-content1 rounded-xl shadow-xs border border-default-200 p-6">
-              <h3 className="text-lg font-semibold text-foreground mb-4">{t('settings.company')}</h3>
-            <div className="flex flex-col gap-4 mb-6">
-              <Select
+            <div className="h-fit xl:sticky xl:top-8 bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-6 flex flex-col gap-6">
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
+                <Select
                 aria-label={t('settings.company')}
                 selectionMode="single"
                 selectedKeys={companyId ? new Set([companyId]) : new Set()}
@@ -700,12 +709,12 @@ export default function InvoiceEditPage() {
                   </SelectItem>
                 ))}
               </Select>
-            </div>
+              </div>
 
-            <h3 className="text-lg font-semibold text-foreground mb-4">{t('settings.invoiceSettings')}</h3>
             <div className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.template')}</label>
+            <h3 className="text-lg font-semibold text-foreground">{t('settings.invoiceSettings')}</h3>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-default-600">{t('settings.template')}</label>
                 <Select
                   aria-label={t('settings.template')}
                   selectionMode="single"
@@ -730,8 +739,8 @@ export default function InvoiceEditPage() {
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.currency')}</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-default-600">{t('settings.currency')}</label>
                 <Select
                   aria-label={t('settings.currency')}
                   selectionMode="single"
@@ -756,8 +765,8 @@ export default function InvoiceEditPage() {
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium text-default-600 mb-2 block">{t('settings.language')}</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-default-600">{t('settings.language')}</label>
                 <Select
                   aria-label={t('settings.language')}
                   selectionMode="single"

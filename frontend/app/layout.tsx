@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { fontInter } from "@/config/fonts";
 import { Providers } from "@/contexts/HeroProviders";
 import { LocaleProvider } from "@/contexts/LocaleProvider";
-import { SidebarProvider, SidebarLayout } from "@/components/layout";
+import { SidebarLayout } from "@/components/layout";
 import { getLanguageConfig, getLanguages } from "@/lib/i18n/settings.server";
 import { fallbackLng } from "@/lib/i18n/settings";
 import "@/styles/globals.css";
@@ -27,11 +27,9 @@ export default async function RootLayout({ children, }: Readonly<{ children: Rea
       <body className={`${fontInter.className} antialiased`}>
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
           <LocaleProvider languageConfig={languageConfig} initialLocale={initialLocale}>
-            <SidebarProvider>
-              <SidebarLayout>
-                {children}
-              </SidebarLayout>
-            </SidebarProvider>
+            <SidebarLayout>
+              {children}
+            </SidebarLayout>
           </LocaleProvider>
         </Providers>
       </body>

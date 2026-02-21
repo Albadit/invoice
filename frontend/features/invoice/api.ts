@@ -74,7 +74,7 @@ export const invoicesApi = {
     cursor?: PageCursor | null;
     status?: 'active' | 'cancelled';
     search?: string;
-    statusFilter?: string;
+    statusFilter?: string[];
     startDate?: string;
     endDate?: string;
     signal?: AbortSignal;
@@ -104,8 +104,12 @@ export const invoicesApi = {
     }
     
     // Additional status filter (pending, paid, etc.)
-    if (statusFilter) {
-      url.searchParams.append('status', `eq.${statusFilter}`);
+    if (statusFilter && statusFilter.length > 0) {
+      if (statusFilter.length === 1) {
+        url.searchParams.append('status', `eq.${statusFilter[0]}`);
+      } else {
+        url.searchParams.append('status', `in.(${statusFilter.join(',')})`);
+      }
     }
     
     // Search filter - use FTS for word search, trigram for substring
@@ -190,16 +194,16 @@ export const invoicesApi = {
 
   /**
    * Get all invoices (paginated with offset-based pagination)
-   * @deprecated Use getAllWithCursor for better performance on large datasets
    */
   async getAll(options?: {
     limit?: number;
     offset?: number;
     status?: 'active' | 'cancelled';
     search?: string;
-    statusFilter?: string;
+    statusFilter?: string[];
     startDate?: string;
     endDate?: string;
+    orderBy?: string;
     signal?: AbortSignal;
   }): Promise<PaginatedResponse<InvoiceWithItems>> {
     const { 
@@ -209,14 +213,15 @@ export const invoicesApi = {
       search, 
       statusFilter, 
       startDate, 
-      endDate, 
+      endDate,
+      orderBy,
       signal 
     } = options || {};
     
     // Build URL with query params
     const url = new URL(`${API_URL}/invoices`);
     url.searchParams.set('select', LIST_COLUMNS);
-    url.searchParams.set('order', 'created_at.desc,id.desc');
+    url.searchParams.set('order', orderBy || 'created_at.desc,id.desc');
     url.searchParams.set('limit', String(limit));
     url.searchParams.set('offset', String(offset));
     
@@ -228,8 +233,12 @@ export const invoicesApi = {
     }
     
     // Additional status filter (pending, paid, etc.)
-    if (statusFilter) {
-      url.searchParams.append('status', `eq.${statusFilter}`);
+    if (statusFilter && statusFilter.length > 0) {
+      if (statusFilter.length === 1) {
+        url.searchParams.append('status', `eq.${statusFilter[0]}`);
+      } else {
+        url.searchParams.append('status', `in.(${statusFilter.join(',')})`);
+      }
     }
     
     // Search filter - use FTS + trigram for fast search
@@ -334,8 +343,6 @@ export const invoicesApi = {
         sort_order: index
       }));
       
-      console.log('Creating invoice items:', itemsData);
-      
       const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
         method: 'POST',
         headers: getHeaders(),
@@ -392,8 +399,6 @@ export const invoicesApi = {
           unit_price: item.unit_price || 0,
           sort_order: index
         }));
-        
-        console.log('Updating invoice items:', itemsData);
         
         const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
           method: 'POST',

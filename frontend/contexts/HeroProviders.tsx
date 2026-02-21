@@ -24,6 +24,18 @@ declare module "@react-types/shared" {
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
 
+  // Suppress React 19 "inert" attribute warning caused by HeroUI internals
+  React.useEffect(() => {
+    const originalError = console.error;
+    console.error = (...args: unknown[]) => {
+      if (typeof args[0] === 'string' && args[0].includes('Received an empty string for a boolean attribute `inert`')) {
+        return;
+      }
+      originalError.apply(console, args);
+    };
+    return () => { console.error = originalError; };
+  }, []);
+
   return (
     <HeroUIProvider navigate={router.push}>
       <ToastProvider/>

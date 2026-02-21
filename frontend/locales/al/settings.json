@@ -16,7 +16,7 @@
     "deleteCompany": "Fshi Kompani",
     "manageCompanies": "Menaxho Kompanitë",
     "selectCompany": "Zgjidh Kompani",
-    "selectDescription": "Zgjidh një kompani për faturat e tua.",
+    "selectDescription": "Kompania",
     "selectPlaceholder": "Zgjidh një kompani",
     "fields": {
       "name": "Emri i Kompanisë",
@@ -47,17 +47,17 @@
     "title": "Logo e Faturës",
     "upload": "Ngarko Logo",
     "url": "URL e Logos",
-    "urlDescription": "Fut URL-në e logos së kompanisë nëse është e hostuar diku tjetër.",
+    "urlDescription": "URL e logos",
     "or": "OSE"
   },
   "invoiceSettings": {
     "title": "Cilësimet e Faturës",
     "templateStyle": "Stili i Shablonit",
-    "templateDescription": "Zgjidh stilin e shablonit për faturat (redaktim dhe shfaqje).",
+    "templateDescription": "Shablloni",
     "defaultCurrency": "Valuta e Paracaktuar",
-    "currencyDescription": "Cakto valutën e paracaktuar për faturat e reja.",
+    "currencyDescription": "Valuta",
     "defaultTax": "TVSH e Paracaktuar (%)",
-    "taxDescription": "Cakto përqindjen e TVSH-së së paracaktuar për faturat e reja."
+    "taxDescription": "TVSH %"
   },
   "templates": {
     "title": "Shabllonet e Faturës",

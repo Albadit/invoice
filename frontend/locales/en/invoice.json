@@ -30,8 +30,7 @@
   "fields": {
     "client": "Client",
     "company": "Company",
-    "items": "Items",
-    "itemName": "Item Name",
+    "item": "Item",
     "description": "Description",
     "quantity": "Quantity",
     "rate": "Rate",

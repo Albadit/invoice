@@ -1,39 +1,51 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { generatePdf } from '@/lib/generatePdf';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/settings/api';
 import { renderInvoiceToHtml } from '@/lib/renderTemplate';
+import { tl } from '@/lib/i18n/translate';
+import { loadTranslations } from '@/lib/i18n/translate.server';
+import type { Translations } from '@/lib/i18n/translate';
 import type { InvoiceWithItems, InvoiceItem } from '@/lib/types';
 
-type Translations = Record<string, unknown>;
+/**
+ * Replace English labels in rendered HTML with translated versions.
+ * Uses HTML-context-aware regex so only text between > and < is replaced,
+ * preventing accidental replacement inside attributes or CSS.
+ */
+function translateHtml(html: string, labels: Translations): string {
+  // Hardcoded English template strings paired with their translation key paths.
+  // Order matters: longer/more-specific strings first to avoid partial matches.
+  const replacements: [string, string][] = [
+    ['Terms & Conditions', 'fields.terms'],
+    ['Issue Date:', 'preview.issueDate'],
+    ['Due Date:', 'preview.dueDate'],
+    ['Bill To:', 'preview.billTo'],
+    ['INVOICE', 'preview.invoiceTitle'],
+    ['Subtotal', 'fields.subtotal'],
+    ['Quantity', 'fields.quantity'],
+    ['Shipping', 'fields.shipping'],
+    ['Discount', 'fields.discount'],
+    ['Amount', 'fields.amount'],
+    ['Notes', 'fields.notes'],
+    ['Total', 'fields.total'],
+    ['Item', 'fields.item'],
+    ['Rate', 'fields.rate'],
+    ['Tax', 'fields.tax'],
+  ];
 
-function loadTranslations(lang: string): Translations {
-  const filePath = path.join(process.cwd(), 'locales', lang, 'invoice.json');
-  try {
-    return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-  } catch {
-    const fallback = path.join(process.cwd(), 'locales', 'en', 'invoice.json');
-    try {
-      return JSON.parse(fs.readFileSync(fallback, 'utf-8'));
-    } catch {
-      return {};
+  let result = html;
+  for (const [en, key] of replacements) {
+    const translated = tl(labels, key);
+    if (translated && translated !== key && translated !== en) {
+      // Escape special regex chars in the English text
+      const escaped = en.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Only replace when text appears as HTML content (between > and <)
+      const regex = new RegExp(`(>[^<]*)${escaped}([^<]*<)`, 'g');
+      result = result.replace(regex, `$1${translated}$2`);
     }
   }
-}
-
-function tl(translations: Translations, key: string): string {
-  const parts = key.split('.');
-  let current: unknown = translations;
-  for (const part of parts) {
-    if (current && typeof current === 'object') {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return key;
-    }
-  }
-  return typeof current === 'string' ? current : key;
+  return result;
 }
 
 /**
@@ -96,7 +108,8 @@ export async function GET(
     }
 
     // Load translations for the invoice's language
-    const labels = loadTranslations(invoice.language || 'en');
+    const lang = invoice.language || 'en';
+    const labels = loadTranslations(lang);
 
     // Fetch template info
     let template = null;
@@ -127,6 +140,11 @@ export async function GET(
     } else {
       // Use default template
       html = InvoiceHtml(invoice, labels);
+    }
+
+    // Replace English labels with translated versions (works for custom templates too)
+    if (lang !== 'en') {
+      html = translateHtml(html, labels);
     }
     
     // Generate PDF on the server (no CSS needed - Tailwind is included in HTML)
@@ -200,9 +218,9 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
         <div class="flex flex-col gap-4">
           <div class="flex justify-between">
             ${invoice.company?.logo_url ? `
-              <img src="${invoice.company.logo_url}" alt="Logo" class="h-16 mb-4" />
+              <img src="${invoice.company.logo_url}" alt="Logo" class="h-16" />
             ` : `
-              <div class="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold mb-4">
+              <div class="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold">
                 Logo Demo
               </div>
             `}
@@ -214,7 +232,7 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
 
           <div class="flex justify-between">
             <div class="flex flex-col">
-              <h1 class="text-2xl font-bold text-gray-900 mb-2">${invoice.company?.name || ''}</h1>
+              <h1 class="text-2xl font-bold text-gray-900">${invoice.company?.name || ''}</h1>
               ${invoice.company?.street ? `<p class="text-sm text-gray-600">${invoice.company.street}</p>` : ''}
               ${invoice.company?.city && invoice.company?.zip_code ? `<p class="text-sm text-gray-600">${invoice.company.city}, ${invoice.company.zip_code}</p>` : invoice.company?.city ? `<p class="text-sm text-gray-600">${invoice.company.city}</p>` : ''}
               ${invoice.company?.country ? `<p class="text-sm text-gray-600">${invoice.company.country}</p>` : ''}
@@ -242,7 +260,7 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
 
         <!-- Bill To -->
         <div class="flex flex-col">
-          <h3 class="text-xs font-bold uppercase text-gray-600 mb-2">${tl(labels, 'preview.billTo')}</h3>
+          <h3 class="text-xs font-bold uppercase text-gray-600">${tl(labels, 'preview.billTo')}</h3>
           <p class="text-lg font-semibold text-gray-900">${invoice.customer_name}</p>
           ${invoice.customer_street ? `<p class="text-sm text-gray-600">${invoice.customer_street}</p>` : ''}
           ${invoice.customer_city ? `<p class="text-sm text-gray-600">${invoice.customer_city}</p>` : ''}
@@ -252,7 +270,7 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
         <!-- Items Table -->
         <div class="flex flex-col gap-4">
           <div class="grid grid-cols-12 border-b-2 py-3 border-slate-900">
-            <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">${tl(labels, 'fields.items')}</div>
+            <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">${tl(labels, 'fields.item')}</div>
             <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-center">${tl(labels, 'fields.quantity')}</div>
             <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-right">${tl(labels, 'fields.rate')}</div>
             <div class="col-span-3 text-sm font-bold text-slate-900 uppercase text-right">${tl(labels, 'fields.amount')}</div>
@@ -271,11 +289,11 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
           <!-- Terms & Notes -->
           <div class="flex flex-col gap-8">
             <div>
-              <h4 class="text-sm font-bold text-gray-900 mb-2">${tl(labels, 'fields.notes')}</h4>
+              <h4 class="text-sm font-bold text-gray-900">${tl(labels, 'fields.notes')}</h4>
               <p class="text-sm text-gray-600 whitespace-pre-line">${invoice.notes}</p>
             </div>
             <div>
-              <h4 class="text-sm font-bold text-gray-900 mb-2">${tl(labels, 'fields.terms')}</h4>
+              <h4 class="text-sm font-bold text-gray-900">${tl(labels, 'fields.terms')}</h4>
               <p class="text-sm text-gray-600 whitespace-pre-line">${invoice.terms}</p>
             </div>
           </div>

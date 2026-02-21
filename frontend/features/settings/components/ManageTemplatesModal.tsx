@@ -44,7 +44,7 @@ export function ManageTemplatesModal({
                       size="sm"
                       variant="flat"
                       color="primary"
-                      startContent={<Edit className="h-4 w-4" />}
+                      startContent={<Edit className="size-4" />}
                       onClick={() => onEdit(template)}
                     >
                       Edit
@@ -53,7 +53,7 @@ export function ManageTemplatesModal({
                       size="sm"
                       variant="flat"
                       color="danger"
-                      startContent={<Trash className="h-4 w-4" />}
+                      startContent={<Trash className="size-4" />}
                       onClick={() => onDelete(template.id)}
                     >
                       Delete
@@ -70,7 +70,7 @@ export function ManageTemplatesModal({
           </Button>
           <Button
             color="primary"
-            startContent={<Plus className="h-4 w-4" />}
+            startContent={<Plus className="size-4" />}
             onClick={onAdd}
           >
             Add New

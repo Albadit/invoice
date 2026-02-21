@@ -54,9 +54,9 @@ export default function InvoiceTestPage() {
   <div className="flex flex-col gap-4">
     <div className="flex justify-between">
       {invoice.company?.logo_url ? (
-        <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
+        <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} unoptimized className="h-16 w-auto object-contain" />
       ) : (
-        <div className="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold mb-4">
+        <div className="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold">
           Logo
         </div>
       )}
@@ -69,7 +69,7 @@ export default function InvoiceTestPage() {
     {/* Company Info and Invoice Details */}
     <div className="flex justify-between">
       <div className="flex flex-col">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{invoice.company?.name || ''}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{invoice.company?.name || ''}</h1>
         {invoice.company?.street && <p className="text-sm text-gray-600">{invoice.company.street}</p>}
         {(invoice.company?.city || invoice.company?.zip_code) && (
           <p className="text-sm text-gray-600">
@@ -97,7 +97,7 @@ export default function InvoiceTestPage() {
 
   {/* Bill To */}
   <div className="flex flex-col">
-    <h3 className="text-xs font-bold uppercase text-gray-600 mb-2">Bill To:</h3>
+    <h3 className="text-xs font-bold uppercase text-gray-600">Bill To:</h3>
     <p className="text-lg font-semibold text-gray-900">{invoice.customer_name}</p>
     <p className="text-sm text-gray-600">{invoice.customer_street}</p>
     <p className="text-sm text-gray-600">{invoice.customer_city}</p>
@@ -127,13 +127,13 @@ export default function InvoiceTestPage() {
     <div className="flex flex-col gap-8">
       {invoice.notes && (
         <div>
-          <h4 className="text-sm font-bold text-gray-900 mb-2">Notes</h4>
+          <h4 className="text-sm font-bold text-gray-900">Notes</h4>
           <p className="text-sm text-gray-600 whitespace-pre-line">{invoice.notes}</p>
         </div>
       )}
       {invoice.terms && (
         <div>
-          <h4 className="text-sm font-bold text-gray-900 mb-2">Terms & Conditions</h4>
+          <h4 className="text-sm font-bold text-gray-900">Terms & Conditions</h4>
           <p className="text-sm text-gray-600 whitespace-pre-line">{invoice.terms}</p>
         </div>
       )}

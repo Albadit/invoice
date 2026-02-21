@@ -16,7 +16,7 @@
     "deleteCompany": "Delete Company",
     "manageCompanies": "Manage Companies",
     "selectCompany": "Select Company",
-    "selectDescription": "Choose a company for your invoices.",
+    "selectDescription": "Company",
     "selectPlaceholder": "Select a company",
     "fields": {
       "name": "Company Name",
@@ -47,17 +47,17 @@
     "title": "Invoice Logo",
     "upload": "Upload Logo",
     "url": "Logo URL",
-    "urlDescription": "Enter the URL of your company logo if hosted elsewhere.",
+    "urlDescription": "Logo URL",
     "or": "OR"
   },
   "invoiceSettings": {
     "title": "Invoice Settings",
     "templateStyle": "Template Style",
-    "templateDescription": "Choose a template style for your invoices (both editing and viewing).",
+    "templateDescription": "Template",
     "defaultCurrency": "Default Currency",
-    "currencyDescription": "Set the default currency for new invoices.",
+    "currencyDescription": "Currency",
     "defaultTax": "Default Tax (%)",
-    "taxDescription": "Set the default tax percentage for new invoices."
+    "taxDescription": "Tax %"
   },
   "templates": {
     "title": "Invoice Templates",

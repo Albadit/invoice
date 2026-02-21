@@ -9,21 +9,8 @@ import { format } from 'date-fns';
 import type { InvoiceWithItems } from '@/lib/types';
 import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
 import { useTranslation } from '@/contexts/LocaleProvider';
-
-type Translations = Record<string, string | Record<string, string>>;
-
-function tl(translations: Translations, key: string): string {
-  const parts = key.split('.');
-  let current: unknown = translations;
-  for (const part of parts) {
-    if (current && typeof current === 'object') {
-      current = (current as Record<string, unknown>)[part];
-    } else {
-      return key;
-    }
-  }
-  return typeof current === 'string' ? current : key;
-}
+import { tl } from '@/lib/i18n/translate';
+import type { Translations } from '@/lib/i18n/translate';
 
 interface InvoicePreviewModalProps {
   isOpen: boolean;
@@ -66,7 +53,7 @@ export function InvoicePreviewModal({
             isIconOnly
             variant="light"
             onClick={onClose}
-            startContent={<X className="h-5 w-5" />}
+            startContent={<X className="size-5" />}
           />
         </ModalHeader>
         <ModalBody>
@@ -75,9 +62,9 @@ export function InvoicePreviewModal({
             <div className="flex flex-col gap-4">
               <div className="flex justify-between">
                 {invoice.company?.logo_url ? (
-                  <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} className="h-16 w-auto mb-4 object-contain" />
+                  <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} unoptimized className="h-16 w-auto object-contain" />
                 ) : (
-                  <div className="h-16 w-32 bg-default-200 rounded flex items-center justify-center text-default-500 text-sm font-bold mb-4">
+                  <div className="h-16 w-32 bg-default-200 rounded flex items-center justify-center text-default-500 text-sm font-bold">
                     Logo
                   </div>
                 )}
@@ -90,7 +77,7 @@ export function InvoicePreviewModal({
               {/* Company Info and Invoice Details */}
               <div className="flex justify-between">
                 <div className="flex flex-col">
-                  <h1 className="text-2xl font-bold text-foreground mb-2">{invoice.company?.name || ''}</h1>
+                  <h1 className="text-2xl font-bold text-foreground">{invoice.company?.name || ''}</h1>
                   {invoice.company?.street && <p className="text-sm text-default-500">{invoice.company.street}</p>}
                   {(invoice.company?.city || invoice.company?.zip_code) && (
                     <p className="text-sm text-default-500">
@@ -102,7 +89,7 @@ export function InvoicePreviewModal({
                   {invoice.company?.phone && <p className="text-sm text-default-500">{invoice.company.phone}</p>}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-foreground mb-2 uppercase">{tl(labels, 'preview.invoiceDetails') || 'Invoice Details'}</h3>
+                  <h3 className="text-sm font-bold text-foreground uppercase">{tl(labels, 'preview.invoiceDetails') || 'Invoice Details'}</h3>
                   <div className="text-default-600 space-y-1">
                     <div>
                       <span className="font-semibold">{tl(labels, 'preview.date') || 'Date:'} </span>
@@ -115,7 +102,7 @@ export function InvoicePreviewModal({
                       </div>
                     )}
                     <div>
-                      <span className="font-semibold">{tl(labels, 'preview.status') || 'Status:'} </span>
+                      <span className="font-semibold">{t('preview.status') || 'Status:'} </span>
                       {getStatusBadge(invoice.status)}
                     </div>
                   </div>
@@ -125,7 +112,7 @@ export function InvoicePreviewModal({
 
             {/* Bill To */}
             <div className="flex flex-col">
-              <h3 className="text-xs font-bold uppercase text-default-500 mb-2">{tl(labels, 'preview.billTo') || 'Bill To:'}</h3>
+              <h3 className="text-xs font-bold uppercase text-default-500">{tl(labels, 'preview.billTo') || 'Bill To:'}</h3>
               <p className="text-lg font-semibold text-foreground">{invoice.customer_name}</p>
               <p className="text-sm text-default-500">{invoice.customer_street}</p>
               <p className="text-sm text-default-500">{invoice.customer_city}</p>
@@ -135,7 +122,7 @@ export function InvoicePreviewModal({
             {/* Items Table */}
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-12 border-b-2 py-3 border-foreground">
-                <div className="col-span-5 text-sm font-bold text-foreground uppercase">{tl(labels, 'fields.items') || 'Item'}</div>
+                <div className="col-span-5 text-sm font-bold text-foreground uppercase">{tl(labels, 'fields.item') || 'Item'}</div>
                 <div className="col-span-2 text-sm font-bold text-foreground uppercase text-center">{tl(labels, 'fields.quantity') || 'Quantity'}</div>
                 <div className="col-span-2 text-sm font-bold text-foreground uppercase text-right">{tl(labels, 'fields.rate') || 'Rate'}</div>
                 <div className="col-span-3 text-sm font-bold text-foreground uppercase text-right">{tl(labels, 'fields.amount') || 'Amount'}</div>
@@ -155,13 +142,13 @@ export function InvoicePreviewModal({
               <div className="flex flex-col gap-8">
                 {invoice.notes && (
                   <div>
-                    <h4 className="text-sm font-bold text-foreground mb-2">{tl(labels, 'fields.notes') || 'Notes'}</h4>
+                    <h4 className="text-sm font-bold text-foreground">{tl(labels, 'fields.notes') || 'Notes'}</h4>
                     <p className="text-sm text-default-500 whitespace-pre-line">{invoice.notes}</p>
                   </div>
                 )}
                 {invoice.terms && (
                   <div>
-                    <h4 className="text-sm font-bold text-foreground mb-2">{tl(labels, 'fields.terms') || 'Terms & Conditions'}</h4>
+                    <h4 className="text-sm font-bold text-foreground">{tl(labels, 'fields.terms') || 'Terms & Conditions'}</h4>
                     <p className="text-sm text-default-500 whitespace-pre-line">{invoice.terms}</p>
                   </div>
                 )}
@@ -205,7 +192,7 @@ export function InvoicePreviewModal({
           <Button 
             color="primary" 
             onClick={() => onDownload(invoice.id)}
-            startContent={<Download className="h-4 w-4" />}
+            startContent={<Download className="size-4" />}
           >
             {t('actions.downloadPdf')}
           </Button>

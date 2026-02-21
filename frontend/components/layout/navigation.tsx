@@ -12,7 +12,7 @@ export function Navigation() {
       <Button
         variant="solid"
         onClick={() => router.push('/settings')}
-        startContent={<Settings className="h-4 w-4" />}
+        startContent={<Settings className="size-4" />}
       >
       </Button>
     </div>

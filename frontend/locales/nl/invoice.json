@@ -30,8 +30,7 @@
   "fields": {
     "client": "Klant",
     "company": "Bedrijf",
-    "items": "Artikelen",
-    "itemName": "Artikelnaam",
+    "item": "Artikel",
     "description": "Omschrijving",
     "quantity": "Aantal",
     "rate": "Tarief",

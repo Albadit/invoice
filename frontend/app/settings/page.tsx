@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { currenciesApi, templatesApi, companiesApi } from '@/features/settings/api';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { currenciesApi, templatesApi, companiesApi, storageApi } from '@/features/settings/api';
 import type { Currency, Template, Company } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
@@ -30,6 +30,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [logoUrl, setLogoUrl] = useState('');
+  const [pendingLogoFile, setPendingLogoFile] = useState<File | null>(null);
+  const savedLogoUrlRef = useRef('');
   const [templateId, setTemplateId] = useState<string | null>(null);
   const [terms, setTerms] = useState('');
   const [tax, setTax] = useState<number | null>(null);
@@ -63,7 +65,10 @@ export default function SettingsPage() {
   const companiesRef = useRef<HTMLDivElement>(null);
   const templatesRef = useRef<HTMLDivElement>(null);
   const currenciesRef = useRef<HTMLDivElement>(null);
+  const scrollUpdateRef = useRef(false);
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     loadSettings();
@@ -72,8 +77,12 @@ export default function SettingsPage() {
     loadCompanies();
   }, []);
 
-  // Handle tab query parameter for scrolling
+  // Handle tab query parameter for scrolling (skip when triggered by scroll listener)
   useEffect(() => {
+    if (scrollUpdateRef.current) {
+      scrollUpdateRef.current = false;
+      return;
+    }
     const tab = searchParams.get('tab');
     if (tab && !loading) {
       const refs: Record<string, React.RefObject<HTMLElement | null>> = {
@@ -89,6 +98,39 @@ export default function SettingsPage() {
       }
     }
   }, [searchParams, loading]);
+
+  // Update ?tab= when user stops scrolling (debounced)
+  useEffect(() => {
+    if (loading) return;
+    const sections = [
+      { id: 'companies', ref: companiesRef },
+      { id: 'templates', ref: templatesRef },
+      { id: 'currencies', ref: currenciesRef },
+    ];
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    function onScroll() {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const offset = window.innerHeight * 0.3;
+        let active: string | null = null;
+        for (const { id, ref } of sections) {
+          const el = ref.current;
+          if (el && el.getBoundingClientRect().top <= offset) {
+            active = id;
+          }
+        }
+        if (active && active !== searchParams.get('tab')) {
+          scrollUpdateRef.current = true;
+          router.replace(`${pathname}?tab=${active}`, { scroll: false });
+        }
+      }, 150);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, [loading, pathname, router, searchParams]);
 
   useEffect(() => {
     if (cooldown > 0) {
@@ -131,6 +173,8 @@ export default function SettingsPage() {
       setCompanyZipCode(company.zip_code || '');
       setCompanyCountry(company.country || '');
       setLogoUrl(company.logo_url || '');
+      savedLogoUrlRef.current = company.logo_url || '';
+      setPendingLogoFile(null);
       setTemplateId(company.template_id);
       setTerms(company.terms || '');
       setTax(company.tax_percent);
@@ -478,6 +522,7 @@ export default function SettingsPage() {
         setCompanyZipCode(firstCompany.zip_code || '');
         setCompanyCountry(firstCompany.country || '');
         setLogoUrl(firstCompany.logo_url || '');
+        savedLogoUrlRef.current = firstCompany.logo_url || '';
         setTemplateId(firstCompany.template_id);
         setTerms(firstCompany.terms || '');
         setTax(firstCompany.tax_percent);
@@ -502,8 +547,27 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
+      // Upload pending logo file if any
+      let finalLogoUrl = logoUrl;
+      if (pendingLogoFile) {
+        finalLogoUrl = await storageApi.uploadLogo(pendingLogoFile);
+        setPendingLogoFile(null);
+        setLogoUrl(finalLogoUrl);
+      }
+
+      // Delete old logo from storage if URL changed
+      const oldUrl = savedLogoUrlRef.current;
+      if (oldUrl && oldUrl !== finalLogoUrl && oldUrl.includes('/storage/')) {
+        const oldPath = oldUrl.split('/logos/').pop();
+        if (oldPath) {
+          try { await storageApi.deleteLogo(oldPath); } catch { /* ignore */ }
+        }
+      }
+
+      savedLogoUrlRef.current = finalLogoUrl || '';
+
       await companiesApi.update(companyId, {
-        logo_url: logoUrl || null,
+        logo_url: finalLogoUrl || null,
         template_id: templateId,
         terms: terms || null,
         tax_percent: tax,
@@ -536,18 +600,19 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="min-h-screen max-w-4xl mx-auto p-8">
-      <section className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-4xl font-bold text-foreground">{t('title')}</h1>
-          <p className="text-default-500 mt-1">{t('subtitle')}</p>
+    <main className="min-h-screen max-w-4xl mx-auto p-4 sm:p-8 flex flex-col gap-6 sm:gap-8">
+      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl sm:text-4xl font-bold text-foreground">{t('title')}</h1>
+          <p className="text-sm sm:text-base text-default-500">{t('subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Button
             color="primary"
+            className="w-full"
             onClick={handleSave}
             disabled={saving || cooldown > 0}
-            startContent={<Save className="h-4 w-4" />}
+            startContent={<Save className="size-4" />}
             >
             {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
           </Button>
@@ -555,9 +620,9 @@ export default function SettingsPage() {
       </section>
 
       <Card>
-        <CardBody className='flex gap-8 p-6'>
-          <section id="companies" ref={companiesRef} className="border-b pb-6 scroll-mt-24">
-            <div className="flex items-center justify-between mb-2">
+        <CardBody className='flex gap-6 sm:gap-8 p-4 sm:p-6'>
+          <section id="companies" ref={companiesRef} className="flex flex-col gap-2 border-b pb-6 scroll-mt-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span className="text-base font-semibold">
                 {t('companies.selectCompany')}
               </span>
@@ -565,7 +630,7 @@ export default function SettingsPage() {
                 size="sm"
                 variant="flat"
                 color="primary"
-                startContent={<Edit className="h-4 w-4" />}
+                startContent={<Edit className="size-4" />}
                 onClick={() => setIsManageCompaniesModalOpen(true)}
               >
                 {t('companies.manageCompanies')}
@@ -587,16 +652,17 @@ export default function SettingsPage() {
             </Select>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-6">{t('logo.title')}</h2>
+          <section className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold">{t('logo.title')}</h2>
             <div className="space-y-4">
               <div>
-                <span className="text-base font-semibold mb-2 block">
+                <span className="text-base font-semibold">
                   {t('logo.upload')}
                 </span>
                 <LogoUpload
                   logoUrl={logoUrl}
                   onLogoUrlChange={setLogoUrl}
+                  onPendingFileChange={setPendingLogoFile}
                   imageError={imageError}
                   onImageError={setImageError}
                 />
@@ -611,7 +677,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="flex flex-col gap-2">
                 <span className="text-base font-semibold">
                   {t('logo.url')}
                 </span>
@@ -629,10 +695,10 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section id="templates" ref={templatesRef} className="flex flex-col gap-6 scroll-mt-24">
+          <section className="flex flex-col gap-6 ">
             <h2 className="text-2xl font-bold">{t('invoiceSettings.title')}</h2>
-            <div>
-              <div className="flex items-center justify-between mb-2">
+            <div id="templates" ref={templatesRef} className="flex flex-col gap-2 scroll-mt-20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="text-base font-semibold">
                   {t('invoiceSettings.templateStyle')}
                 </span>
@@ -640,7 +706,8 @@ export default function SettingsPage() {
                   size="sm"
                   variant="flat"
                   color="primary"
-                  startContent={<Edit className="h-4 w-4" />}
+                  className="w-full sm:w-auto"
+                  startContent={<Edit className="size-4" />}
                   onClick={() => setIsManageTemplatesModalOpen(true)}
                 >
                   {t('templates.manageTemplates')}
@@ -660,8 +727,8 @@ export default function SettingsPage() {
                 ))}
               </Select>
             </div>
-            <div id="currencies" ref={currenciesRef} className="scroll-mt-24">
-              <div className="flex items-center justify-between mb-2">
+            <div id="currencies" ref={currenciesRef} className="flex flex-col gap-2 scroll-mt-20">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="text-base font-semibold">
                   {t('invoiceSettings.defaultCurrency')}
                 </span>
@@ -669,7 +736,8 @@ export default function SettingsPage() {
                   size="sm"
                   variant="flat"
                   color="primary"
-                  startContent={<Edit className="h-4 w-4" />}
+                  className="w-full sm:w-auto"
+                  startContent={<Edit className="size-4" />}
                   onClick={() => setIsManageCurrenciesModalOpen(true)}
                 >
                   {t('currencies.manageCurrencies')}
@@ -692,7 +760,7 @@ export default function SettingsPage() {
                 ))}
               </Select>
             </div>
-            <div>
+            <div className='flex flex-col gap-2'>
               <span className="text-base font-semibold">
                 {t('invoiceSettings.defaultTax')}
               </span>
@@ -710,8 +778,8 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-bold mb-6">{t('terms.title')}</h2>
+          <section className="flex flex-col gap-6">
+            <h2 className="text-2xl font-bold">{t('terms.title')}</h2>
             <div>
               <span className="text-base font-semibold">
                 {t('terms.label')}
@@ -727,7 +795,7 @@ export default function SettingsPage() {
             </div>
           </section>
         </CardBody>
-        <CardFooter className="p-6">
+        <CardFooter className="p-4 sm:p-6">
           <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg">
             <p className="text-sm text-foreground">
               <strong>{t('terms.tip')}:</strong> {t('terms.tipText')}

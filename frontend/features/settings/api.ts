@@ -4,6 +4,7 @@
  */
 
 import { API_URL, getHeaders } from '@/lib/api';
+import { createClient } from '@/lib/supabase/client';
 import type { 
   Currency, 
   Template,
@@ -183,18 +184,16 @@ export const storageApi = {
    * Upload a file to the logo bucket
    */
   async uploadLogo(file: File): Promise<string> {
-    // Dynamic import to avoid server-side issues
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `logos/${fileName}`;
+    const filePath = fileName;
     
     // Upload file using Supabase client
     const { error } = await supabase.storage
-      .from('logo')
+      .from('logos')
       .upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
@@ -207,7 +206,7 @@ export const storageApi = {
     
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('logo')
+      .from('logos')
       .getPublicUrl(filePath);
     
     return urlData.publicUrl;
@@ -217,11 +216,10 @@ export const storageApi = {
    * Get public URL for a logo
    */
   async getLogoUrl(path: string): Promise<string> {
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     
     const { data } = supabase.storage
-      .from('logo')
+      .from('logos')
       .getPublicUrl(path);
     
     return data.publicUrl;
@@ -231,11 +229,10 @@ export const storageApi = {
    * Delete a logo from storage
    */
   async deleteLogo(path: string): Promise<void> {
-    const { createClient } = await import('@/lib/supabase/client');
     const supabase = createClient();
     
     const { error } = await supabase.storage
-      .from('logo')
+      .from('logos')
       .remove([path]);
     
     if (error) {

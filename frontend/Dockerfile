@@ -21,11 +21,14 @@ WORKDIR /app
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-# Copy all project files into container
-COPY . .
+# Copy only package files first (Docker layer caching — deps only re-install when these change)
+COPY package.json package-lock.json ./
 
 # Install dependencies from package.json
 RUN npm install
+
+# Copy the rest of the project files
+COPY . .
 
 # Build the Next.js app for production
 RUN npm run build

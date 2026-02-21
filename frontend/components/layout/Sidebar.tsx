@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, createContext, useContext, type ReactNode } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@heroui/button';
 import { Tooltip } from '@heroui/tooltip';
 import { ScrollShadow } from '@heroui/scroll-shadow';
@@ -114,10 +114,12 @@ function SidebarSectionComponent({
   section,
   isCollapsed,
   pathname,
+  searchParams,
 }: {
   section: SidebarSection;
   isCollapsed: boolean;
   pathname: string;
+  searchParams: URLSearchParams;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -127,10 +129,20 @@ function SidebarSectionComponent({
         </p>
       )}
       {section.items.map((item) => {
-        const isActive =
-          item.href === '/'
-            ? pathname === '/'
-            : pathname.startsWith(item.href.split('?')[0]);
+        let isActive: boolean;
+        if (item.href === '/') {
+          isActive = pathname === '/';
+        } else if (item.href.includes('?')) {
+          const [basePath, query] = item.href.split('?');
+          const itemParams = new URLSearchParams(query);
+          isActive =
+            pathname.startsWith(basePath) &&
+            Array.from(itemParams.entries()).every(
+              ([key, value]) => searchParams.get(key) === value
+            );
+        } else {
+          isActive = pathname.startsWith(item.href);
+        }
 
         return (
           <SidebarItemComponent
@@ -148,6 +160,7 @@ function SidebarSectionComponent({
 // Main Sidebar Component
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const sidebarSections = useSidebarSections();
 
@@ -180,8 +193,8 @@ export function Sidebar() {
         >
           {!isCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <FileText className="h-5 w-5 text-primary-foreground" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
+                <FileText className="size-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold">Invoice</span>
             </div>
@@ -196,9 +209,9 @@ export function Sidebar() {
             onPress={() => setIsCollapsed(!isCollapsed)}
           >
             {isCollapsed ? (
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="size-4" />
             ) : (
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="size-4" />
             )}
           </Button>
 
@@ -210,7 +223,7 @@ export function Sidebar() {
             className="lg:hidden"
             onPress={() => setIsMobileOpen(false)}
           >
-            <X className="h-4 w-4" />
+            <X className="size-4" />
           </Button>
         </div>
 
@@ -223,6 +236,7 @@ export function Sidebar() {
                 section={section}
                 isCollapsed={isCollapsed}
                 pathname={pathname}
+                searchParams={searchParams}
               />
             ))}
           </nav>
@@ -277,13 +291,13 @@ export function SidebarMobileToggle() {
       className="lg:hidden"
       onPress={() => setIsMobileOpen(true)}
     >
-      <Menu className="h-5 w-5" />
+      <Menu className="size-5" />
     </Button>
   );
 }
 
-// Sidebar Provider
-export function SidebarProvider({ children }: { children: ReactNode }) {
+// Layout Wrapper with Sidebar (includes provider)
+export function SidebarLayout({ children }: { children: ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -291,38 +305,33 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
     <SidebarContext.Provider
       value={{ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }}
     >
-      {children}
+      <SidebarLayoutInner>{children}</SidebarLayoutInner>
     </SidebarContext.Provider>
   );
 }
 
-// Layout Wrapper with Sidebar
-export function SidebarLayout({ children }: { children: ReactNode }) {
+function SidebarLayoutInner({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
 
   return (
-    <div className="min-h-screen">
+    <div className={cn(
+      'min-h-screen transition-all duration-300',
+      isCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]'
+    )}>
       <Sidebar />
-      <main
-        className={cn(
-          'min-h-screen transition-all duration-300',
-          isCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]'
-        )}
-      >
-        {/* Mobile Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-divider bg-background px-4 lg:hidden">
-          <SidebarMobileToggle />
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-              <FileText className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <span className="text-lg font-bold">Invoice</span>
+      {/* Mobile Header */}
+      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-divider bg-background px-4 lg:hidden">
+        <SidebarMobileToggle />
+        <div className="flex items-center gap-2">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
+            <FileText className="size-5 text-primary-foreground" />
           </div>
-        </header>
+          <span className="text-lg font-bold">Invoice</span>
+        </div>
+      </header>
 
-        {/* Page Content */}
-        <div className="p-4 lg:p-6">{children}</div>
-      </main>
-    </div>
+      {/* Page Content */}
+      {children}
+  </div>
   );
 }

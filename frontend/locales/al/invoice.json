@@ -30,8 +30,7 @@
   "fields": {
     "client": "Klienti",
     "company": "Kompania",
-    "items": "Artikujt",
-    "itemName": "Emri i Artikullit",
+    "item": "Artikull",
     "description": "Përshkrimi",
     "quantity": "Sasia",
     "rate": "Tarifa",

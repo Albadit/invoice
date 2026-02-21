@@ -16,7 +16,7 @@
     "deleteCompany": "Bedrijf verwijderen",
     "manageCompanies": "Bedrijven beheren",
     "selectCompany": "Selecteer bedrijf",
-    "selectDescription": "Kies een bedrijf voor je facturen.",
+    "selectDescription": "Bedrijf",
     "selectPlaceholder": "Selecteer een bedrijf",
     "fields": {
       "name": "Bedrijfsnaam",
@@ -47,17 +47,17 @@
     "title": "Factuurlogo",
     "upload": "Logo uploaden",
     "url": "Logo URL",
-    "urlDescription": "Voer de URL in van je bedrijfslogo als het elders gehost wordt.",
+    "urlDescription": "Logo-URL",
     "or": "OF"
   },
   "invoiceSettings": {
     "title": "Factuurinstellingen",
     "templateStyle": "Sjabloonstijl",
-    "templateDescription": "Kies een sjabloonstijl voor je facturen (bewerken en bekijken).",
+    "templateDescription": "Sjabloon",
     "defaultCurrency": "Standaard Valuta",
-    "currencyDescription": "Stel de standaardvaluta in voor nieuwe facturen.",
+    "currencyDescription": "Valuta",
     "defaultTax": "Standaard BTW (%)",
-    "taxDescription": "Stel het standaard BTW-percentage in voor nieuwe facturen."
+    "taxDescription": "BTW %"
   },
   "templates": {
     "title": "Factuursjablonen",

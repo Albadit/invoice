@@ -30,8 +30,7 @@
   "fields": {
     "client": "Клиент",
     "company": "Компанија",
-    "items": "Ставки",
-    "itemName": "Име на Ставка",
+    "item": "Ставка",
     "description": "Опис",
     "quantity": "Количина",
     "rate": "Стапка",
