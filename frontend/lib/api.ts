@@ -7,7 +7,7 @@
  */
 
 const baseUrl = typeof window === 'undefined'
-  ? (process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000')
+  ? (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000')
   : (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000');
 
 export const API_URL = `${baseUrl}/rest/v1`;

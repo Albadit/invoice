@@ -35,7 +35,7 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-- add a button to clear filter
-- query the filter if refesh page same data
-- add lang facturen
+- filter reset when change page lang
+- fix button mobile bug not open
+- add fields inmfo copmpany
 - login sytem
