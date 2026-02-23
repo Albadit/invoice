@@ -45,10 +45,14 @@ export function InvoicePreviewModal({
       size="3xl"
       scrollBehavior="inside"
       hideCloseButton
+      classNames={{
+        base: 'mx-0 sm:mx-4',
+        body: 'p-0',
+      }}
     >
-      <ModalContent >
-        <ModalHeader className="flex justify-between items-center border-b px-6 py-4">
-          <h2 className="text-xl font-semibold">{t('preview.title')}</h2>
+      <ModalContent>
+        <ModalHeader className="flex justify-between items-center border-b px-4 sm:px-6 py-3 sm:py-4">
+          <h2 className="text-lg sm:text-xl font-semibold">{t('preview.title')}</h2>
           <Button
             isIconOnly
             variant="light"
@@ -57,27 +61,27 @@ export function InvoicePreviewModal({
           />
         </ModalHeader>
         <ModalBody>
-          <div className="flex flex-col gap-8 p-12 max-w-[210mm] max-h-[297mm]">
+          <div className="flex flex-col gap-4 sm:gap-8 p-4 sm:p-12">
             {/* Invoice Header */}
             <div className="flex flex-col gap-4">
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row justify-between gap-3">
                 {invoice.company?.logo_url ? (
-                  <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} unoptimized className="h-16 w-auto object-contain" />
+                  <Image src={invoice.company.logo_url} alt="Logo" width={128} height={64} unoptimized className="h-12 sm:h-16 w-auto object-contain" />
                 ) : (
-                  <div className="h-16 w-32 bg-default-200 rounded flex items-center justify-center text-default-500 text-sm font-bold">
+                  <div className="h-12 sm:h-16 w-24 sm:w-32 bg-default-200 rounded flex items-center justify-center text-default-500 text-sm font-bold">
                     Logo
                   </div>
                 )}
-                <div className="flex flex-col gap-2 text-right">
-                  <h2 className="text-4xl font-bold text-foreground">{tl(labels, 'preview.invoiceTitle') || 'INVOICE'}</h2>
-                  <p className="text-2xl text-default-500 font-semibold">#{invoice.invoice_number}</p>
+                <div className="flex flex-col gap-1 sm:gap-2 sm:text-right">
+                  <h2 className="text-2xl sm:text-4xl font-bold text-foreground">{tl(labels, 'preview.invoiceTitle') || 'INVOICE'}</h2>
+                  <p className="text-lg sm:text-2xl text-default-500 font-semibold">#{invoice.invoice_number}</p>
                 </div>
               </div>
               
               {/* Company Info and Invoice Details */}
-              <div className="flex justify-between">
+              <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <div className="flex flex-col">
-                  <h1 className="text-2xl font-bold text-foreground">{invoice.company?.name || ''}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-foreground">{invoice.company?.name || ''}</h1>
                   {invoice.company?.street && <p className="text-sm text-default-500">{invoice.company.street}</p>}
                   {(invoice.company?.city || invoice.company?.zip_code) && (
                     <p className="text-sm text-default-500">
@@ -90,7 +94,7 @@ export function InvoicePreviewModal({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground uppercase">{tl(labels, 'preview.invoiceDetails') || 'Invoice Details'}</h3>
-                  <div className="text-default-600 space-y-1">
+                  <div className="text-default-600 space-y-1 text-sm">
                     <div>
                       <span className="font-semibold">{tl(labels, 'preview.date') || 'Date:'} </span>
                       {format(new Date(invoice.issue_date || invoice.created_at || ''), 'MMM dd, yyyy')}
@@ -113,33 +117,46 @@ export function InvoicePreviewModal({
             {/* Bill To */}
             <div className="flex flex-col">
               <h3 className="text-xs font-bold uppercase text-default-500">{tl(labels, 'preview.billTo') || 'Bill To:'}</h3>
-              <p className="text-lg font-semibold text-foreground">{invoice.customer_name}</p>
+              <p className="text-base sm:text-lg font-semibold text-foreground">{invoice.customer_name}</p>
               <p className="text-sm text-default-500">{invoice.customer_street}</p>
               <p className="text-sm text-default-500">{invoice.customer_city}</p>
               <p className="text-sm text-default-500">{invoice.customer_country}</p>
             </div>
 
-            {/* Items Table */}
-            <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-12 border-b-2 py-3 border-foreground">
+            {/* Items Table - grid on desktop, stacked cards on mobile */}
+            <div className="flex flex-col gap-3 sm:gap-4">
+              {/* Desktop table header */}
+              <div className="hidden sm:grid grid-cols-12 border-b-2 py-3 border-foreground">
                 <div className="col-span-5 text-sm font-bold text-foreground uppercase">{tl(labels, 'fields.item') || 'Item'}</div>
                 <div className="col-span-2 text-sm font-bold text-foreground uppercase text-center">{tl(labels, 'fields.quantity') || 'Quantity'}</div>
                 <div className="col-span-2 text-sm font-bold text-foreground uppercase text-right">{tl(labels, 'fields.rate') || 'Rate'}</div>
                 <div className="col-span-3 text-sm font-bold text-foreground uppercase text-right">{tl(labels, 'fields.amount') || 'Amount'}</div>
               </div>
               {invoice.items.map((item, i) => (
-                <div key={i} className="grid grid-cols-12">
-                  <span className="col-span-5 text-default-600">{item.name}</span>
-                  <span className="col-span-2 text-default-600 text-center">{item.quantity}</span>
-                  <span className="col-span-2 text-default-600 text-right">{invoice.currency?.symbol || '$'}{item.unit_price.toFixed(2)}</span>
-                  <span className="col-span-3 text-foreground font-semibold text-right">{invoice.currency?.symbol || '$'}{(item.quantity * item.unit_price).toFixed(2)}</span>
+                <div key={i}>
+                  {/* Desktop row */}
+                  <div className="hidden sm:grid grid-cols-12">
+                    <span className="col-span-5 text-default-600">{item.name}</span>
+                    <span className="col-span-2 text-default-600 text-center">{item.quantity}</span>
+                    <span className="col-span-2 text-default-600 text-right">{invoice.currency?.symbol || '$'}{item.unit_price.toFixed(2)}</span>
+                    <span className="col-span-3 text-foreground font-semibold text-right">{invoice.currency?.symbol || '$'}{(item.quantity * item.unit_price).toFixed(2)}</span>
+                  </div>
+                  {/* Mobile card */}
+                  <div className="sm:hidden border border-default-200 rounded-lg p-3 flex flex-col gap-1">
+                    <div className="font-semibold text-foreground">{item.name}</div>
+                    <div className="flex justify-between text-sm text-default-600">
+                      <span>{item.quantity} × {invoice.currency?.symbol || '$'}{item.unit_price.toFixed(2)}</span>
+                      <span className="font-semibold text-foreground">{invoice.currency?.symbol || '$'}{(item.quantity * item.unit_price).toFixed(2)}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="grid grid-cols-2 gap-8">
+            {/* Notes/Terms & Totals */}
+            <div className="flex flex-col-reverse sm:grid sm:grid-cols-2 gap-6 sm:gap-8">
               {/* Terms & Notes */}
-              <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-4 sm:gap-8">
                 {invoice.notes && (
                   <div>
                     <h4 className="text-sm font-bold text-foreground">{tl(labels, 'fields.notes') || 'Notes'}</h4>
@@ -154,7 +171,7 @@ export function InvoicePreviewModal({
                 )}
               </div>
               {/* Totals */}
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4">
                 <div className="flex justify-between text-default-600">
                   <span className="font-semibold text-default-600">{tl(labels, 'fields.subtotal') || 'Subtotal'}:</span>
                   <span className="font-semibold text-foreground">{invoice.currency?.symbol || '$'}{(invoice.subtotal_amount ?? 0).toFixed(2)}</span>
@@ -178,18 +195,19 @@ export function InvoicePreviewModal({
                   </div>
                 )}
                 <div className="flex justify-between items-center pt-2 border-t border-default-200">
-                  <span className="text-xl font-bold text-foreground">{tl(labels, 'fields.total') || 'Total'}:</span>
-                  <span className="text-2xl font-bold text-foreground">{invoice.currency?.symbol || '$'}{(invoice.total_amount ?? 0).toFixed(2)}</span>
+                  <span className="text-lg sm:text-xl font-bold text-foreground">{tl(labels, 'fields.total') || 'Total'}:</span>
+                  <span className="text-xl sm:text-2xl font-bold text-foreground">{invoice.currency?.symbol || '$'}{(invoice.total_amount ?? 0).toFixed(2)}</span>
                 </div>
               </div>
             </div>
           </div>
         </ModalBody>
-        <ModalFooter className="border-t px-6 py-4">
-          <Button variant="light" onClick={onClose}>
+        <ModalFooter className="border-t px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row gap-2">
+          <Button className="w-full sm:w-auto" variant="light" onClick={onClose}>
             {t('preview.close')}
           </Button>
           <Button 
+            className="w-full sm:w-auto"
             color="primary" 
             onClick={() => onDownload(invoice.id)}
             startContent={<Download className="size-4" />}

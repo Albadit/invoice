@@ -25,7 +25,8 @@ export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
 
   // Suppress React 19 "inert" attribute warning caused by HeroUI internals
-  React.useEffect(() => {
+  // useInsertionEffect runs before DOM mutations, catching warnings before useEffect-based renders
+  React.useInsertionEffect(() => {
     const originalError = console.error;
     console.error = (...args: unknown[]) => {
       if (typeof args[0] === 'string' && args[0].includes('Received an empty string for a boolean attribute `inert`')) {

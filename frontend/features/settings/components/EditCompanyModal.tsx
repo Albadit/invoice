@@ -107,7 +107,7 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
               onChange={(e) => setStreet(e.target.value)}
               placeholder="123 Business Street"
             />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex gap-4">
               <Input
                 label="City"
                 value={city}
@@ -129,7 +129,7 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
             />
           </div>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
             Cancel
           </Button>

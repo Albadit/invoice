@@ -34,7 +34,7 @@ export function ManageCurrenciesModal({
               currencies.map((currency) => (
                 <div
                   key={currency.id}
-                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
                 >
                   <div>
                     <p className="font-semibold">
@@ -42,7 +42,7 @@ export function ManageCurrenciesModal({
                     </p>
                     <p className="text-sm text-slate-600">Symbol: {currency.symbol}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex md:flex-row flex-col gap-2">
                     <Button
                       size="sm"
                       variant="flat"
@@ -67,7 +67,7 @@ export function ManageCurrenciesModal({
             )}
           </div>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
             Close
           </Button>

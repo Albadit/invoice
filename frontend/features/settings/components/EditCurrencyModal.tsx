@@ -81,7 +81,7 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
             />
           </div>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
             Cancel
           </Button>

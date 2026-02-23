@@ -83,7 +83,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
       hideCloseButton
     >
       <ModalContent>
-        <ModalHeader className="flex justify-between items-center border-b px-6 py-4">
+        <ModalHeader className="flex justify-between items-center">
           <h2 className="text-xl font-semibold">Add New Company</h2>
           <Button
             isIconOnly
@@ -94,76 +94,64 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
           />
         </ModalHeader>
         <ModalBody className="p-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Company Name *</span>
+          <div className="flex flex-col gap-4">
+            <Input 
+              label="Company Name"
+              value={companyName} 
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Acme Corp"
+              isRequired
+              disabled={saving}
+            />
+            <Input 
+              label="Email"
+              type="email"
+              value={companyEmail} 
+              onChange={(e) => setCompanyEmail(e.target.value)}
+              placeholder="contact@acme.com"
+              disabled={saving}
+            />
+            <Input 
+              label="Phone"
+              type="tel"
+              value={companyPhone} 
+              onChange={(e) => setCompanyPhone(e.target.value)}
+              placeholder="+1 234 567 8900"
+              disabled={saving}
+            />
+            <Input 
+              label="Street Address"
+              value={companyStreet} 
+              onChange={(e) => setCompanyStreet(e.target.value)}
+              placeholder="123 Main St"
+              disabled={saving}
+            />
+            <div className="flex gap-4">
               <Input 
-                value={companyName} 
-                onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Acme Corp"
-                isRequired
-                disabled={saving}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Email</span>
-              <Input 
-                type="email"
-                value={companyEmail} 
-                onChange={(e) => setCompanyEmail(e.target.value)}
-                placeholder="contact@acme.com"
-                disabled={saving}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Phone</span>
-              <Input 
-                type="tel"
-                value={companyPhone} 
-                onChange={(e) => setCompanyPhone(e.target.value)}
-                placeholder="+1 234 567 8900"
-                disabled={saving}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Street</span>
-              <Input 
-                value={companyStreet} 
-                onChange={(e) => setCompanyStreet(e.target.value)}
-                placeholder="123 Main St"
-                disabled={saving}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">City</span>
-              <Input 
+                label="City"
                 value={companyCity} 
                 onChange={(e) => setCompanyCity(e.target.value)}
                 placeholder="New York"
                 disabled={saving}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Zip Code</span>
               <Input 
+                label="Zip Code"
                 value={companyZipCode} 
                 onChange={(e) => setCompanyZipCode(e.target.value)}
                 placeholder="10001"
                 disabled={saving}
               />
             </div>
-            <div className="col-span-2 flex flex-col gap-2">
-              <span className="text-sm font-semibold">Country</span>
-              <Input 
-                value={companyCountry} 
-                onChange={(e) => setCompanyCountry(e.target.value)}
-                placeholder="United States"
-                disabled={saving}
-              />
-            </div>
+            <Input 
+              label="Country"
+              value={companyCountry} 
+              onChange={(e) => setCompanyCountry(e.target.value)}
+              placeholder="United States"
+              disabled={saving}
+            />
           </div>
         </ModalBody>
-        <ModalFooter className="border-t px-6 py-4">
+        <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button 
             variant="light" 
             onClick={handleClose}

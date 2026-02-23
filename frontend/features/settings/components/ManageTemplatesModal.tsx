@@ -34,12 +34,12 @@ export function ManageTemplatesModal({
               templates.map((template) => (
                 <div
                   key={template.id}
-                  className="flex items-center justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
                 >
                   <div>
                     <p className="font-semibold">{template.name}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex md:flex-row flex-col gap-2">
                     <Button
                       size="sm"
                       variant="flat"
@@ -64,7 +64,7 @@ export function ManageTemplatesModal({
             )}
           </div>
         </ModalBody>
-        <ModalFooter>
+        <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
             Close
           </Button>

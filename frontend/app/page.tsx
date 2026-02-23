@@ -346,6 +346,13 @@ export default function InvoicesPage() {
 
   const isDefaultSort = sortDescriptors.length === 1 && sortDescriptors[0].column === 'created_at' && sortDescriptors[0].direction === 'descending';
 
+  // Only pass sortDescriptor to Table when the primary sort column is visible in the table
+  // (created_at is a DB-only column, not rendered as a TableColumn, causing hydration mismatch)
+  const VISIBLE_SORT_COLUMNS = new Set(['invoice_number', 'customer_name', 'issue_date', 'due_date', 'status', 'total_amount']);
+  const tableSortDescriptor = sortDescriptors[0]?.column && VISIBLE_SORT_COLUMNS.has(sortDescriptors[0].column as string)
+    ? sortDescriptors[0]
+    : undefined;
+
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
       <div className="flex flex-col gap-1 sm:gap-2">
@@ -367,9 +374,9 @@ export default function InvoicesPage() {
       </div>
 
       <Card>
-        <CardBody className='flex flex-col md:grid md:grid-cols-4 gap-4'>
+        <CardBody className='flex flex-col lg:grid grid-cols-2 gap-4'>
           <Input
-            className='md:col-span-2'
+            className='col-span-2 row-span-1'
             isClearable
             startContent={<Search className="size-4" />}
             placeholder={t('search.placeholder')}
@@ -381,19 +388,22 @@ export default function InvoicesPage() {
             aria-label={t('table.status')}
             selectionMode="multiple"
             classNames={{
-              base: 'md:col-span-1',
+              base: 'col-span-1 row-span-2',
             }}
             placeholder={t('status.all')}
             selectedKeys={currentFilters.statusFilter}
             onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, statusFilter: new Set(Array.from(keys) as string[]) })}
             endContent={currentFilters.statusFilter.size > 0 ? (
-              <button
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors"
+              <span
+                role="button"
+                tabIndex={0}
+                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); } }}
                 aria-label="Clear status filter"
               >
                 <X className="size-3.5 text-default-400" />
-              </button>
+              </span>
             ) : null}
             renderValue={(items) => (
               <div className="flex gap-1 overflow-hidden">
@@ -423,23 +433,26 @@ export default function InvoicesPage() {
           <DateRangePicker
             showMonthAndYearPickers
             aria-label="Date Range Picker"
-            className='md:col-span-1'
+            className='col-span-1 row-span-2'
             value={currentFilters.dateRange}
             onChange={(value) => setCurrentFilters({ ...currentFilters, dateRange: value })}
             endContent={currentFilters.dateRange ? (
-              <button
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors"
+              <span
+                role="button"
+                tabIndex={0}
+                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
                 onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); } }}
                 aria-label="Clear date range"
               >
                 <X className="size-3.5 text-default-400" />
-              </button>
+              </span>
             ) : null}
           />
         </CardBody>
       </Card>
 
-      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', sortIcon: 'hidden', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }} sortDescriptor={sortDescriptors[0]} onSortChange={handleSortChange}>
+      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', sortIcon: 'hidden', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }} sortDescriptor={tableSortDescriptor} onSortChange={handleSortChange}>
         <TableHeader>
           <TableColumn key="invoice_number" className="font-semibold" allowsSorting>{t('table.invoice')}{getSortBadge('invoice_number')}</TableColumn>
           <TableColumn key="customer_name" className="font-semibold" allowsSorting>{t('table.customer')}{getSortBadge('customer_name')}</TableColumn>
@@ -604,27 +617,28 @@ export default function InvoicesPage() {
           />
         </div>
 
-        {/* Rows per page */}
-        <Select
-          aria-label={t('pagination.rowsPerPage')}
-          className="w-full sm:w-32"
-          selectedKeys={[String(rowsPerPage)]}
-          onSelectionChange={(keys) => {
-            const value = Number(Array.from(keys)[0]);
-            setRowsPerPage(value);
-            // useEffect will handle reloading with page 1
-          }}
-        >
-          <SelectItem key="10" textValue="10 rows">10 {t('pagination.rows')}</SelectItem>
-          <SelectItem key="25" textValue="25 rows">25 {t('pagination.rows')}</SelectItem>
-          <SelectItem key="50" textValue="50 rows">50 {t('pagination.rows')}</SelectItem>
-          <SelectItem key="100" textValue="100 rows">100 {t('pagination.rows')}</SelectItem>
-        </Select>
+        <div className="flex items-center gap-3">
+          {/* Rows per page */}
+          <Select
+            aria-label={t('pagination.rowsPerPage')}
+            className="w-32"
+            selectedKeys={[String(rowsPerPage)]}
+            onSelectionChange={(keys) => {
+              const value = Number(Array.from(keys)[0]);
+              setRowsPerPage(value);
+            }}
+          >
+            <SelectItem key="10" textValue="10 rows">10 {t('pagination.rows')}</SelectItem>
+            <SelectItem key="25" textValue="25 rows">25 {t('pagination.rows')}</SelectItem>
+            <SelectItem key="50" textValue="50 rows">50 {t('pagination.rows')}</SelectItem>
+            <SelectItem key="100" textValue="100 rows">100 {t('pagination.rows')}</SelectItem>
+          </Select>
 
-        {/* Total records */}
-        <span className="text-default-400">
-          {formatRecordCount(totalCount)} {t('pagination.records')}
-        </span>
+          {/* Total records */}
+          <span className="text-default-400 whitespace-nowrap">
+            {formatRecordCount(totalCount)} {t('pagination.records')}
+          </span>
+        </div>
       </div>
 
       <InvoicePreviewModal
