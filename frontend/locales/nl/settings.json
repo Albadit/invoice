@@ -41,7 +41,8 @@
       "deleted": "Bedrijf en bijbehorende instellingen verwijderd",
       "createError": "Kon bedrijf niet aanmaken. Probeer het opnieuw.",
       "updateError": "Kon bedrijf niet bijwerken. Probeer het opnieuw.",
-      "deleteError": "Kon bedrijf niet verwijderen. Het wordt mogelijk gebruikt door facturen."
+      "deleteError": "Kon bedrijf niet verwijderen. Het wordt mogelijk gebruikt door facturen.",
+      "confirmDelete": "Weet je zeker dat je dit bedrijf wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
     }
   },
   "logo": {
@@ -79,7 +80,8 @@
       "deleted": "Sjabloon succesvol verwijderd",
       "createError": "Kon sjabloon niet aanmaken. Probeer het opnieuw.",
       "updateError": "Kon sjabloon niet bijwerken. Probeer het opnieuw.",
-      "deleteError": "Kon sjabloon niet verwijderen. Het wordt mogelijk gebruikt door facturen."
+      "deleteError": "Kon sjabloon niet verwijderen. Het wordt mogelijk gebruikt door facturen.",
+      "confirmDelete": "Weet je zeker dat je dit sjabloon wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
     }
   },
   "currencies": {
@@ -101,7 +103,8 @@
       "deleted": "Valuta succesvol verwijderd",
       "createError": "Kon valuta niet aanmaken. Probeer het opnieuw.",
       "updateError": "Kon valuta niet bijwerken. Probeer het opnieuw.",
-      "deleteError": "Kon valuta niet verwijderen. Het wordt mogelijk gebruikt door facturen."
+      "deleteError": "Kon valuta niet verwijderen. Het wordt mogelijk gebruikt door facturen.",
+      "confirmDelete": "Weet je zeker dat je deze valuta wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
     }
   },
   "terms": {

@@ -22,6 +22,7 @@ import {
   AddCurrencyModal,
   LogoUpload,
 } from '@/features/settings/components';
+import { ConfirmModal } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
 export default function SettingsPage() {
@@ -60,6 +61,13 @@ export default function SettingsPage() {
   const [isAddCurrencyModalOpen, setIsAddCurrencyModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    action: (() => Promise<void>) | null;
+  }>({ isOpen: false, title: '', message: '', action: null });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   // Refs for scrolling to sections
   const companiesRef = useRef<HTMLDivElement>(null);
@@ -290,43 +298,46 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteCompany(companyIdToDelete: string) {
-    if (!confirm('Are you sure you want to delete this company? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await companiesApi.delete(companyIdToDelete);
-      
-      // If the deleted company was the currently selected one, clear the fields
-      if (companyId === companyIdToDelete) {
-        setCompanyId(null);
-        setCompanyName('');
-        setCompanyEmail('');
-        setCompanyPhone('');
-        setCompanyStreet('');
-        setCompanyCity('');
-        setCompanyZipCode('');
-        setCompanyCountry('');
-        setLogoUrl('');
-      }
-      
-      // Reload companies list
-      await loadCompanies();
-      
-      addToast({
-        title: t('messages.success'),
-        description: t('companies.messages.deleted'),
-        color: "success"
-      });
-    } catch (error) {
-      console.error('Failed to delete company:', error);
-      addToast({
-        title: t('messages.error'),
-        description: t('companies.messages.deleteError'),
-        color: "danger"
-      });
-    }
+  function handleDeleteCompany(companyIdToDelete: string) {
+    setConfirmModal({
+      isOpen: true,
+      title: t('companies.deleteCompany'),
+      message: t('companies.messages.confirmDelete'),
+      action: async () => {
+        try {
+          await companiesApi.delete(companyIdToDelete);
+          
+          // If the deleted company was the currently selected one, clear the fields
+          if (companyId === companyIdToDelete) {
+            setCompanyId(null);
+            setCompanyName('');
+            setCompanyEmail('');
+            setCompanyPhone('');
+            setCompanyStreet('');
+            setCompanyCity('');
+            setCompanyZipCode('');
+            setCompanyCountry('');
+            setLogoUrl('');
+          }
+          
+          // Reload companies list
+          await loadCompanies();
+          
+          addToast({
+            title: t('messages.success'),
+            description: t('companies.messages.deleted'),
+            color: "success"
+          });
+        } catch (error) {
+          console.error('Failed to delete company:', error);
+          addToast({
+            title: t('messages.error'),
+            description: t('companies.messages.deleteError'),
+            color: "danger"
+          });
+        }
+      },
+    });
   }
 
   async function handleAddTemplate(templateData: {
@@ -388,29 +399,32 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteTemplate(templateId: string) {
-    if (!confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await templatesApi.delete(templateId);
-      
-      await loadTemplates();
-      
-      addToast({
-        title: t('messages.success'),
-        description: t('templates.messages.deleted'),
-        color: "success"
-      });
-    } catch (error) {
-      console.error('Failed to delete template:', error);
-      addToast({
-        title: t('messages.error'),
-        description: t('templates.messages.deleteError'),
-        color: "danger"
-      });
-    }
+  function handleDeleteTemplate(templateId: string) {
+    setConfirmModal({
+      isOpen: true,
+      title: t('templates.deleteTemplate'),
+      message: t('templates.messages.confirmDelete'),
+      action: async () => {
+        try {
+          await templatesApi.delete(templateId);
+          
+          await loadTemplates();
+          
+          addToast({
+            title: t('messages.success'),
+            description: t('templates.messages.deleted'),
+            color: "success"
+          });
+        } catch (error) {
+          console.error('Failed to delete template:', error);
+          addToast({
+            title: t('messages.error'),
+            description: t('templates.messages.deleteError'),
+            color: "danger"
+          });
+        }
+      },
+    });
   }
 
   async function handleAddCurrency(currencyData: {
@@ -474,29 +488,32 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleDeleteCurrency(currencyId: string) {
-    if (!confirm('Are you sure you want to delete this currency? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      await currenciesApi.delete(currencyId);
-      
-      await loadCurrencies();
-      
-      addToast({
-        title: t('messages.success'),
-        description: t('currencies.messages.deleted'),
-        color: "success"
-      });
-    } catch (error) {
-      console.error('Failed to delete currency:', error);
-      addToast({
-        title: t('messages.error'),
-        description: t('currencies.messages.deleteError'),
-        color: "danger"
-      });
-    }
+  function handleDeleteCurrency(currencyId: string) {
+    setConfirmModal({
+      isOpen: true,
+      title: t('currencies.deleteCurrency'),
+      message: t('currencies.messages.confirmDelete'),
+      action: async () => {
+        try {
+          await currenciesApi.delete(currencyId);
+          
+          await loadCurrencies();
+          
+          addToast({
+            title: t('messages.success'),
+            description: t('currencies.messages.deleted'),
+            color: "success"
+          });
+        } catch (error) {
+          console.error('Failed to delete currency:', error);
+          addToast({
+            title: t('messages.error'),
+            description: t('currencies.messages.deleteError'),
+            color: "danger"
+          });
+        }
+      },
+    });
   }
 
   async function loadCurrencies() {
@@ -926,6 +943,25 @@ export default function SettingsPage() {
         }}
         onSave={handleEditCurrency}
         currency={selectedCurrency}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={async () => {
+          if (!confirmModal.action) return;
+          setConfirmLoading(true);
+          try {
+            await confirmModal.action();
+          } finally {
+            setConfirmLoading(false);
+            setConfirmModal(prev => ({ ...prev, isOpen: false }));
+          }
+        }}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmColor="danger"
+        isLoading={confirmLoading}
       />
     </main>
   );

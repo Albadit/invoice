@@ -41,7 +41,8 @@
       "deleted": "Kompania dhe cilësimet e lidhura u fshinë",
       "createError": "Dështoi krijimi i kompanisë. Provo përsëri.",
       "updateError": "Dështoi përditësimi i kompanisë. Provo përsëri.",
-      "deleteError": "Dështoi fshirja e kompanisë. Mund të jetë në përdorim nga faturat."
+      "deleteError": "Dështoi fshirja e kompanisë. Mund të jetë në përdorim nga faturat.",
+      "confirmDelete": "Je i sigurt që dëshiron të fshish këtë kompani? Ky veprim nuk mund të kthehet."
     }
   },
   "logo": {
@@ -79,7 +80,8 @@
       "deleted": "Shablloni u fshi me sukses",
       "createError": "Dështoi krijimi i shablonit. Provo përsëri.",
       "updateError": "Dështoi përditësimi i shablonit. Provo përsëri.",
-      "deleteError": "Dështoi fshirja e shablonit. Mund të jetë në përdorim nga faturat."
+      "deleteError": "Dështoi fshirja e shablonit. Mund të jetë në përdorim nga faturat.",
+      "confirmDelete": "Je i sigurt që dëshiron të fshish këtë shabllon? Ky veprim nuk mund të kthehet."
     }
   },
   "currencies": {
@@ -101,7 +103,8 @@
       "deleted": "Valuta u fshi me sukses",
       "createError": "Dështoi krijimi i valutës. Provo përsëri.",
       "updateError": "Dështoi përditësimi i valutës. Provo përsëri.",
-      "deleteError": "Dështoi fshirja e valutës. Mund të jetë në përdorim nga faturat."
+      "deleteError": "Dështoi fshirja e valutës. Mund të jetë në përdorim nga faturat.",
+      "confirmDelete": "Je i sigurt që dëshiron të fshish këtë valutë? Ky veprim nuk mund të kthehet."
     }
   },
   "terms": {

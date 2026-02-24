@@ -115,6 +115,31 @@
     "loadingInvoices": "Facturen laden...",
     "noInvoices": "Geen facturen gevonden",
     "error": "Fout",
-    "saveError": "Kon factuur niet opslaan. Probeer het opnieuw."
+    "saveError": "Kon factuur niet opslaan. Probeer het opnieuw.",
+    "deleteError": "Kon factuur niet verwijderen. Probeer het opnieuw.",
+    "updateError": "Kon factuur niet bijwerken. Probeer het opnieuw.",
+    "duplicateError": "Kon factuur niet dupliceren. Probeer het opnieuw.",
+    "voidError": "Kon factuur niet annuleren. Probeer het opnieuw.",
+    "markedAsPaid": "Factuur Gemarkeerd als Betaald",
+    "markedAsPaidDescription": "De factuur is gemarkeerd als betaald.",
+    "markedAsPending": "Factuur Gemarkeerd als in Behandeling",
+    "markedAsPendingDescription": "De factuur is gemarkeerd als in behandeling.",
+    "cancelled": "Factuur Geannuleerd",
+    "cancelledDescription": "De factuur is succesvol geannuleerd.",
+    "duplicated": "Factuur Gedupliceerd",
+    "duplicatedDescription": "Een duplicaat van de factuur is aangemaakt.",
+    "deletedDescription": "De factuur is permanent verwijderd."
+  },
+  "confirm": {
+    "markAsPaid": "Deze factuur als betaald markeren?",
+    "markAsPaidTitle": "Markeer als Betaald",
+    "markAsPending": "Deze factuur als in behandeling markeren?",
+    "markAsPendingTitle": "Markeer als in Behandeling",
+    "cancel": "Weet je zeker dat je deze factuur wilt annuleren?",
+    "cancelTitle": "Factuur Annuleren",
+    "duplicate": "Een duplicaat van deze factuur maken?",
+    "duplicateTitle": "Factuur Dupliceren",
+    "delete": "Weet je zeker dat je deze factuur permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deleteTitle": "Factuur Verwijderen"
   }
 }

@@ -115,6 +115,31 @@
     "loadingInvoices": "Loading invoices...",
     "noInvoices": "No invoices found",
     "error": "Error",
-    "saveError": "Failed to save invoice. Please try again."
+    "saveError": "Failed to save invoice. Please try again.",
+    "deleteError": "Failed to delete invoice. Please try again.",
+    "updateError": "Failed to update invoice. Please try again.",
+    "duplicateError": "Failed to duplicate invoice. Please try again.",
+    "voidError": "Failed to cancel invoice. Please try again.",
+    "markedAsPaid": "Invoice Marked as Paid",
+    "markedAsPaidDescription": "The invoice has been marked as paid.",
+    "markedAsPending": "Invoice Marked as Pending",
+    "markedAsPendingDescription": "The invoice has been marked as pending.",
+    "cancelled": "Invoice Cancelled",
+    "cancelledDescription": "The invoice has been cancelled.",
+    "duplicated": "Invoice Duplicated",
+    "duplicatedDescription": "A duplicate invoice has been created.",
+    "deletedDescription": "The invoice has been permanently deleted."
+  },
+  "confirm": {
+    "markAsPaid": "Mark this invoice as paid?",
+    "markAsPaidTitle": "Mark as Paid",
+    "markAsPending": "Mark this invoice as pending?",
+    "markAsPendingTitle": "Mark as Pending",
+    "cancel": "Are you sure you want to cancel this invoice?",
+    "cancelTitle": "Cancel Invoice",
+    "duplicate": "Create a duplicate of this invoice?",
+    "duplicateTitle": "Duplicate Invoice",
+    "delete": "Are you sure you want to permanently delete this invoice? This action cannot be undone.",
+    "deleteTitle": "Delete Invoice"
   }
 }

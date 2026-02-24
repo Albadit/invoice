@@ -41,7 +41,8 @@
       "deleted": "Company and associated settings deleted successfully",
       "createError": "Failed to create company. Please try again.",
       "updateError": "Failed to update company. Please try again.",
-      "deleteError": "Failed to delete company. It may be in use by invoices."
+      "deleteError": "Failed to delete company. It may be in use by invoices.",
+      "confirmDelete": "Are you sure you want to delete this company? This action cannot be undone."
     }
   },
   "logo": {
@@ -79,7 +80,8 @@
       "deleted": "Template deleted successfully",
       "createError": "Failed to create template. Please try again.",
       "updateError": "Failed to update template. Please try again.",
-      "deleteError": "Failed to delete template. It may be in use by invoices."
+      "deleteError": "Failed to delete template. It may be in use by invoices.",
+      "confirmDelete": "Are you sure you want to delete this template? This action cannot be undone."
     }
   },
   "currencies": {
@@ -101,7 +103,8 @@
       "deleted": "Currency deleted successfully",
       "createError": "Failed to create currency. Please try again.",
       "updateError": "Failed to update currency. Please try again.",
-      "deleteError": "Failed to delete currency. It may be in use by invoices."
+      "deleteError": "Failed to delete currency. It may be in use by invoices.",
+      "confirmDelete": "Are you sure you want to delete this currency? This action cannot be undone."
     }
   },
   "terms": {

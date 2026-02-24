@@ -34,6 +34,7 @@ import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, 
 import { format } from 'date-fns';
 import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { InvoicePreviewModal } from '@/features/invoice/components';
+import { ConfirmModal } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { addToast } from "@heroui/toast";
 
@@ -69,6 +70,15 @@ export default function InvoicesPage() {
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmColor: 'primary' | 'danger' | 'success' | 'warning' | 'default' | 'secondary';
+    confirmLabel?: string;
+    action: (() => Promise<void>) | null;
+  }>({ isOpen: false, title: '', message: '', confirmColor: 'primary', action: null });
+  const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInput, setPageInput] = useState('1');
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -284,20 +294,42 @@ export default function InvoicesPage() {
   const loadingState = loading && filteredInvoices.length === 0 ? 'loading' : 'idle';
 
   async function handleDelete(invoiceId: string) {
-    if (!confirm('Are you sure you want to permanently delete this invoice? This action cannot be undone.')) {
-      return;
-    }
-    
     try {
       await invoicesApi.delete(invoiceId);
       await loadInvoices(currentPage);
+      addToast({
+        title: t('messages.deleted'),
+        description: t('messages.deletedDescription'),
+        color: 'success',
+      });
     } catch (error) {
       console.error('Failed to delete invoice:', error);
       addToast({
-        title: 'Error',
-        description: 'Failed to delete invoice. Please try again.',
+        title: t('messages.error'),
+        description: t('messages.deleteError'),
         color: 'danger',
       });
+    }
+  }
+
+  function openConfirm(opts: {
+    title: string;
+    message: string;
+    confirmColor: 'primary' | 'danger' | 'success' | 'warning' | 'default' | 'secondary';
+    confirmLabel?: string;
+    action: () => Promise<void>;
+  }) {
+    setConfirmModal({ isOpen: true, ...opts });
+  }
+
+  async function handleConfirm() {
+    if (!confirmModal.action) return;
+    setConfirmLoading(true);
+    try {
+      await confirmModal.action();
+    } finally {
+      setConfirmLoading(false);
+      setConfirmModal(prev => ({ ...prev, isOpen: false }));
     }
   }
 
@@ -528,7 +560,21 @@ export default function InvoicesPage() {
                       </DropdownItem>
                       {invoice.status !== 'paid' ? (
                       <DropdownItem color="success" key="paid" 
-                        onClick={() => handleMarkAsPaid(invoice.id, refreshCurrentPage)} 
+                        onClick={() => openConfirm({
+                          title: t('confirm.markAsPaidTitle'),
+                          message: t('confirm.markAsPaid'),
+                          confirmColor: 'success',
+                          confirmLabel: t('actions.markAsPaid'),
+                          action: async () => {
+                            try {
+                              await handleMarkAsPaid(invoice.id, refreshCurrentPage);
+                              addToast({ title: t('messages.markedAsPaid'), description: t('messages.markedAsPaidDescription'), color: 'success' });
+                            } catch (error) {
+                              console.error('Failed to mark as paid:', error);
+                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
+                            }
+                          },
+                        })}
                         className="text-success"
                         startContent={<HandCoins className="size-4" />}
                       >
@@ -537,21 +583,63 @@ export default function InvoicesPage() {
                       ) : null}
                       {invoice.status !== 'pending' ? (
                       <DropdownItem key="pending" 
-                        onClick={() => handleMarkAsPending(invoice.id, refreshCurrentPage)}
+                        onClick={() => openConfirm({
+                          title: t('confirm.markAsPendingTitle'),
+                          message: t('confirm.markAsPending'),
+                          confirmColor: 'primary',
+                          confirmLabel: t('actions.markAsPending'),
+                          action: async () => {
+                            try {
+                              await handleMarkAsPending(invoice.id, refreshCurrentPage);
+                              addToast({ title: t('messages.markedAsPending'), description: t('messages.markedAsPendingDescription'), color: 'success' });
+                            } catch (error) {
+                              console.error('Failed to mark as pending:', error);
+                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
+                            }
+                          },
+                        })}
                         startContent={<Clock className="size-4" />}
                       >
                         {t('actions.markAsPending')}
                       </DropdownItem>
                       ) : null}
                       <DropdownItem key="duplicate" 
-                        onClick={() => handleDuplicate(invoice.id, router)}
+                        onClick={() => openConfirm({
+                          title: t('confirm.duplicateTitle'),
+                          message: t('confirm.duplicate'),
+                          confirmColor: 'primary',
+                          confirmLabel: t('actions.duplicate'),
+                          action: async () => {
+                            try {
+                              await handleDuplicate(invoice.id, router);
+                              addToast({ title: t('messages.duplicated'), description: t('messages.duplicatedDescription'), color: 'success' });
+                            } catch (error) {
+                              console.error('Failed to duplicate invoice:', error);
+                              addToast({ title: t('messages.error'), description: t('messages.duplicateError'), color: 'danger' });
+                            }
+                          },
+                        })}
                         startContent={<Copy className="size-4" />}
                       >
                         {t('actions.duplicate')}
                       </DropdownItem>
                       {invoice.status !== 'cancelled' ? (
                       <DropdownItem color="danger" key="cancelled" 
-                        onClick={() => handleVoid(invoice.id, refreshCurrentPage)} 
+                        onClick={() => openConfirm({
+                          title: t('confirm.cancelTitle'),
+                          message: t('confirm.cancel'),
+                          confirmColor: 'danger',
+                          confirmLabel: t('actions.cancel'),
+                          action: async () => {
+                            try {
+                              await handleVoid(invoice.id, refreshCurrentPage);
+                              addToast({ title: t('messages.cancelled'), description: t('messages.cancelledDescription'), color: 'success' });
+                            } catch (error) {
+                              console.error('Failed to void invoice:', error);
+                              addToast({ title: t('messages.error'), description: t('messages.voidError'), color: 'danger' });
+                            }
+                          },
+                        })}
                         className="text-danger"
                         startContent={<Ban className="size-4" />}
                       >
@@ -560,7 +648,13 @@ export default function InvoicesPage() {
                       ) : null}
                       {invoice.status === 'cancelled' ? (
                       <DropdownItem color="danger" key="delete" 
-                        onClick={() => handleDelete(invoice.id)} 
+                        onClick={() => openConfirm({
+                          title: t('confirm.deleteTitle'),
+                          message: t('confirm.delete'),
+                          confirmColor: 'danger',
+                          confirmLabel: tCommon('actions.delete'),
+                          action: () => handleDelete(invoice.id),
+                        })}
                         className="text-danger"
                         startContent={<Trash className="size-4" />}
                       >
@@ -616,7 +710,7 @@ export default function InvoicesPage() {
           />
         </div>
 
-        <div className="w-full sm:w-fit flex items-center gap-3">
+        <div className="w-full sm:w-fit flex items-center justify-center gap-3">
           {/* Rows per page */}
           <Select
             aria-label={t('pagination.rowsPerPage')}
@@ -645,6 +739,17 @@ export default function InvoicesPage() {
         onClose={() => setIsModalOpen(false)}
         invoice={selectedInvoice}
         onDownload={handleDownloadPDF}
+      />
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handleConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmColor={confirmModal.confirmColor}
+        confirmLabel={confirmModal.confirmLabel}
+        isLoading={confirmLoading}
       />
     </main>
   );

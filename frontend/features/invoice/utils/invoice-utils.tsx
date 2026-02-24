@@ -68,86 +68,50 @@ export function getTaxAmount(invoice: InvoiceWithItems): number {
  * Mark invoice as paid
  */
 export async function handleMarkAsPaid(invoiceId: string | number, onSuccess: () => void) {
-  if (!confirm('Mark this invoice as paid?')) {
-    return;
-  }
-  
-  try {
-    await invoicesApi.updateStatus(String(invoiceId), 'paid');
-    await onSuccess();
-  } catch (error) {
-    console.error('Failed to mark as paid:', error);
-    alert('Failed to update invoice. Please try again.');
-  }
+  await invoicesApi.updateStatus(String(invoiceId), 'paid');
+  await onSuccess();
 }
 
 /**
  * Mark invoice as pending
  */
 export async function handleMarkAsPending(invoiceId: string | number, onSuccess: () => void) {
-  if (!confirm('Mark this invoice as pending?')) {
-    return;
-  }
-  
-  try {
-    await invoicesApi.updateStatus(String(invoiceId), 'pending');
-    await onSuccess();
-  } catch (error) {
-    console.error('Failed to mark as pending:', error);
-    alert('Failed to update invoice. Please try again.');
-  }
+  await invoicesApi.updateStatus(String(invoiceId), 'pending');
+  await onSuccess();
 }
 
 /**
  * Void an invoice
  */
 export async function handleVoid(invoiceId: string | number, onSuccess: () => void) {
-  if (!confirm('Are you sure you want to void this invoice? This action cannot be undone.')) {
-    return;
-  }
-  
-  try {
-    await invoicesApi.updateStatus(String(invoiceId), 'cancelled');
-    await onSuccess();
-  } catch (error) {
-    console.error('Failed to void invoice:', error);
-    alert('Failed to void invoice. Please try again.');
-  }
+  await invoicesApi.updateStatus(String(invoiceId), 'cancelled');
+  await onSuccess();
 }
 
 /**
  * Duplicate an invoice
  */
 export async function handleDuplicate(invoiceId: string | number, router: AppRouterInstance) {
-  if (!confirm('Create a duplicate of this invoice?')) {
-    return;
-  }
+  // Fetch the invoice to duplicate
+  const invoice = await invoicesApi.getById(String(invoiceId));
   
-  try {
-    // Fetch the invoice to duplicate
-    const invoice = await invoicesApi.getById(String(invoiceId));
-    
-    // Create new invoice (without id, created_at, updated_at)
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_number: _invoice_number, search_tsv: _search_tsv, search_text: _search_text, ...invoiceData } = invoice;
-    const newInvoiceData = {
-      ...invoiceData,
-      status: 'pending',
-    };
-    
-    // Create the duplicate invoice with its items
-    const newInvoice = await invoicesApi.create(
-      newInvoiceData as Parameters<typeof invoicesApi.create>[0],
-      items.map(item => ({
-        name: item.name,
-        quantity: item.quantity,
-        unit_price: item.unit_price
-      }))
-    );
-    
-    router.push(`/invoice/${newInvoice.id}/edit`);
-  } catch (error) {
-    console.error('Failed to duplicate invoice:', error);
-    alert('Failed to duplicate invoice. Please try again.');
-  }
+  // Create new invoice (without id, created_at, updated_at)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_number: _invoice_number, search_tsv: _search_tsv, search_text: _search_text, ...invoiceData } = invoice;
+  const newInvoiceData = {
+    ...invoiceData,
+    status: 'pending',
+  };
+  
+  // Create the duplicate invoice with its items
+  const newInvoice = await invoicesApi.create(
+    newInvoiceData as Parameters<typeof invoicesApi.create>[0],
+    items.map(item => ({
+      name: item.name,
+      quantity: item.quantity,
+      unit_price: item.unit_price
+    }))
+  );
+  
+  router.push(`/invoice/${newInvoice.id}/edit`);
 }

@@ -115,6 +115,31 @@
     "loadingInvoices": "Duke ngarkuar faturat...",
     "noInvoices": "Nuk u gjetën fatura",
     "error": "Gabim",
-    "saveError": "Dështoi ruajtja e faturës. Provo përsëri."
+    "saveError": "Dështoi ruajtja e faturës. Provo përsëri.",
+    "deleteError": "Dështoi fshirja e faturës. Provo përsëri.",
+    "updateError": "Dështoi përditësimi i faturës. Provo përsëri.",
+    "duplicateError": "Dështoi dyfishimi i faturës. Provo përsëri.",
+    "voidError": "Dështoi anulimi i faturës. Provo përsëri.",
+    "markedAsPaid": "Fatura u Shënua si e Paguar",
+    "markedAsPaidDescription": "Fatura u shënua si e paguar.",
+    "markedAsPending": "Fatura u Shënua si në Pritje",
+    "markedAsPendingDescription": "Fatura u shënua si në pritje.",
+    "cancelled": "Fatura u Anulua",
+    "cancelledDescription": "Fatura u anulua me sukses.",
+    "duplicated": "Fatura u Dyfishua",
+    "duplicatedDescription": "Një kopje e faturës u krijua.",
+    "deletedDescription": "Fatura u fshi përgjithmonë."
+  },
+  "confirm": {
+    "markAsPaid": "Shëno këtë faturë si të paguar?",
+    "markAsPaidTitle": "Shëno si të Paguar",
+    "markAsPending": "Shëno këtë faturë si në pritje?",
+    "markAsPendingTitle": "Shëno si në Pritje",
+    "cancel": "Je i sigurt që dëshiron të anulosh këtë faturë?",
+    "cancelTitle": "Anulo Faturën",
+    "duplicate": "Krijo një kopje të kësaj fature?",
+    "duplicateTitle": "Dyfisho Faturën",
+    "delete": "Je i sigurt që dëshiron të fshish përgjithmonë këtë faturë? Ky veprim nuk mund të kthehet.",
+    "deleteTitle": "Fshi Faturën"
   }
 }
