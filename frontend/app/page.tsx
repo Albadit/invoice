@@ -147,7 +147,6 @@ export default function InvoicesPage() {
       setPageInput('1');
       loadInvoices(1);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.dateRange, sortDescriptors]);
 
   async function loadCurrencies() {
@@ -617,11 +616,11 @@ export default function InvoicesPage() {
           />
         </div>
 
-        <div className="w-full sm:w-fit flex sm:flex-row flex-col items-center gap-3">
+        <div className="w-full sm:w-fit flex items-center gap-3">
           {/* Rows per page */}
           <Select
             aria-label={t('pagination.rowsPerPage')}
-            className="w-full sm:w-32"
+            className="w-42"
             selectedKeys={[String(rowsPerPage)]}
             onSelectionChange={(keys) => {
               const value = Number(Array.from(keys)[0]);

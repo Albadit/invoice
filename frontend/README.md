@@ -35,8 +35,6 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-- filter reset when change page lang
-- fix button mobile bug not open
 - add fields info copmpany
 - login sytem
 - valuta position choice left or right

@@ -27,6 +27,19 @@ COPY . .
 # Install dependencies from package.json
 RUN npm install
 
+# Run npm audit fix --force until 0 vulnerabilities (max 5 attempts)
+RUN sh -c '\
+    i=0; \
+    while [ $i -lt 5 ]; do \
+      if npm audit 2>&1 | grep -q "found 0 vulnerabilities"; then \
+        echo "No vulnerabilities found."; \
+        break; \
+      fi; \
+      i=$((i + 1)); \
+      echo "Attempt $i/5: running npm audit fix --force..."; \
+      npm audit fix --force || break; \
+    done'
+
 # Build the Next.js app for production
 RUN npm run build
 

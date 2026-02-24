@@ -12,7 +12,7 @@ import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
-import { Plus, Trash, Save } from 'lucide-react';
+import { Plus, Trash, Save, Settings, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
@@ -58,6 +58,7 @@ export default function InvoiceEditPage() {
   const [showDiscount, setShowDiscount] = useState(false);
   const [showTax, setShowTax] = useState(false);
   const [showShipping, setShowShipping] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   useEffect(() => {
     async function initialize() {
@@ -366,6 +367,115 @@ export default function InvoiceEditPage() {
                 >
                   {saving ? t('actions.saving') : t('actions.save')}
                 </Button>
+              </div>
+            </div>
+
+            {/* Mobile collapsible settings panel */}
+            <div className="xl:hidden bg-content1 rounded-xl shadow-xs border border-default-200">
+              <button
+                type="button"
+                className="w-full flex items-center justify-between p-4 sm:p-6"
+                onClick={() => setSettingsOpen(!settingsOpen)}
+              >
+                <div className="flex items-center gap-2">
+                  <Settings className="size-5 text-default-500" />
+                  <span className="text-lg font-semibold text-foreground">{t('settings.invoiceSettings')}</span>
+                </div>
+                <ChevronDown className={`size-5 text-default-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="px-4 pb-4 sm:px-6 sm:pb-6 flex flex-col gap-6">
+                  <div className="flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
+                    <Select
+                      aria-label={t('settings.company')}
+                      selectionMode="single"
+                      selectedKeys={companyId ? new Set([companyId]) : new Set()}
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0];
+                        if (selected) setCompanyId(String(selected));
+                      }}
+                      placeholder={t('settings.selectCompany')}
+                      classNames={{ trigger: "font-semibold" }}
+                    >
+                      {companies.map((company) => (
+                        <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-default-600">{t('settings.template')}</label>
+                      <Select
+                        aria-label={t('settings.template')}
+                        selectionMode="single"
+                        selectedKeys={templateId ? new Set([templateId]) : new Set()}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0];
+                          if (selected) setTemplateId(String(selected));
+                        }}
+                        placeholder={t('settings.selectTemplate')}
+                        classNames={{ trigger: "font-semibold" }}
+                      >
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} textValue={template.name}>{template.name}</SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-default-600">{t('settings.currency')}</label>
+                      <Select
+                        aria-label={t('settings.currency')}
+                        selectionMode="single"
+                        selectedKeys={currencyId ? new Set([currencyId]) : new Set()}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0];
+                          if (selected) setCurrencyId(String(selected));
+                        }}
+                        placeholder={t('settings.selectCurrency')}
+                        classNames={{ trigger: "font-semibold" }}
+                      >
+                        {currencies.map((currency) => (
+                          <SelectItem key={currency.id} textValue={`${currency.code} - ${currency.symbol}`}>{currency.code} - {currency.symbol}</SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-default-600">{t('settings.language')}</label>
+                      <Select
+                        aria-label={t('settings.language')}
+                        selectionMode="single"
+                        selectedKeys={new Set([language])}
+                        onSelectionChange={(keys) => {
+                          const selected = Array.from(keys)[0];
+                          if (selected) setLanguage(String(selected));
+                        }}
+                        placeholder={t('settings.selectLanguage')}
+                        classNames={{ trigger: "font-semibold" }}
+                        renderValue={() => {
+                          const selected = languageConfig.find(l => l.key === language);
+                          if (!selected) return null;
+                          return (
+                            <div className="flex items-center gap-2">
+                              <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
+                              <span>{selected.name}</span>
+                            </div>
+                          );
+                        }}
+                      >
+                        {languageConfig.map((lang) => (
+                          <SelectItem
+                            key={lang.key}
+                            textValue={lang.name}
+                            startContent={<Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />}
+                          >
+                            {lang.name}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-8 flex flex-col gap-8">
@@ -681,7 +791,7 @@ export default function InvoiceEditPage() {
             </div>
           </div>
 
-          <div className="w-full xl:min-w-xs xl:max-w-xs flex flex-col gap-6">
+          <div className="w-full xl:min-w-xs xl:max-w-xs hidden xl:flex flex-col gap-6">
             {/* Spacer to align with invoice card */}
             <div className="h-10 max-xl:hidden" aria-hidden="true" />
             <div className="h-fit xl:sticky xl:top-8 bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-6 flex flex-col gap-6">
@@ -779,12 +889,12 @@ export default function InvoiceEditPage() {
                   classNames={{
                     trigger: "font-semibold"
                   }}
-                  renderValue={(items) => {
+                  renderValue={() => {
                     const selected = languageConfig.find(l => l.key === language);
                     if (!selected) return null;
                     return (
                       <div className="flex items-center gap-2">
-                        <img src={selected.flag} alt={selected.name} className="w-5 h-4 object-cover rounded-sm" />
+                        <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
                         <span>{selected.name}</span>
                       </div>
                     );
@@ -795,7 +905,7 @@ export default function InvoiceEditPage() {
                       key={lang.key} 
                       textValue={lang.name}
                       startContent={
-                        <img src={lang.flag} alt={lang.name} className="w-5 h-4 object-cover rounded-sm" />
+                        <Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
                       }
                     >
                       {lang.name}
