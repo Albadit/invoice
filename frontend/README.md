@@ -37,4 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 - add fields info copmpany
 - login sytem
-- valuta position choice left or right
+- valuta position choice left or right and toggle add space
