@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface EditCompanyModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ interface EditCompanyModalProps {
 }
 
 export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditCompanyModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -75,54 +78,54 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Edit Company</ModalHeader>
+        <ModalHeader>{t('companies.editCompany')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-4">
             <Input
-              label="Company Name"
+              label={t('companies.fields.name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
               placeholder="Acme Corporation"
             />
             <Input
-              label="Email"
+              label={t('companies.fields.email')}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="contact@company.com"
             />
             <Input
-              label="Phone"
+              label={t('companies.fields.phone')}
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+1 (555) 123-4567"
             />
             <Input
-              label="Street Address"
+              label={t('companies.fields.street')}
               value={street}
               onChange={(e) => setStreet(e.target.value)}
               placeholder="123 Business Street"
             />
             <div className="flex gap-4">
               <Input
-                label="City"
+                label={t('companies.fields.city')}
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder="New York"
               />
               <Input
-                label="Zip Code"
+                label={t('companies.fields.zipCode')}
                 value={zipCode}
                 onChange={(e) => setZipCode(e.target.value)}
                 placeholder="10001"
               />
             </div>
             <Input
-              label="Country"
+              label={t('companies.fields.country')}
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               placeholder="United States"
@@ -131,10 +134,10 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button color="primary" onClick={handleSave} disabled={saving || !name.trim()}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('actions.saving') : t('actions.save')}
           </Button>
         </ModalFooter>
       </ModalContent>

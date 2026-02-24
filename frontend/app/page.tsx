@@ -617,11 +617,11 @@ export default function InvoicesPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="w-full sm:w-fit flex sm:flex-row flex-col items-center gap-3">
           {/* Rows per page */}
           <Select
             aria-label={t('pagination.rowsPerPage')}
-            className="w-32"
+            className="w-full sm:w-32"
             selectedKeys={[String(rowsPerPage)]}
             onSelectionChange={(keys) => {
               const value = Number(Array.from(keys)[0]);

@@ -34,6 +34,7 @@
       "template": "Shablloni i Paracaktuar",
       "currency": "Valuta e Paracaktuar"
     },
+    "noData": "Nuk ka kompani të disponueshme",
     "messages": {
       "created": "Kompania u krijua me sukses",
       "updated": "Kompania u përditësua me sukses",
@@ -66,9 +67,11 @@
     "editTemplate": "Ndrysho Shabllon",
     "deleteTemplate": "Fshi Shabllon",
     "manageTemplates": "Menaxho Shabllonet",
+    "noData": "Nuk ka shabllone të disponueshme",
     "fields": {
       "name": "Emri i Shablonit",
-      "content": "Përmbajtja e Shablonit"
+      "content": "Përmbajtja e Shablonit",
+      "styling": "Stili i Shablonit (HTML)"
     },
     "messages": {
       "created": "Shablloni u krijua me sukses",
@@ -91,6 +94,7 @@
       "name": "Emri i Valutës",
       "symbol": "Simboli"
     },
+    "noData": "Nuk ka valuta të disponueshme",
     "messages": {
       "created": "Valuta u krijua me sukses",
       "updated": "Valuta u përditësua me sukses",
@@ -111,6 +115,7 @@
   "actions": {
     "save": "Ruaj Ndryshimet",
     "saving": "Duke ruajtur...",
+    "creating": "Duke krijuar...",
     "wait": "Prit",
     "cancel": "Anulo"
   },

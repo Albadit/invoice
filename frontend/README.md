@@ -37,5 +37,6 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 
 - filter reset when change page lang
 - fix button mobile bug not open
-- add fields inmfo copmpany
+- add fields info copmpany
 - login sytem
+- valuta position choice left or right

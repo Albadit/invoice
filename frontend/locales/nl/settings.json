@@ -34,6 +34,7 @@
       "template": "Standaard Sjabloon",
       "currency": "Standaard Valuta"
     },
+    "noData": "Geen bedrijven beschikbaar",
     "messages": {
       "created": "Bedrijf succesvol aangemaakt",
       "updated": "Bedrijf succesvol bijgewerkt",
@@ -66,9 +67,11 @@
     "editTemplate": "Sjabloon bewerken",
     "deleteTemplate": "Sjabloon verwijderen",
     "manageTemplates": "Sjablonen beheren",
+    "noData": "Geen sjablonen beschikbaar",
     "fields": {
       "name": "Sjabloonnaam",
-      "content": "Sjablooninhoud"
+      "content": "Sjablooninhoud",
+      "styling": "Sjabloon Styling (HTML)"
     },
     "messages": {
       "created": "Sjabloon succesvol aangemaakt",
@@ -91,6 +94,7 @@
       "name": "Valutanaam",
       "symbol": "Symbool"
     },
+    "noData": "Geen valuta's beschikbaar",
     "messages": {
       "created": "Valuta succesvol aangemaakt",
       "updated": "Valuta succesvol bijgewerkt",
@@ -111,6 +115,7 @@
   "actions": {
     "save": "Wijzigingen opslaan",
     "saving": "Opslaan...",
+    "creating": "Aanmaken...",
     "wait": "Wacht",
     "cancel": "Annuleren"
   },

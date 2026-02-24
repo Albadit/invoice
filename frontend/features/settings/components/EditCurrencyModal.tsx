@@ -5,6 +5,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import type { Currency } from '@/lib/types';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface EditCurrencyModalProps {
   isOpen: boolean;
@@ -18,6 +19,8 @@ interface EditCurrencyModalProps {
 }
 
 export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCurrencyModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
@@ -52,13 +55,13 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Edit Currency</ModalHeader>
+        <ModalHeader>{t('currencies.editCurrency')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-4">
             <Input
-              label="Currency Code"
+              label={t('currencies.fields.code')}
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               isRequired
@@ -66,14 +69,14 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
               maxLength={3}
             />
             <Input
-              label="Currency Name"
+              label={t('currencies.fields.name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
               placeholder="US Dollar"
             />
             <Input
-              label="Currency Symbol"
+              label={t('currencies.fields.symbol')}
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               isRequired
@@ -83,14 +86,14 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button
             color="primary"
             onClick={handleSave}
             disabled={saving || !code.trim() || !name.trim() || !symbol.trim()}
           >
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('actions.saving') : t('actions.save')}
           </Button>
         </ModalFooter>
       </ModalContent>

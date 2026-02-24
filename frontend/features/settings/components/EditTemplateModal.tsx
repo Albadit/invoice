@@ -5,6 +5,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import type { Template } from '@/lib/types';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface EditTemplateModalProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ interface EditTemplateModalProps {
 }
 
 export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTemplateModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const [name, setName] = useState('');
   const [styling, setStyling] = useState('');
   const [saving, setSaving] = useState(false);
@@ -50,18 +53,18 @@ export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTem
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Edit Template</ModalHeader>
+        <ModalHeader>{t('templates.editTemplate')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-4">
             <Input
-              label="Template Name"
+              label={t('templates.fields.name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
               placeholder="Classic"
             />
             <Textarea
-              label="Template Styling (HTML)"
+              label={t('templates.fields.styling')}
               value={styling}
               onChange={(e) => setStyling(e.target.value)}
               placeholder="Enter HTML template..."
@@ -72,10 +75,10 @@ export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTem
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button color="primary" onClick={handleSave} disabled={saving || !name.trim()}>
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? t('actions.saving') : t('actions.save')}
           </Button>
         </ModalFooter>
       </ModalContent>

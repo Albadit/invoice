@@ -5,6 +5,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { X } from 'lucide-react';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface AddCompanyModalProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ interface AddCompanyModalProps {
 }
 
 export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   const [companyName, setCompanyName] = useState('');
   const [companyEmail, setCompanyEmail] = useState('');
   const [companyPhone, setCompanyPhone] = useState('');
@@ -84,7 +87,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
     >
       <ModalContent>
         <ModalHeader className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Add New Company</h2>
+          <h2 className="text-xl font-semibold">{t('companies.addCompany')}</h2>
           <Button
             isIconOnly
             variant="light"
@@ -96,7 +99,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
         <ModalBody className="p-6">
           <div className="flex flex-col gap-4">
             <Input 
-              label="Company Name"
+              label={t('companies.fields.name')}
               value={companyName} 
               onChange={(e) => setCompanyName(e.target.value)}
               placeholder="Acme Corp"
@@ -104,7 +107,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
               disabled={saving}
             />
             <Input 
-              label="Email"
+              label={t('companies.fields.email')}
               type="email"
               value={companyEmail} 
               onChange={(e) => setCompanyEmail(e.target.value)}
@@ -112,7 +115,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
               disabled={saving}
             />
             <Input 
-              label="Phone"
+              label={t('companies.fields.phone')}
               type="tel"
               value={companyPhone} 
               onChange={(e) => setCompanyPhone(e.target.value)}
@@ -120,7 +123,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
               disabled={saving}
             />
             <Input 
-              label="Street Address"
+              label={t('companies.fields.street')}
               value={companyStreet} 
               onChange={(e) => setCompanyStreet(e.target.value)}
               placeholder="123 Main St"
@@ -128,14 +131,14 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
             />
             <div className="flex gap-4">
               <Input 
-                label="City"
+                label={t('companies.fields.city')}
                 value={companyCity} 
                 onChange={(e) => setCompanyCity(e.target.value)}
                 placeholder="New York"
                 disabled={saving}
               />
               <Input 
-                label="Zip Code"
+                label={t('companies.fields.zipCode')}
                 value={companyZipCode} 
                 onChange={(e) => setCompanyZipCode(e.target.value)}
                 placeholder="10001"
@@ -143,7 +146,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
               />
             </div>
             <Input 
-              label="Country"
+              label={t('companies.fields.country')}
               value={companyCountry} 
               onChange={(e) => setCompanyCountry(e.target.value)}
               placeholder="United States"
@@ -157,7 +160,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
             onClick={handleClose}
             disabled={saving}
           >
-            Cancel
+            {tCommon('actions.cancel')}
           </Button>
           <Button 
             color="primary"
@@ -165,7 +168,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
             isLoading={saving}
             disabled={!companyName.trim() || saving}
           >
-            {saving ? 'Saving...' : 'Save Company'}
+            {saving ? t('actions.saving') : t('companies.addCompany')}
           </Button>
         </ModalFooter>
       </ModalContent>

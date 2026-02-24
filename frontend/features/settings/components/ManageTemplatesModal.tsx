@@ -4,6 +4,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Edit, Trash, Plus } from 'lucide-react';
 import type { Template } from '@/lib/types';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface ManageTemplatesModalProps {
   isOpen: boolean;
@@ -22,14 +23,16 @@ export function ManageTemplatesModal({
   onDelete,
   onAdd,
 }: ManageTemplatesModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Manage Templates</ModalHeader>
+        <ModalHeader>{t('templates.manageTemplates')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-3">
             {templates.length === 0 ? (
-              <p className="text-slate-600 text-center py-8">No templates available</p>
+              <p className="text-slate-600 text-center py-8">{t('templates.noData')}</p>
             ) : (
               templates.map((template) => (
                 <div
@@ -47,7 +50,7 @@ export function ManageTemplatesModal({
                       startContent={<Edit className="size-4" />}
                       onClick={() => onEdit(template)}
                     >
-                      Edit
+                      {tCommon('actions.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -56,7 +59,7 @@ export function ManageTemplatesModal({
                       startContent={<Trash className="size-4" />}
                       onClick={() => onDelete(template.id)}
                     >
-                      Delete
+                      {tCommon('actions.delete')}
                     </Button>
                   </div>
                 </div>
@@ -66,14 +69,14 @@ export function ManageTemplatesModal({
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Close
+            {tCommon('actions.close')}
           </Button>
           <Button
             color="primary"
             startContent={<Plus className="size-4" />}
             onClick={onAdd}
           >
-            Add New
+            {t('templates.addTemplate')}
           </Button>
         </ModalFooter>
       </ModalContent>

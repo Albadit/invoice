@@ -34,6 +34,7 @@
       "template": "Default Template",
       "currency": "Default Currency"
     },
+    "noData": "No companies available",
     "messages": {
       "created": "Company created successfully",
       "updated": "Company updated successfully",
@@ -66,9 +67,11 @@
     "editTemplate": "Edit Template",
     "deleteTemplate": "Delete Template",
     "manageTemplates": "Manage Templates",
+    "noData": "No templates available",
     "fields": {
       "name": "Template Name",
-      "content": "Template Content"
+      "content": "Template Content",
+      "styling": "Template Styling (HTML)"
     },
     "messages": {
       "created": "Template created successfully",
@@ -91,6 +94,7 @@
       "name": "Currency Name",
       "symbol": "Symbol"
     },
+    "noData": "No currencies available",
     "messages": {
       "created": "Currency created successfully",
       "updated": "Currency updated successfully",
@@ -111,6 +115,7 @@
   "actions": {
     "save": "Save Changes",
     "saving": "Saving...",
+    "creating": "Creating...",
     "wait": "Wait",
     "cancel": "Cancel"
   },

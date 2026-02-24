@@ -4,6 +4,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Edit, Trash, Plus } from 'lucide-react';
 import type { Company } from '@/lib/types';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface ManageCompaniesModalProps {
   isOpen: boolean;
@@ -22,14 +23,16 @@ export function ManageCompaniesModal({
   onDelete,
   onAdd,
 }: ManageCompaniesModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Manage Companies</ModalHeader>
+        <ModalHeader>{t('companies.manageCompanies')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-3">
             {companies.length === 0 ? (
-              <p className="text-slate-600 text-center py-8">No companies available</p>
+              <p className="text-slate-600 text-center py-8">{t('companies.noData')}</p>
             ) : (
               companies.map((company) => (
                 <div
@@ -55,7 +58,7 @@ export function ManageCompaniesModal({
                       startContent={<Edit className="size-4" />}
                       onClick={() => onEdit(company)}
                     >
-                      Edit
+                      {tCommon('actions.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -64,7 +67,7 @@ export function ManageCompaniesModal({
                       startContent={<Trash className="size-4" />}
                       onClick={() => onDelete(company.id)}
                     >
-                      Delete
+                      {tCommon('actions.delete')}
                     </Button>
                   </div>
                 </div>
@@ -74,14 +77,14 @@ export function ManageCompaniesModal({
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Close
+            {tCommon('actions.close')}
           </Button>
           <Button
             color="primary"
             startContent={<Plus className="size-4" />}
             onClick={onAdd}
           >
-            Add New
+            {t('companies.addCompany')}
           </Button>
         </ModalFooter>
       </ModalContent>

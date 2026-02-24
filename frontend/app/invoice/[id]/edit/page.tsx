@@ -688,18 +688,18 @@ export default function InvoiceEditPage() {
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
                 <Select
-                aria-label={t('settings.company')}
-                selectionMode="single"
-                selectedKeys={companyId ? new Set([companyId]) : new Set()}
-                onSelectionChange={(keys) => {
-                  const selected = Array.from(keys)[0];
-                  if (selected) setCompanyId(String(selected));
-                }}
-                placeholder={t('settings.selectCompany')}
-                classNames={{
-                  trigger: "font-semibold"
-                }}
-              >
+                  aria-label={t('settings.company')}
+                  selectionMode="single"
+                  selectedKeys={companyId ? new Set([companyId]) : new Set()}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0];
+                    if (selected) setCompanyId(String(selected));
+                  }}
+                  placeholder={t('settings.selectCompany')}
+                  classNames={{
+                    trigger: "font-semibold"
+                  }}
+                >
                 {companies.map((company) => (
                   <SelectItem 
                     key={company.id} 

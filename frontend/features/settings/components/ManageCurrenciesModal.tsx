@@ -4,6 +4,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Edit, Trash, Plus } from 'lucide-react';
 import type { Currency } from '@/lib/types';
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface ManageCurrenciesModalProps {
   isOpen: boolean;
@@ -22,14 +23,16 @@ export function ManageCurrenciesModal({
   onDelete,
   onAdd,
 }: ManageCurrenciesModalProps) {
+  const { t } = useTranslation('settings');
+  const { t: tCommon } = useTranslation('common');
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
-        <ModalHeader>Manage Currencies</ModalHeader>
+        <ModalHeader>{t('currencies.manageCurrencies')}</ModalHeader>
         <ModalBody>
           <div className="flex flex-col gap-3">
             {currencies.length === 0 ? (
-              <p className="text-slate-600 text-center py-8">No currencies available</p>
+              <p className="text-slate-600 text-center py-8">{t('currencies.noData')}</p>
             ) : (
               currencies.map((currency) => (
                 <div
@@ -50,7 +53,7 @@ export function ManageCurrenciesModal({
                       startContent={<Edit className="size-4" />}
                       onClick={() => onEdit(currency)}
                     >
-                      Edit
+                      {tCommon('actions.edit')}
                     </Button>
                     <Button
                       size="sm"
@@ -59,7 +62,7 @@ export function ManageCurrenciesModal({
                       startContent={<Trash className="size-4" />}
                       onClick={() => onDelete(currency.id)}
                     >
-                      Delete
+                      {tCommon('actions.delete')}
                     </Button>
                   </div>
                 </div>
@@ -69,14 +72,14 @@ export function ManageCurrenciesModal({
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose}>
-            Close
+            {tCommon('actions.close')}
           </Button>
           <Button
             color="primary"
             startContent={<Plus className="size-4" />}
             onClick={onAdd}
           >
-            Add New
+            {t('currencies.addCurrency')}
           </Button>
         </ModalFooter>
       </ModalContent>
