@@ -92,6 +92,8 @@
     "issueDate": "Issue Date:",
     "dueDate": "Due Date:",
     "status": "Status:",
+    "vatNumber": "VAT",
+    "cocNumber": "CoC",
     "close": "Close"
   },
   "settings": {
@@ -144,5 +146,21 @@
     "duplicateTitle": "Duplicate Invoice",
     "delete": "Are you sure you want to permanently delete this invoice? This action cannot be undone.",
     "deleteTitle": "Delete Invoice"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Overview of your invoice statistics",
+    "filterCompany": "Company",
+    "filterYear": "Year",
+    "allCompanies": "All Companies",
+    "allYears": "All Years",
+    "totalInvoices": "Total Invoices",
+    "totalRevenue": "Total Revenue",
+    "statusDistribution": "Status Distribution",
+    "amountByStatus": "Amount by Status",
+    "monthlyTrend": "Monthly Trend (12 months)",
+    "noData": "No data available",
+    "viewAll": "View All",
+    "outstanding": "Outstanding"
   }
 }

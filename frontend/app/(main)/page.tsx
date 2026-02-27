@@ -32,7 +32,7 @@ import type { DateValue } from "@internationalized/date";
 import { useRouter } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
+import { getStatusBadge, getEffectiveStatus, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
@@ -523,7 +523,7 @@ export default function InvoicesPage() {
                   ? format(new Date(invoice.due_date), 'MMM dd, yyyy')
                   : '-'}
               </TableCell>
-              <TableCell>{getStatusBadge(invoice.status, {
+              <TableCell>{getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {
                 pending: t('status.pending'),
                 paid: t('status.paid'),
                 overdue: t('status.overdue'),

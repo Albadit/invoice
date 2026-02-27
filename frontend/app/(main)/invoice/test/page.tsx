@@ -81,6 +81,16 @@ export default function InvoiceTestPage() {
         {invoice.company?.country && <p className="text-sm text-gray-600">{invoice.company.country}</p>}
         {invoice.company?.email && <p className="text-sm text-gray-600">{invoice.company.email}</p>}
         {invoice.company?.phone && <p className="text-sm text-gray-600">{invoice.company.phone}</p>}
+        {invoice.company?.vat_number && (
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold">VAT:</span> {invoice.company.vat_number}
+          </p>
+        )}
+        {invoice.company?.coc_number && (
+          <p className="text-sm text-gray-600">
+            <span className="font-semibold">CoC:</span> {invoice.company.coc_number}
+          </p>
+        )}
       </div>
       <div className="flex flex-col gap-1">
         <div className="flex justify-end gap-3">

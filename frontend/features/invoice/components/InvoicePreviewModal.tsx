@@ -8,7 +8,7 @@ import { Download, X } from 'lucide-react';
 import { format } from 'date-fns';
 import type { InvoiceWithItems } from '@/lib/types';
 import { formatWithCurrency } from '@/lib/utils';
-import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
+import { getStatusBadge, getEffectiveStatus } from '@/features/invoice/utils/invoice-utils';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
@@ -92,6 +92,16 @@ export function InvoicePreviewModal({
                   {invoice.company?.country && <p className="text-sm text-default-500">{invoice.company.country}</p>}
                   {invoice.company?.email && <p className="text-sm text-default-500">{invoice.company.email}</p>}
                   {invoice.company?.phone && <p className="text-sm text-default-500">{invoice.company.phone}</p>}
+                  {invoice.company?.vat_number && (
+                    <p className="text-sm text-default-500">
+                      <span className="font-semibold">{tl(labels, 'preview.vatNumber') || 'VAT'}:</span> {invoice.company.vat_number}
+                    </p>
+                  )}
+                  {invoice.company?.coc_number && (
+                    <p className="text-sm text-default-500">
+                      <span className="font-semibold">{tl(labels, 'preview.cocNumber') || 'CoC'}:</span> {invoice.company.coc_number}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground uppercase">{tl(labels, 'preview.invoiceDetails') || 'Invoice Details'}</h3>
@@ -108,7 +118,7 @@ export function InvoicePreviewModal({
                     )}
                     <div>
                       <span className="font-semibold">{t('preview.status') || 'Status:'} </span>
-                      {getStatusBadge(invoice.status, {
+                      {getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {
                         pending: t('status.pending'),
                         paid: t('status.paid'),
                         overdue: t('status.overdue'),

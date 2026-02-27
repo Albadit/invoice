@@ -9,6 +9,7 @@
   },
   "navigation": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "invoices": "Facturen",
     "newInvoice": "Nieuwe Factuur",
     "settings": "Instellingen",

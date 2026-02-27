@@ -450,5 +450,27 @@ export const invoicesApi = {
     if (!response.ok) {
       throw new Error('Failed to update invoice status');
     }
+  },
+
+  /**
+   * Get all invoices with minimal fields for dashboard stats.
+   * Optionally filter by company_id.
+   */
+  async getStats(companyId?: string): Promise<{
+    status: string;
+    total_amount: number | null;
+    currency_id: string;
+    issue_date: string | null;
+    due_date: string | null;
+  }[]> {
+    let url = `${API_URL}/invoices?select=status,total_amount,currency_id,issue_date,due_date`;
+    if (companyId) {
+      url += `&company_id=eq.${companyId}`;
+    }
+    const response = await fetch(url, { headers: await getHeaders() });
+    if (!response.ok) {
+      throw new Error('Failed to fetch invoice stats');
+    }
+    return response.json();
   }
 };

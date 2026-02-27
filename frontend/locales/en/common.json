@@ -9,6 +9,7 @@
   },
   "navigation": {
     "home": "Home",
+    "dashboard": "Dashboard",
     "invoices": "Invoices",
     "newInvoice": "New Invoice",
     "settings": "Settings",

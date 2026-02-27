@@ -5,6 +5,7 @@ import {
   Coins,
   Plus,
   Users,
+  LayoutDashboard,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -36,6 +37,12 @@ export const sidebarSections: NavSection[] = [
   {
     key: 'main',
     items: [
+      {
+        key: 'dashboard',
+        labelKey: 'navigation.dashboard',
+        icon: LayoutDashboard,
+        href: '/dashboard',
+      },
       {
         key: 'home',
         labelKey: 'navigation.invoices',

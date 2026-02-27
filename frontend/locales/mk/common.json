@@ -9,6 +9,7 @@
   },
   "navigation": {
     "home": "Почетна",
+    "dashboard": "Контролна Табла",
     "invoices": "Фактури",
     "newInvoice": "Нова Фактура",
     "settings": "Поставки",

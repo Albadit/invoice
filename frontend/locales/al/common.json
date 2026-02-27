@@ -9,6 +9,7 @@
   },
   "navigation": {
     "home": "Kryefaqja",
+    "dashboard": "Paneli",
     "invoices": "Faturat",
     "newInvoice": "Faturë e Re",
     "settings": "Cilësimet",
