@@ -48,7 +48,7 @@ export interface CursorPaginatedResponse<T> {
 /**
  * Invoice list columns (only what's needed for the table view)
  */
-const LIST_COLUMNS = 'id,invoice_number,customer_name,status,issue_date,due_date,total_amount,currency_id,created_at,currencies(symbol,code)';
+const LIST_COLUMNS = 'id,invoice_number,customer_name,status,issue_date,due_date,total_amount,currency_id,created_at,currencies(symbol,code,symbol_position,symbol_space)';
 
 /**
  * Invoice API functions
@@ -175,11 +175,11 @@ export const invoicesApi = {
     
     const invoices = pageData.map((invoice: Record<string, unknown>) => {
       const { currencies, ...rest } = invoice;
-      const curr = currencies as { symbol?: string; code?: string } | null;
+      const curr = currencies as { symbol?: string; code?: string; symbol_position?: string; symbol_space?: boolean } | null;
       return {
         ...rest,
         items: [],
-        currency: curr ? { symbol: curr.symbol, code: curr.code } : null,
+        currency: curr ? { symbol: curr.symbol, code: curr.code, symbol_position: curr.symbol_position, symbol_space: curr.symbol_space } : null,
         company: null
       };
     });
@@ -273,11 +273,11 @@ export const invoicesApi = {
     
     const invoices = data.map((invoice: Record<string, unknown>) => {
       const { currencies, ...rest } = invoice;
-      const curr = currencies as { symbol?: string; code?: string } | null;
+      const curr = currencies as { symbol?: string; code?: string; symbol_position?: string; symbol_space?: boolean } | null;
       return {
         ...rest,
         items: [],
-        currency: curr ? { symbol: curr.symbol, code: curr.code } : null,
+        currency: curr ? { symbol: curr.symbol, code: curr.code, symbol_position: curr.symbol_position, symbol_space: curr.symbol_space } : null,
         company: null
       };
     });

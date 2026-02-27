@@ -94,7 +94,12 @@
     "fields": {
       "code": "Kodi i Valutës",
       "name": "Emri i Valutës",
-      "symbol": "Simboli"
+      "symbol": "Simboli",
+      "symbolPosition": "Pozicioni i Simbolit",
+      "positionLeft": "Majtas (p.sh. $100)",
+      "positionRight": "Djathtas (p.sh. 100$)",
+      "symbolSpace": "Hapësirë midis simbolit dhe çmimit",
+      "preview": "Parashikimi"
     },
     "noData": "Nuk ka valuta të disponueshme",
     "messages": {

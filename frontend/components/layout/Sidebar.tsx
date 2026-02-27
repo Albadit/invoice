@@ -178,7 +178,7 @@ export function Sidebar() {
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 flex h-full flex-col border-r border-divider bg-background transition-all duration-300',
-          isCollapsed ? 'w-[72px]' : 'w-[260px]',
+          isCollapsed ? 'w-28' : 'w-65',
           // Mobile styles
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -316,7 +316,7 @@ function SidebarLayoutInner({ children }: { children: ReactNode }) {
   return (
     <div className={cn(
       'min-h-screen transition-all duration-300',
-      isCollapsed ? 'lg:pl-[72px]' : 'lg:pl-[260px]'
+      isCollapsed ? 'lg:pl-18' : 'lg:pl-65'
     )}>
       <Sidebar />
       {/* Mobile Header */}

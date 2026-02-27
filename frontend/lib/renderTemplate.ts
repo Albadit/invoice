@@ -12,6 +12,7 @@
  */
 
 import type { InvoiceWithItems, Company, Currency } from '@/lib/types';
+import { formatWithCurrency } from '@/lib/utils';
 
 /**
  * Context object passed to template rendering
@@ -612,6 +613,9 @@ function createSafeContext(context: TemplateContext) {
 
     // Helper function
     formatDate,
+
+    // Currency formatting helper
+    fc: (amount: string | number) => formatWithCurrency(currency, amount),
 
     // Safe conditional rendering
     when: (condition: unknown, truthyValue: string, falsyValue: string = '') => {

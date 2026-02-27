@@ -27,13 +27,11 @@ const eslintConfig = defineConfig([
           pattern: [
             "components/**/*",
             "lib/**/*",
-            "utils/**/*",
             "contexts/**/*",
             "config/**/*",
             "styles/**/*",
             "public/**/*",
-            "locales/**/*",
-            "proxy.ts",
+            "hooks/**/*",
           ]
         },
         

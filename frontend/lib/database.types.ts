@@ -1,5 +1,5 @@
 // Auto-generated TypeScript types from PostgreSQL database
-// Generated on: 2026-02-20T23:24:48.079Z
+// Generated on: 2026-02-27T12:13:10.603Z
 
 export type Json =
   | string
@@ -12,6 +12,8 @@ export type Json =
 export type AmountType = 'percent' | 'fixed'
 
 export type StatusType = 'pending' | 'paid' | 'overdue' | 'cancelled'
+
+export type SymbolPositionType = 'left' | 'right'
 
 export interface Companies {
   id: string
@@ -36,6 +38,8 @@ export interface Currencies {
   code: string
   name: string
   symbol: string
+  symbol_position: SymbolPositionType
+  symbol_space: boolean
 }
 
 export interface InvoiceItems {
@@ -75,13 +79,13 @@ export interface Invoices {
   shipping_total_amount: number | null
   notes: string | null
   terms: string | null
+  language: string | null
   subtotal_amount: number | null
   total_amount: number | null
   created_at: string | null
   updated_at: string | null
   search_tsv: unknown | null
   search_text: string | null
-  language: string | null
 }
 
 export interface Templates {

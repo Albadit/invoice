@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi } from '@/features/settings/api';
 import type { InvoiceWithItems, Currency } from '@/lib/types';
-import { getCurrencySymbol } from '@/lib/utils';
+import { formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Form } from "@heroui/form";
@@ -491,7 +491,7 @@ export default function InvoicesPage() {
           <TableColumn key="due_date" className="font-semibold" allowsSorting>{t('table.dueDate')}{getSortBadge('due_date')}</TableColumn>
           <TableColumn key="status" className="font-semibold" allowsSorting>{t('table.status')}{getSortBadge('status')}</TableColumn>
           <TableColumn key="total_amount" className="font-semibold text-right" allowsSorting>{t('table.total')}{getSortBadge('total_amount')}</TableColumn>
-          <TableColumn key="actions" className="w-[100px]">
+          <TableColumn key="actions" className="w-25">
             <div className="flex items-center gap-1">
               {t('table.action')}
               {!isDefaultSort ? (
@@ -530,7 +530,7 @@ export default function InvoicesPage() {
                 cancelled: t('status.cancelled')
               })}</TableCell>
               <TableCell className="text-right font-semibold">
-                {getCurrencySymbol(currencies, invoice.currency_id)}{invoice.total_amount?.toFixed(2) || '0.00'}
+                {formatCurrencyAmount(currencies, invoice.currency_id, invoice.total_amount?.toFixed(2) || '0.00')}
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { invoicesApi } from '@/features/invoice/api';
+import { formatWithCurrency } from '@/lib/utils';
 import type { InvoiceWithItems } from '@/lib/types';
 
 export default function InvoiceTestPage() {
@@ -16,8 +17,9 @@ export default function InvoiceTestPage() {
         const res = await invoicesApi.getAll();
         const invoices = res.data;
         if (invoices.length > 0) {
-          const firstInvoice = invoices[0];
-          setInvoice(firstInvoice);
+          // Fetch full invoice with items, company, and currency
+          const fullInvoice = await invoicesApi.getById(invoices[0].id);
+          setInvoice(fullInvoice);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load invoice');
@@ -116,8 +118,8 @@ export default function InvoiceTestPage() {
       <div key={i} className="grid grid-cols-12">
         <span className="col-span-5 text-slate-700">{item.name}</span>
         <span className="col-span-2 text-slate-700 text-center">{item.quantity}</span>
-        <span className="col-span-2 text-slate-700 text-right">{invoice.currency?.symbol || '$'}{item.unit_price.toFixed(2)}</span>
-        <span className="col-span-3 text-slate-900 font-semibold text-right">{invoice.currency?.symbol || '$'}{(item.quantity * item.unit_price).toFixed(2)}</span>
+        <span className="col-span-2 text-slate-700 text-right">{formatWithCurrency(invoice.currency, item.unit_price.toFixed(2))}</span>
+        <span className="col-span-3 text-slate-900 font-semibold text-right">{formatWithCurrency(invoice.currency, (item.quantity * item.unit_price).toFixed(2))}</span>
       </div>
     ))}
   </div>
@@ -142,29 +144,29 @@ export default function InvoiceTestPage() {
     <div className="flex flex-col gap-4">
       <div className="flex justify-between text-slate-700">
         <span className="font-semibold text-gray-700">Subtotal:</span>
-        <span className="font-semibold text-gray-900">{invoice.currency?.symbol || '$'}{invoice.subtotal_amount?.toFixed(2) || '0.00'}</span>
+        <span className="font-semibold text-gray-900">{formatWithCurrency(invoice.currency, invoice.subtotal_amount?.toFixed(2) || '0.00')}</span>
       </div>
       {invoice.discount_total_amount != null && (
         <div className="flex justify-between text-slate-700">
-          <span className="text-gray-700">Discount ({invoice.discount_type === 'percent' ? `${invoice.discount_amount}%` : (invoice.currency?.symbol || '$') + invoice.discount_amount}):</span>
-          <span className="font-semibold text-gray-900">-{invoice.currency?.symbol || '$'}{invoice.discount_total_amount.toFixed(2)}</span>
+          <span className="text-gray-700">Discount ({invoice.discount_type === 'percent' ? `${invoice.discount_amount}%` : formatWithCurrency(invoice.currency, invoice.discount_amount ?? 0)}):</span>
+          <span className="font-semibold text-gray-900">-{formatWithCurrency(invoice.currency, invoice.discount_total_amount.toFixed(2))}</span>
         </div>
       )}
       {invoice.tax_total_amount != null && (
         <div className="flex justify-between text-slate-700">
-          <span className="text-gray-700">Tax ({invoice.tax_type === 'percent' ? `${invoice.tax_amount}%` : (invoice.currency?.symbol || '$') + invoice.tax_amount}):</span>
-          <span className="font-semibold text-gray-900">{invoice.currency?.symbol || '$'}{invoice.tax_total_amount.toFixed(2)}</span>
+          <span className="text-gray-700">Tax ({invoice.tax_type === 'percent' ? `${invoice.tax_amount}%` : formatWithCurrency(invoice.currency, invoice.tax_amount ?? 0)}):</span>
+          <span className="font-semibold text-gray-900">{formatWithCurrency(invoice.currency, invoice.tax_total_amount.toFixed(2))}</span>
         </div>
       )}
       {invoice.shipping_total_amount != null && (
         <div className="flex justify-between text-slate-700">
           <span className="text-gray-700">Shipping:</span>
-          <span className="font-semibold text-gray-900">{invoice.currency?.symbol || '$'}{invoice.shipping_total_amount.toFixed(2)}</span>
+          <span className="font-semibold text-gray-900">{formatWithCurrency(invoice.currency, invoice.shipping_total_amount.toFixed(2))}</span>
         </div>
       )}
       <div className="flex justify-between items-center pt-2 border-t">
         <span className="text-xl font-bold text-gray-900">Total:</span>
-        <span className="text-2xl font-bold text-gray-900">{invoice.currency?.symbol || '$'}{invoice.total_amount?.toFixed(2) || '0.00'}</span>
+        <span className="text-2xl font-bold text-gray-900">{formatWithCurrency(invoice.currency, invoice.total_amount?.toFixed(2) || '0.00')}</span>
       </div>
     </div>
   </div>

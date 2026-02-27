@@ -7,7 +7,7 @@ import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi, companiesApi, templatesApi } from '@/features/settings/api';
 import type { InvoiceItem, Currency, Company, Template } from '@/lib/types';
 import type { InvoicesPost } from '@/lib/database.types';
-import { getCurrencySymbol } from '@/lib/utils';
+import { getCurrencySymbol, formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -383,7 +383,7 @@ export default function InvoiceEditPage() {
                 </div>
                 <ChevronDown className={`size-5 text-default-400 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
               </button>
-              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-250 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="px-4 pb-4 sm:px-6 sm:pb-6 flex flex-col gap-6">
                   <div className="flex flex-col gap-4">
                     <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
@@ -602,7 +602,7 @@ export default function InvoiceEditPage() {
                     </div>
                     <div className="sm:col-span-2 flex items-center justify-between sm:justify-end font-semibold">
                       <span className="text-xs text-default-400 sm:hidden">{t('fields.amount')}</span>
-                      {getCurrencySymbol(currencies, currencyId)}{((item.quantity || 0) * (item.unit_price || 0)).toFixed(2)}
+                      {formatCurrencyAmount(currencies, currencyId, ((item.quantity || 0) * (item.unit_price || 0)).toFixed(2))}
                     </div>
                     <div className="sm:col-span-1 flex items-center justify-end sm:justify-start">
                       <Button
@@ -632,7 +632,7 @@ export default function InvoiceEditPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder={t('fields.notes')}
-                    className="min-h-[100px] font-semibold [&_span]:text-default-600"
+                    className="min-h-25 font-semibold [&_span]:text-default-600"
                   />
                   <Textarea
                     label={t('fields.terms')}
@@ -640,7 +640,7 @@ export default function InvoiceEditPage() {
                     value={terms}
                     onChange={(e) => setTerms(e.target.value)}
                     placeholder={t('fields.terms')}
-                    className="min-h-[100px] font-semibold [&_span]:text-default-600"
+                    className="min-h-25 font-semibold [&_span]:text-default-600"
                   />
                 </div>
 
@@ -649,7 +649,7 @@ export default function InvoiceEditPage() {
                   <div className="flex justify-between items-center">
                     <span className="font-semibold text-default-600">{t('fields.subtotal')}</span>
                     <span className="text-lg font-semibold">
-                      {getCurrencySymbol(currencies, currencyId)}{getSubtotal().toFixed(2)}
+                      {formatCurrencyAmount(currencies, currencyId, getSubtotal().toFixed(2))}
                     </span>
                   </div>
 
@@ -681,7 +681,7 @@ export default function InvoiceEditPage() {
                         />
                       </div>
                       <span className="text-lg font-semibold ml-auto">
-                        -{getCurrencySymbol(currencies, currencyId)}{getDiscountAmount().toFixed(2)}
+                        -{formatCurrencyAmount(currencies, currencyId, getDiscountAmount().toFixed(2))}
                       </span>
                     </div>
                   ) : null}
@@ -714,7 +714,7 @@ export default function InvoiceEditPage() {
                         />
                       </div>
                       <span className="text-lg font-semibold ml-auto">
-                        {getCurrencySymbol(currencies, currencyId)}{getTaxAmount().toFixed(2)}
+                        {formatCurrencyAmount(currencies, currencyId, getTaxAmount().toFixed(2))}
                       </span>
                     </div>
                   ) : null}
@@ -740,7 +740,7 @@ export default function InvoiceEditPage() {
                         />
                       </div>
                       <span className="text-lg font-semibold ml-auto">
-                        {getCurrencySymbol(currencies, currencyId)}{(shippingAmount || 0).toFixed(2)}
+                        {formatCurrencyAmount(currencies, currencyId, (shippingAmount || 0).toFixed(2))}
                       </span>
                     </div>
                   ) : null}
@@ -783,7 +783,7 @@ export default function InvoiceEditPage() {
                   <div className="flex justify-between items-center pt-2 border-t border-default-200">
                     <span className="text-xl font-bold text-foreground">{t('fields.total')}</span>
                     <span className="text-2xl font-bold text-foreground">
-                      {getCurrencySymbol(currencies, currencyId)}{getTotal().toFixed(2)}
+                      {formatCurrencyAmount(currencies, currencyId, getTotal().toFixed(2))}
                     </span>
                   </div>
                 </div>

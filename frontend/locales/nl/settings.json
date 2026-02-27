@@ -94,7 +94,12 @@
     "fields": {
       "code": "Valutacode",
       "name": "Valutanaam",
-      "symbol": "Symbool"
+      "symbol": "Symbool",
+      "symbolPosition": "Symboolpositie",
+      "positionLeft": "Links (bijv. $100)",
+      "positionRight": "Rechts (bijv. 100$)",
+      "symbolSpace": "Spatie tussen symbool en bedrag",
+      "preview": "Voorbeeld"
     },
     "noData": "Geen valuta's beschikbaar",
     "messages": {

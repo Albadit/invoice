@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Switch } from "@heroui/switch";
 import type { Currency } from '@/lib/types';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
@@ -14,6 +16,8 @@ interface EditCurrencyModalProps {
     code: string;
     name: string;
     symbol: string;
+    symbol_position: 'left' | 'right';
+    symbol_space: boolean;
   }) => Promise<void>;
   currency: Currency | null;
 }
@@ -24,6 +28,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [symbol, setSymbol] = useState('');
+  const [symbolPosition, setSymbolPosition] = useState<'left' | 'right'>('left');
+  const [symbolSpace, setSymbolSpace] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -31,6 +37,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
       setCode(currency.code);
       setName(currency.name);
       setSymbol(currency.symbol);
+      setSymbolPosition((currency.symbol_position as 'left' | 'right') || 'left');
+      setSymbolSpace(currency.symbol_space || false);
     }
   }, [isOpen, currency]);
 
@@ -45,6 +53,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
         code,
         name,
         symbol,
+        symbol_position: symbolPosition,
+        symbol_space: symbolSpace,
       });
       onClose();
     } catch (error) {
@@ -82,6 +92,28 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
               isRequired
               placeholder="$"
             />
+            <Select
+              label={t('currencies.fields.symbolPosition')}
+              selectedKeys={[symbolPosition]}
+              onSelectionChange={(keys) => {
+                const value = Array.from(keys)[0] as string;
+                if (value === 'left' || value === 'right') setSymbolPosition(value);
+              }}
+            >
+              <SelectItem key="left">{t('currencies.fields.positionLeft')}</SelectItem>
+              <SelectItem key="right">{t('currencies.fields.positionRight')}</SelectItem>
+            </Select>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">{t('currencies.fields.symbolSpace')}</span>
+              <Switch
+                isSelected={symbolSpace}
+                onValueChange={setSymbolSpace}
+                size="sm"
+              />
+            </div>
+            <div className="text-sm text-default-500">
+              {t('currencies.fields.preview')}: <strong>{symbolPosition === 'left' ? `${symbol}${symbolSpace ? ' ' : ''}100.00` : `100.00${symbolSpace ? ' ' : ''}${symbol}`}</strong>
+            </div>
           </div>
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">

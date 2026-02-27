@@ -431,9 +431,16 @@ export default function SettingsPage() {
     code: string;
     name: string;
     symbol: string;
+    symbol_position: 'left' | 'right';
+    symbol_space: boolean;
   }) {
     try {
-      await currenciesApi.create(currencyData);
+      await currenciesApi.create({
+        ...currencyData,
+        code: currencyData.code.trim(),
+        name: currencyData.name.trim(),
+        symbol: currencyData.symbol.trim(),
+      });
       
       await loadCurrencies();
       
@@ -460,11 +467,18 @@ export default function SettingsPage() {
     code: string;
     name: string;
     symbol: string;
+    symbol_position: 'left' | 'right';
+    symbol_space: boolean;
   }) {
     if (!selectedCurrency) return;
 
     try {
-      await currenciesApi.update(selectedCurrency.id, currencyData);
+      await currenciesApi.update(selectedCurrency.id, {
+        ...currencyData,
+        code: currencyData.code.trim(),
+        name: currencyData.name.trim(),
+        symbol: currencyData.symbol.trim(),
+      });
       
       await loadCurrencies();
       

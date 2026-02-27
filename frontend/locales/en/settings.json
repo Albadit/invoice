@@ -94,7 +94,12 @@
     "fields": {
       "code": "Currency Code",
       "name": "Currency Name",
-      "symbol": "Symbol"
+      "symbol": "Symbol",
+      "symbolPosition": "Symbol Position",
+      "positionLeft": "Left (e.g. $100)",
+      "positionRight": "Right (e.g. 100$)",
+      "symbolSpace": "Space between symbol and amount",
+      "preview": "Preview"
     },
     "noData": "No currencies available",
     "messages": {

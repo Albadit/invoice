@@ -26,6 +26,13 @@ EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
+-- Symbol position enumeration (for currency display)
+DO $$ BEGIN
+    CREATE TYPE symbol_position_type AS ENUM ('left', 'right');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
 -- =============================================
 -- Functions
 -- =============================================
@@ -79,7 +86,9 @@ CREATE TABLE IF NOT EXISTS currencies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
-    symbol TEXT NOT NULL
+    symbol TEXT NOT NULL,
+    symbol_position symbol_position_type NOT NULL DEFAULT 'left',
+    symbol_space BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Templates table
@@ -363,17 +372,7 @@ CREATE OR REPLACE TRIGGER update_companies_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-DO $$ BEGIN
-    DROP TRIGGER IF EXISTS update_currencies_updated_at ON currencies;
-EXCEPTION
-    WHEN undefined_table THEN NULL;
-    WHEN undefined_object THEN NULL;
-END $$;
-
-CREATE OR REPLACE TRIGGER update_currencies_updated_at
-    BEFORE UPDATE ON currencies
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column();
+-- Note: currencies table has no updated_at column, so no trigger needed
 
 DO $$ BEGIN
     DROP TRIGGER IF EXISTS update_templates_updated_at ON templates;

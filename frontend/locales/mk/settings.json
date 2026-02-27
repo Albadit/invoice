@@ -94,7 +94,12 @@
     "fields": {
       "code": "Код на Валута",
       "name": "Име на Валута",
-      "symbol": "Симбол"
+      "symbol": "Симбол",
+      "symbolPosition": "Позиција на Симболот",
+      "positionLeft": "Лево (пр. $100)",
+      "positionRight": "Десно (пр. 100$)",
+      "symbolSpace": "Празно место меѓу симболот и износот",
+      "preview": "Преглед"
     },
     "noData": "Нема достапни валути",
     "messages": {

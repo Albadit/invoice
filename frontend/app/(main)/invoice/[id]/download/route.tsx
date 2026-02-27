@@ -3,6 +3,7 @@ import { generatePdf } from '@/lib/generatePdf';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/settings/api';
 import { renderInvoiceToHtml } from '@/lib/renderTemplate';
+import { formatWithCurrency } from '@/lib/utils';
 import { tl } from '@/lib/i18n/translate';
 import { loadTranslations } from '@/lib/i18n/translate.server';
 import type { Translations } from '@/lib/i18n/translate';
@@ -194,6 +195,7 @@ export async function GET(
  */
 function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
   // Get currency symbol
+  const fc = (amount: string | number) => formatWithCurrency(invoice.currency, amount);
 
   // Default template
   return `
@@ -279,8 +281,8 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
             <div class="grid grid-cols-12">
               <span class="col-span-5 text-slate-700">${item.name}</span>
               <span class="col-span-2 text-slate-700 text-center">${item.quantity}</span>
-              <span class="col-span-2 text-slate-700 text-right">${invoice.currency.symbol}${item.unit_price.toFixed(2)}</span>
-              <span class="col-span-3 text-slate-900 font-semibold text-right">${invoice.currency.symbol}${(item.quantity * item.unit_price).toFixed(2)}</span>
+              <span class="col-span-2 text-slate-700 text-right">${fc(item.unit_price.toFixed(2))}</span>
+              <span class="col-span-3 text-slate-900 font-semibold text-right">${fc((item.quantity * item.unit_price).toFixed(2))}</span>
             </div>
           `).join('')}
         </div>
@@ -302,29 +304,29 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
           <div class="flex flex-col gap-4">
             <div class="flex justify-between text-slate-700">
               <span class="font-semibold text-gray-700">${tl(labels, 'fields.subtotal')}:</span>
-              <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.subtotal_amount ?? 0).toFixed(2)}</span>
+              <span class="font-semibold text-gray-900">${fc((invoice.subtotal_amount ?? 0).toFixed(2))}</span>
             </div>
             ${invoice.discount_amount && invoice.discount_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
-                <span class="text-gray-700">${tl(labels, 'fields.discount')} (${invoice.discount_type === 'percent' ? invoice.discount_amount + '%' : invoice.currency.symbol + invoice.discount_amount}):</span>
-                <span class="font-semibold text-gray-900">-${invoice.currency.symbol}${(invoice.discount_amount ?? 0).toFixed(2)}</span>
+                <span class="text-gray-700">${tl(labels, 'fields.discount')} (${invoice.discount_type === 'percent' ? invoice.discount_amount + '%' : fc(invoice.discount_amount)}):</span>
+                <span class="font-semibold text-gray-900">-${fc((invoice.discount_amount ?? 0).toFixed(2))}</span>
               </div>
             ` : ''}
             ${invoice.tax_amount && invoice.tax_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
-                <span class="text-gray-700">${tl(labels, 'fields.tax')} (${invoice.tax_type === 'percent' ? invoice.tax_amount + '%' : invoice.currency.symbol + invoice.tax_amount}):</span>
-                <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.tax_amount ?? 0).toFixed(2)}</span>
+                <span class="text-gray-700">${tl(labels, 'fields.tax')} (${invoice.tax_type === 'percent' ? invoice.tax_amount + '%' : fc(invoice.tax_amount)}):</span>
+                <span class="font-semibold text-gray-900">${fc((invoice.tax_amount ?? 0).toFixed(2))}</span>
               </div>
             ` : ''}
             ${invoice.shipping_amount && invoice.shipping_amount > 0 ? `
               <div class="flex justify-between text-slate-700">
                 <span class="text-gray-700">${tl(labels, 'fields.shipping')}:</span>
-                <span class="font-semibold text-gray-900">${invoice.currency.symbol}${(invoice.shipping_amount ?? 0).toFixed(2)}</span>
+                <span class="font-semibold text-gray-900">${fc((invoice.shipping_amount ?? 0).toFixed(2))}</span>
               </div>
             ` : ''}
             <div class="flex justify-between items-center pt-2 border-t">
               <span class="text-xl font-bold text-gray-900">${tl(labels, 'fields.total')}:</span>
-              <span class="text-2xl font-bold text-gray-900">${invoice.currency.symbol}${(invoice.total_amount ?? 0).toFixed(2)}</span>
+              <span class="text-2xl font-bold text-gray-900">${fc((invoice.total_amount ?? 0).toFixed(2))}</span>
             </div>
           </div>
         </div>

@@ -43,7 +43,11 @@ export function ManageCurrenciesModal({
                     <p className="font-semibold">
                       {currency.code} - {currency.name}
                     </p>
-                    <p className="text-sm text-slate-600">Symbol: {currency.symbol}</p>
+                    <p className="text-sm text-slate-600">
+                      Symbol: {currency.symbol_position === 'right' 
+                        ? `100${currency.symbol_space ? ' ' : ''}${currency.symbol}` 
+                        : `${currency.symbol}${currency.symbol_space ? ' ' : ''}100`}
+                    </p>
                   </div>
                   <div className="flex md:flex-row flex-col gap-2">
                     <Button
