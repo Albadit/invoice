@@ -1,25 +1,13 @@
 import { Chip } from "@heroui/chip";
 import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
+import { STATUS_COLORS, getEffectiveStatus } from '@/lib/types';
+import type { InvoiceStat } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { invoicesApi } from '@/features/invoice/api';
 
-/**
- * Get the effective display status for an invoice.
- * If the stored status is 'pending' and the due_date is in the past, returns 'overdue'.
- */
-export function getEffectiveStatus(
-  status: InvoiceStatus,
-  dueDate?: string | null
-): InvoiceStatus {
-  if (status === 'pending' && dueDate) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(dueDate);
-    due.setHours(0, 0, 0, 0);
-    if (due < today) return 'overdue';
-  }
-  return status;
-}
+// Re-export shared types/constants for backwards compatibility
+export { STATUS_COLORS, getEffectiveStatus };
+export type { InvoiceStat };
 
 /**
  * Get status badge component for invoice status

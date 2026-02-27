@@ -1,0 +1,16 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Overzicht van uw factuurstatistieken",
+  "filterCompany": "Bedrijf",
+  "filterYear": "Jaar",
+  "allCompanies": "Alle Bedrijven",
+  "allYears": "Alle Jaren",
+  "totalInvoices": "Totaal Facturen",
+  "totalRevenue": "Totale Omzet",
+  "statusDistribution": "Statusverdeling",
+  "amountByStatus": "Bedrag per Status",
+  "monthlyTrend": "Maandelijkse Trend (12 maanden)",
+  "noData": "Geen gegevens beschikbaar",
+  "viewAll": "Bekijk Alles",
+  "outstanding": "Uitstaand"
+}

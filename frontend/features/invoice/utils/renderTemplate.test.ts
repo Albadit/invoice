@@ -6,7 +6,8 @@
  */
 
 import { renderInvoiceToHtml, type TemplateContext } from './renderTemplate';
-import { templatesApi, invoicesApi } from './api';
+import { invoicesApi } from '@/features/invoice/api';
+import { templatesApi } from '@/features/templates/api';
 
 /**
  * Test: Render invoice with data from database
@@ -15,7 +16,8 @@ import { templatesApi, invoicesApi } from './api';
  */
 export async function testRenderInvoice() {
   // Fetch invoices from database
-  const invoices = await invoicesApi.getAll();
+  const result = await invoicesApi.getAll();
+  const invoices = result.data;
   
   if (!invoices || invoices.length === 0) {
     return { 

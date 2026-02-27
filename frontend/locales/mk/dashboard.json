@@ -1,0 +1,16 @@
+{
+  "title": "Контролна Табла",
+  "subtitle": "Преглед на статистиките за вашите фактури",
+  "filterCompany": "Компанија",
+  "filterYear": "Година",
+  "allCompanies": "Сите Компании",
+  "allYears": "Сите Години",
+  "totalInvoices": "Вкупно Фактури",
+  "totalRevenue": "Вкупен Приход",
+  "statusDistribution": "Распределба по Статус",
+  "amountByStatus": "Износ по Статус",
+  "monthlyTrend": "Месечен Тренд (12 месеци)",
+  "noData": "Нема податоци",
+  "viewAll": "Прикажи ги сите",
+  "outstanding": "Неплатени"
+}

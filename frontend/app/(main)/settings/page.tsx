@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { currenciesApi, templatesApi, companiesApi, storageApi } from '@/features/settings/api';
+import { currenciesApi } from '@/features/currencies/api';
+import { templatesApi } from '@/features/templates/api';
+import { companiesApi, storageApi } from '@/features/companies/api';
 import { clientsApi } from '@/features/clients/api';
 import type { Currency, Template, Company, Client } from '@/lib/types';
 import { Button } from "@heroui/button";
@@ -16,14 +18,18 @@ import {
   AddCompanyModal,
   EditCompanyModal,
   ManageCompaniesModal,
+  LogoUpload,
+} from '@/features/companies/components';
+import {
   ManageTemplatesModal,
   EditTemplateModal,
   AddTemplateModal,
+} from '@/features/templates/components';
+import {
   ManageCurrenciesModal,
   EditCurrencyModal,
   AddCurrencyModal,
-  LogoUpload,
-} from '@/features/settings/components';
+} from '@/features/currencies/components';
 import {
   AddClientModal,
   EditClientModal,

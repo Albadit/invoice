@@ -1,63 +1,9 @@
--- Create a test user in auth.users for seeding (auth.uid() is NULL outside PostgREST)
-DO $$
-BEGIN
-    INSERT INTO auth.users (
-        id, instance_id, aud, role, email, encrypted_password,
-        email_confirmed_at, created_at, updated_at,
-        confirmation_token, recovery_token,
-        email_change, email_change_token_new, email_change_token_current,
-        email_change_confirm_status,
-        phone, phone_change, phone_change_token,
-        reauthentication_token,
-        raw_app_meta_data, raw_user_meta_data,
-        is_sso_user, is_anonymous
-    )
-    VALUES (
-        '00000000-0000-0000-0000-000000000001',
-        '00000000-0000-0000-0000-000000000000',
-        'authenticated',
-        'authenticated',
-        'test@test.com',
-        crypt('qwer', gen_salt('bf')),
-        NOW(),
-        NOW(),
-        NOW(),
-        '',
-        '',
-        '',
-        '',
-        '',
-        0,
-        NULL,
-        '',
-        '',
-        '',
-        '{"provider": "email", "providers": ["email"]}'::jsonb,
-        '{}'::jsonb,
-        false,
-        false
-    );
-EXCEPTION WHEN unique_violation THEN
-    -- User already exists, update the columns GoTrue needs
-    UPDATE auth.users SET
-        email_change = COALESCE(email_change, ''),
-        email_change_token_new = COALESCE(email_change_token_new, ''),
-        email_change_token_current = COALESCE(email_change_token_current, ''),
-        email_change_confirm_status = COALESCE(email_change_confirm_status, 0),
-        phone_change = COALESCE(phone_change, ''),
-        phone_change_token = COALESCE(phone_change_token, ''),
-        reauthentication_token = COALESCE(reauthentication_token, ''),
-        raw_app_meta_data = COALESCE(raw_app_meta_data, '{"provider": "email", "providers": ["email"]}'::jsonb),
-        raw_user_meta_data = COALESCE(raw_user_meta_data, '{}'::jsonb)
-    WHERE email = 'test@test.com';
-END $$;
-
--- Get the test user ID (either newly created or existing)
+-- Get the test user ID
 DO $$
 DECLARE
     _uid UUID;
 BEGIN
-    SELECT id INTO _uid FROM auth.users WHERE email = 'test@test.com' LIMIT 1;
+    SELECT id INTO _uid FROM auth.users WHERE email = 'qwer@qwer.qwer' LIMIT 1;
     PERFORM set_config('seed.user_id', _uid::text, false);
 END $$;
 

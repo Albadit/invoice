@@ -4,19 +4,13 @@
  */
 
 import { API_URL, getHeaders } from '@/lib/api';
-import type { Client } from '@/lib/types';
+import type { Client, PaginatedResponse } from '@/lib/types';
 import type {
   ClientsPost,
   ClientsPatch
 } from '@/lib/database.types';
 
-/**
- * Paginated response
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  totalCount: number;
-}
+export type { PaginatedResponse };
 
 /**
  * Client API functions

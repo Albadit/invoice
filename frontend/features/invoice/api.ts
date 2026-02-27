@@ -11,39 +11,17 @@ import { API_URL, getHeaders } from '@/lib/api';
 import type { 
   Invoice, 
   InvoiceItem, 
-  InvoiceWithItems 
+  InvoiceWithItems,
+  PaginatedResponse,
+  CursorPaginatedResponse,
+  PageCursor,
 } from '@/lib/types';
 import type { 
   InvoicesPost,
   InvoicesPatch
 } from '@/lib/database.types';
 
-/**
- * Cursor for keyset pagination
- * Contains the last row's sort values: (created_at, id)
- */
-export interface PageCursor {
-  createdAt: string;  // ISO timestamp of last row
-  id: string;         // UUID of last row
-}
-
-/**
- * Paginated response with cursor (offset-based, legacy)
- */
-export interface PaginatedResponse<T> {
-  data: T[];
-  totalCount: number;
-}
-
-/**
- * Cursor-paginated response (keyset-based, fast)
- */
-export interface CursorPaginatedResponse<T> {
-  data: T[];
-  nextCursor: PageCursor | null;  // null = no more pages
-  hasNext: boolean;
-  estimatedTotal: number;         // Fast estimate, not exact
-}
+export type { PaginatedResponse, CursorPaginatedResponse, PageCursor };
 
 /**
  * Invoice list columns (only what's needed for the table view)

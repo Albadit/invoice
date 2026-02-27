@@ -1,0 +1,16 @@
+{
+  "title": "Paneli",
+  "subtitle": "Përmbledhje e statistikave të faturave tuaja",
+  "filterCompany": "Kompania",
+  "filterYear": "Viti",
+  "allCompanies": "Të gjitha Kompanitë",
+  "allYears": "Të gjithë Vitet",
+  "totalInvoices": "Gjithsej Fatura",
+  "totalRevenue": "Të ardhurat Gjithsej",
+  "statusDistribution": "Shpërndarja sipas Statusit",
+  "amountByStatus": "Shuma sipas Statusit",
+  "monthlyTrend": "Trendi Mujor (12 muaj)",
+  "noData": "Nuk ka të dhëna",
+  "viewAll": "Shiko të gjitha",
+  "outstanding": "Të papaguara"
+}

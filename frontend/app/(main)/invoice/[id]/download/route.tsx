@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { generatePdf } from '@/lib/generatePdf';
+import { generatePdf } from '@/features/invoice/utils/generatePdf';
+import { renderInvoiceToHtml } from '@/features/invoice/utils/renderTemplate';
 import { invoicesApi } from '@/features/invoice/api';
-import { templatesApi } from '@/features/settings/api';
-import { renderInvoiceToHtml } from '@/lib/renderTemplate';
+import { templatesApi } from '@/features/templates/api';
 import { formatWithCurrency } from '@/lib/utils';
 import { tl } from '@/lib/i18n/translate';
 import { loadTranslations } from '@/lib/i18n/translate.server';

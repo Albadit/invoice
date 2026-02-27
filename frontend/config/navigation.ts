@@ -41,13 +41,13 @@ export const sidebarSections: NavSection[] = [
         key: 'dashboard',
         labelKey: 'navigation.dashboard',
         icon: LayoutDashboard,
-        href: '/dashboard',
+        href: '/',
       },
       {
         key: 'home',
         labelKey: 'navigation.invoices',
         icon: FileText,
-        href: '/',
+        href: '/invoice',
       },
       {
         key: 'new-invoice',

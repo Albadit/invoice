@@ -8,7 +8,7 @@
  * safely. Templates cannot access global scope or execute arbitrary code beyond
  * the provided data context.
  * 
- * @module lib/renderTemplate
+ * @module features/invoice/utils/renderTemplate
  */
 
 import type { InvoiceWithItems, Company, Currency } from '@/lib/types';

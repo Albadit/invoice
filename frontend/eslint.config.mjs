@@ -117,7 +117,17 @@ const eslintConfig = defineConfig([
     "*.config.ts",
     "*.config.mjs",
     "*.config.js",
+    // Standalone utility scripts outside the architecture layers
+    "proxy.ts",
   ]),
+
+  // Test files may cross feature boundaries for integration testing
+  {
+    files: ["**/*.test.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "boundaries/element-types": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

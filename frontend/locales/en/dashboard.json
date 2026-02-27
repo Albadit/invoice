@@ -1,0 +1,16 @@
+{
+  "title": "Dashboard",
+  "subtitle": "Overview of your invoice statistics",
+  "filterCompany": "Company",
+  "filterYear": "Year",
+  "allCompanies": "All Companies",
+  "allYears": "All Years",
+  "totalInvoices": "Total Invoices",
+  "totalRevenue": "Total Revenue",
+  "statusDistribution": "Status Distribution",
+  "amountByStatus": "Amount by Status",
+  "monthlyTrend": "Monthly Trend (12 months)",
+  "noData": "No data available",
+  "viewAll": "View All",
+  "outstanding": "Outstanding"
+}

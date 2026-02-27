@@ -1,756 +1,316 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { invoicesApi } from '@/features/invoice/api';
-import { currenciesApi } from '@/features/settings/api';
-import type { InvoiceWithItems, Currency } from '@/lib/types';
-import { formatCurrencyAmount } from '@/lib/utils';
-import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
-import { Form } from "@heroui/form";
-import { Tabs, Tab } from "@heroui/tabs";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell
-} from "@heroui/table";
-import type { SortDescriptor } from "@heroui/table";
-import {
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem
-} from "@heroui/dropdown";
-import { Card, CardBody } from "@heroui/card";
-import { Chip } from "@heroui/chip";
-import { Select, SelectItem } from "@heroui/select";
-import { DateRangePicker } from "@heroui/date-picker";
-import type { DateValue } from "@internationalized/date";
-import { useRouter } from 'next/navigation';
-import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { format } from 'date-fns';
-import { getStatusBadge, getEffectiveStatus, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
-import { InvoicePreviewModal } from '@/features/invoice/components';
-import { ConfirmModal } from '@/components/ui';
+import { useState, useEffect } from 'react';
+import { Select, SelectItem } from '@heroui/select';
+import { Spinner } from '@heroui/spinner';
+import { Card, CardBody, CardHeader } from '@heroui/card';
 import { useTranslation } from '@/contexts/LocaleProvider';
-import { addToast } from "@heroui/toast";
+import { useRouter } from 'next/navigation';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, AreaChart, Area,
+} from 'recharts';
+import { FileText, AlertTriangle, TrendingUp } from 'lucide-react';
 
-// Format large numbers compactly (e.g., 300100 -> "300.1K")
-function formatRecordCount(count: number): string {
-  if (count >= 1000000) {
-    return (count / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  }
-  if (count >= 1000) {
-    return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-  return count.toString();
-}
+import type { Company, Currency, InvoiceStat } from '@/lib/types';
+import { STATUS_COLORS } from '@/lib/types';
+import { invoicesApi } from '@/features/invoice/api';
+import { companiesApi } from '@/features/companies/api';
+import { currenciesApi } from '@/features/currencies/api';
+import { useDashboardComputed } from '@/features/dashboard/hooks/useDashboardStats';
+import { KpiCard, ChartTooltip, LegendDot } from '@/features/dashboard/components/DashboardWidgets';
 
-// Map UI column keys to DB column names (constant, never changes)
-const COLUMN_TO_DB_FIELD: Record<string, string> = {
-  invoice_code: 'invoice_code',
-  customer_name: 'customer_name',
-  issue_date: 'issue_date',
-  due_date: 'due_date',
-  status: 'status',
-  total_amount: 'total_amount',
-  created_at: 'created_at'
-};
-
-export default function InvoicesPage() {
+// ===================================================================
+export default function DashboardPage() {
+  const { t } = useTranslation('dashboard');
+  const { t: tInvoice } = useTranslation('invoice');
   const router = useRouter();
-  const { t } = useTranslation('invoice');
-  const { t: tCommon } = useTranslation('common');
-  const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
+
+  // ── Data fetching (app layer responsibility) ────────────────────
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [stats, setStats] = useState<InvoiceStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('active');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    title: string;
-    message: string;
-    confirmColor: 'primary' | 'danger' | 'success' | 'warning' | 'default' | 'secondary';
-    confirmLabel?: string;
-    action: (() => Promise<void>) | null;
-  }>({ isOpen: false, title: '', message: '', confirmColor: 'primary', action: null });
-  const [confirmLoading, setConfirmLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageInput, setPageInput] = useState('1');
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [totalCount, setTotalCount] = useState(0);
-  const [sortDescriptors, setSortDescriptors] = useState<SortDescriptor[]>([
-    { column: 'created_at', direction: 'descending' }
-  ]);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  
-  // Ref to hold latest filter/sort state (avoids stale closures in pagination handlers)
-  const filtersRef = useRef({ currentFilters: null as typeof activeFilters | null, debouncedSearch: '', sortDescriptors: [{ column: 'created_at', direction: 'descending' as const }] as SortDescriptor[], activeTab: 'active', rowsPerPage: rowsPerPage });
-  
-  // Separate filter states for each tab
-  const [activeFilters, setActiveFilters] = useState<{
-    searchQuery: string;
-    statusFilter: Set<string>;
-    dateRange: { start: DateValue; end: DateValue } | null;
-  }>({
-    searchQuery: '',
-    statusFilter: new Set<string>(),
-    dateRange: null
-  });
-  
-  const [deletedFilters, setDeletedFilters] = useState<{
-    searchQuery: string;
-    statusFilter: Set<string>;
-    dateRange: { start: DateValue; end: DateValue } | null;
-  }>({
-    searchQuery: '',
-    statusFilter: new Set<string>(),
-    dateRange: null
-  });
-  
-  // Current filters based on active tab
-  const currentFilters = activeTab === 'active' ? activeFilters : deletedFilters;
-  const setCurrentFilters = activeTab === 'active' ? setActiveFilters : setDeletedFilters;
-  
-  // Debounced search value
-  const [debouncedSearch, setDebouncedSearch] = useState(currentFilters.searchQuery);
-  
-  // Track previous filter values to detect actual changes
-  const prevFiltersRef = useRef<string>('');
+  const [selectedCompany, setSelectedCompany] = useState<string>('all');
+  const [selectedYear, setSelectedYear] = useState<string>('all');
 
-  // Keep filtersRef in sync with latest state
-  filtersRef.current = { currentFilters, debouncedSearch, sortDescriptors, activeTab, rowsPerPage };
-
-  // Load currencies only once on mount
   useEffect(() => {
-    loadCurrencies();
+    async function load() {
+      try {
+        const [c, cu] = await Promise.all([companiesApi.getAll(), currenciesApi.getAll()]);
+        setCompanies(c);
+        setCurrencies(cu);
+      } catch { /* ignore */ }
+    }
+    load();
   }, []);
 
-  // Debounce search input
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(currentFilters.searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [currentFilters.searchQuery]);
-
-  // Load invoices when filters change - reset to page 1
-  useEffect(() => {
-    // Create a key from current filter values
-    const filterKey = JSON.stringify({
-      activeTab,
-      rowsPerPage,
-      debouncedSearch,
-      statusFilter: Array.from(currentFilters.statusFilter).sort(),
-      dateRange: currentFilters.dateRange,
-      sortDescriptors: sortDescriptors.map(s => `${s.column}:${s.direction}`)
-    });
-    
-    // Only reset if filters actually changed (not just a re-render)
-    if (filterKey !== prevFiltersRef.current) {
-      prevFiltersRef.current = filterKey;
-      setCurrentPage(1);
-      setPageInput('1');
-      loadInvoices(1);
+    async function loadStats() {
+      setLoading(true);
+      try {
+        const companyId = selectedCompany === 'all' ? undefined : selectedCompany;
+        setStats(await invoicesApi.getStats(companyId));
+      } catch { /* ignore */ }
+      finally { setLoading(false); }
     }
-  }, [activeTab, rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.dateRange, sortDescriptors]);
+    loadStats();
+  }, [selectedCompany]);
 
-  async function loadCurrencies() {
-    try {
-      const data = await currenciesApi.getAll();
-      setCurrencies(data);
-    } catch (error) {
-      console.error('Failed to load currencies:', error);
-    }
-  }
+  // ── Pure computation (feature hook) ─────────────────────────────
+  const {
+    availableYears,
+    computed, fmt, monthlyData,
+    paidPct, overduePct,
+  } = useDashboardComputed(stats, currencies, selectedYear);
 
-  async function handleViewInvoice(invoice: InvoiceWithItems) {
-    try {
-      const fullInvoice = await invoicesApi.getById(invoice.id);
-      setSelectedInvoice(fullInvoice);
-      setIsModalOpen(true);
-    } catch (error) {
-      console.error('Failed to load invoice details:', error);
-      setSelectedInvoice(invoice);
-      setIsModalOpen(true);
-    }
-  }
-
-  function handleDownloadPDF(invoiceId: string) {
-    const link = document.createElement('a');
-    link.href = `/invoice/${invoiceId}/download`;
-    link.download = `invoice-${invoiceId}.pdf`;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-
-
-  /**
-   * Load invoices using offset-based pagination
-   */
-  async function loadInvoices(page: number) {
-    // Cancel any previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-    
-    setLoading(true);
-    
-    // Read latest filter state from ref (avoids stale closures)
-    const { currentFilters: filters, debouncedSearch: search, sortDescriptors: sorts, activeTab: tab, rowsPerPage: limit } = filtersRef.current;
-    
-    try {
-      // Build date range strings if provided
-      let startDate: string | undefined;
-      let endDate: string | undefined;
-      if (filters?.dateRange?.start && filters?.dateRange?.end) {
-        startDate = `${filters.dateRange.start.year}-${String(filters.dateRange.start.month).padStart(2, '0')}-${String(filters.dateRange.start.day).padStart(2, '0')}`;
-        endDate = `${filters.dateRange.end.year}-${String(filters.dateRange.end.month).padStart(2, '0')}-${String(filters.dateRange.end.day).padStart(2, '0')}`;
-      }
-      
-      const offset = (page - 1) * limit;
-      
-      // Build multi-column sort order string for PostgREST
-      const orderParts = sorts.map(s => {
-        const dbField = COLUMN_TO_DB_FIELD[s.column as string] || 'created_at';
-        const dir = s.direction === 'ascending' ? 'asc' : 'desc';
-        return `${dbField}.${dir}`;
-      });
-      if (!sorts.some(s => s.column === 'created_at')) {
-        orderParts.push('created_at.desc');
-      }
-      orderParts.push('id.desc');
-
-      const statusArr = filters ? Array.from(filters.statusFilter) : [];
-      const { data, totalCount: total } = await invoicesApi.getAll({
-        limit,
-        offset,
-        status: tab === 'deleted' ? 'cancelled' : 'active',
-        search: search || undefined,
-        statusFilter: statusArr.length > 0 ? statusArr : undefined,
-        startDate,
-        endDate,
-        orderBy: orderParts.join(','),
-        signal: abortController.signal
-      });
-      
-      if (!abortController.signal.aborted) {
-        setFilteredInvoices(data);
-        setTotalCount(total);
-      }
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return;
-      }
-      console.error('Failed to load invoices:', error);
-    } finally {
-      if (!abortController.signal.aborted) {
-        setLoading(false);
-      }
-    }
-  }
-  
-  // Navigation functions
-  function goToNextPage() {
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
-    setPageInput(String(nextPage));
-    loadInvoices(nextPage);
-  }
-  
-  function goToPrevPage() {
-    const prevPage = currentPage - 1;
-    setCurrentPage(prevPage);
-    setPageInput(String(prevPage));
-    loadInvoices(prevPage);
-  }
-  
-  function handlePageInputSubmit() {
-    const page = parseInt(pageInput);
-    
-    if (isNaN(page) || page === currentPage || page < 1 || page > totalPages) {
-      setPageInput(String(currentPage));
-      return;
-    }
-    
-    setCurrentPage(page);
-    loadInvoices(page);
-  }
-
-  // Total pages
-  const totalPages = Math.ceil(totalCount / rowsPerPage);
-  const hasNextPage = currentPage < totalPages;
-  const hasPrevPage = currentPage > 1;
-  const loadingState = loading && filteredInvoices.length === 0 ? 'loading' : 'idle';
-
-  async function handleDelete(invoiceId: string) {
-    try {
-      await invoicesApi.delete(invoiceId);
-      await loadInvoices(currentPage);
-      addToast({
-        title: t('messages.deleted'),
-        description: t('messages.deletedDescription'),
-        color: 'success',
-      });
-    } catch (error) {
-      console.error('Failed to delete invoice:', error);
-      addToast({
-        title: t('messages.error'),
-        description: t('messages.deleteError'),
-        color: 'danger',
-      });
-    }
-  }
-
-  function openConfirm(opts: {
-    title: string;
-    message: string;
-    confirmColor: 'primary' | 'danger' | 'success' | 'warning' | 'default' | 'secondary';
-    confirmLabel?: string;
-    action: () => Promise<void>;
-  }) {
-    setConfirmModal({ isOpen: true, ...opts });
-  }
-
-  async function handleConfirm() {
-    if (!confirmModal.action) return;
-    setConfirmLoading(true);
-    try {
-      await confirmModal.action();
-    } finally {
-      setConfirmLoading(false);
-      setConfirmModal(prev => ({ ...prev, isOpen: false }));
-    }
-  }
-
-  // Helper to refresh current page
-  const refreshCurrentPage = useCallback(async () => {
-    await loadInvoices(currentPage);
-  }, [currentPage]);
-
-  // Multi-column sort handler: click to add, click again to toggle direction, click again to remove
-  function handleSortChange(descriptor: SortDescriptor) {
-    setSortDescriptors(prev => {
-      const existingIndex = prev.findIndex(s => s.column === descriptor.column);
-      if (existingIndex >= 0) {
-        // Already sorted: if ascending → flip to descending, if descending → remove
-        if (prev[existingIndex].direction === 'ascending') {
-          const updated = [...prev];
-          updated[existingIndex] = { ...updated[existingIndex], direction: 'descending' };
-          return updated;
-        } else {
-          // Remove this column from sort
-          const updated = prev.filter((_, i) => i !== existingIndex);
-          return updated.length > 0 ? updated : [{ column: 'created_at', direction: 'descending' as const }];
-        }
-      }
-      // New column: if only default sort is active, replace it; otherwise append
-      const isDefault = prev.length === 1 && prev[0].column === 'created_at' && prev[0].direction === 'descending';
-      if (isDefault) {
-        return [{ column: descriptor.column, direction: 'ascending' as const }];
-      }
-      return [...prev, { column: descriptor.column, direction: 'ascending' as const }];
-    });
-  }
-
-  // Sort badge with arrow direction
-  function getSortBadge(columnKey: string) {
-    const index = sortDescriptors.findIndex(s => s.column === columnKey);
-    if (index < 0) return null;
-    const arrow = sortDescriptors[index].direction === 'ascending' ? '↑' : '↓';
-    return (
-      <span className="inline-flex items-center text-[10px] text-primary font-bold ml-0.5">
-        {sortDescriptors.length > 1 ? `${index + 1}` : ''}{arrow}
-      </span>
-    );
-  }
-
-  const isDefaultSort = sortDescriptors.length === 1 && sortDescriptors[0].column === 'created_at' && sortDescriptors[0].direction === 'descending';
-
-  // Only pass sortDescriptor to Table when the primary sort column is visible in the table
-  // (created_at is a DB-only column, not rendered as a TableColumn, causing hydration mismatch)
-  const VISIBLE_SORT_COLUMNS = new Set(['invoice_code', 'customer_name', 'issue_date', 'due_date', 'status', 'total_amount']);
-  const tableSortDescriptor = sortDescriptors[0]?.column && VISIBLE_SORT_COLUMNS.has(sortDescriptors[0].column as string)
-    ? sortDescriptors[0]
-    : undefined;
+  // Pie data (non-zero slices only)
+  const pieData = [
+    { name: tInvoice('status.pending'), value: computed.pending.count, color: STATUS_COLORS.pending },
+    { name: tInvoice('status.paid'), value: computed.paid.count, color: STATUS_COLORS.paid },
+    { name: tInvoice('status.overdue'), value: computed.overdue.count, color: STATUS_COLORS.overdue },
+    { name: tInvoice('status.cancelled'), value: computed.cancelled.count, color: STATUS_COLORS.cancelled },
+  ].filter((d) => d.value > 0);
 
   return (
-    <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
-      <div className="flex flex-col gap-1 sm:gap-2">
-        <h1 className="text-2xl sm:text-4xl font-bold">{t('title')}</h1>
-        <p className="text-sm sm:text-base text-default-500">{t('subtitle')}</p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
-        <Tabs size="lg" selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
-          <Tab key="active" title={t('tabs.active')}/>
-          <Tab key="deleted" title={t('tabs.cancelled')}/>
-        </Tabs>
-        <Button color="primary" variant="solid" className="w-full sm:w-auto"
-          onClick={() => router.push('/invoice/new/edit')}
-          startContent={<Plus className="h-4 w-4" />}
-        >
-          {t('createNew')}
-        </Button>
-      </div>
-
-      <Card>
-        <CardBody className='flex flex-col lg:grid grid-cols-2 gap-4'>
-          <Input
-            className='col-span-2 row-span-1'
-            isClearable
-            startContent={<Search className="size-4" />}
-            placeholder={t('search.placeholder')}
-            value={currentFilters.searchQuery}
-            onChange={(e) => setCurrentFilters({ ...currentFilters, searchQuery: e.target.value })}
-            onClear={() => setCurrentFilters({ ...currentFilters, searchQuery: '' })}
-          />
+    <div className="flex flex-col gap-6 p-4 sm:p-6 max-w-7xl mx-auto w-full">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">{t('title')}</h1>
+          <p className="text-default-500 text-sm">{t('subtitle')}</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Select
-            aria-label={t('table.status')}
-            selectionMode="multiple"
-            classNames={{
-              base: 'col-span-1 row-span-2',
-            }}
-            placeholder={t('status.all')}
-            selectedKeys={currentFilters.statusFilter}
-            onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, statusFilter: new Set(Array.from(keys) as string[]) })}
-            endContent={currentFilters.statusFilter.size > 0 ? (
-              <span
-                role="button"
-                tabIndex={0}
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); } }}
-                aria-label="Clear status filter"
-              >
-                <X className="size-3.5 text-default-400" />
-              </span>
-            ) : null}
-            renderValue={(items) => (
-              <div className="flex gap-1 overflow-hidden">
-                {items.map((item) => {
-                  const color = item.key === 'pending' ? 'warning' : item.key === 'paid' ? 'success' : item.key === 'overdue' ? 'danger' : 'default';
-                  return <Chip key={item.key} color={color} variant="flat" size="sm">{item.textValue}</Chip>;
-                })}
-              </div>
-            )}
+            label={t('filterYear')}
+            labelPlacement="inside"
+            selectedKeys={[selectedYear]}
+            onChange={(e) => setSelectedYear(e.target.value || 'all')}
+            className="w-full sm:w-36"
+            size="sm"
           >
-            {activeTab === 'active' ? (
-              [<SelectItem key="pending" textValue={t('status.pending')}>
-                <Chip color="warning" variant="flat" size="sm">{t('status.pending')}</Chip>
-              </SelectItem>,
-              <SelectItem key="paid" textValue={t('status.paid')}>
-                <Chip color="success" variant="flat" size="sm">{t('status.paid')}</Chip>
-              </SelectItem>,
-              <SelectItem key="overdue" textValue={t('status.overdue')}>
-                <Chip color="danger" variant="flat" size="sm">{t('status.overdue')}</Chip>
-              </SelectItem>]
-            ) : (
-              [<SelectItem key="cancelled" textValue={t('status.cancelled')}>
-                <Chip color="default" variant="flat" size="sm">{t('status.cancelled')}</Chip>
-              </SelectItem>]
-            )}
+            {[
+              <SelectItem key="all">{t('allYears')}</SelectItem>,
+              ...availableYears.map((y) => <SelectItem key={String(y)}>{String(y)}</SelectItem>),
+            ]}
           </Select>
-          <DateRangePicker
-            showMonthAndYearPickers
-            aria-label="Date Range Picker"
-            className='col-span-1 row-span-2'
-            value={currentFilters.dateRange}
-            onChange={(value) => setCurrentFilters({ ...currentFilters, dateRange: value })}
-            endContent={currentFilters.dateRange ? (
-              <span
-                role="button"
-                tabIndex={0}
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); } }}
-                aria-label="Clear date range"
-              >
-                <X className="size-3.5 text-default-400" />
-              </span>
-            ) : null}
-          />
-        </CardBody>
-      </Card>
+          <Select
+            label={t('filterCompany')}
+            labelPlacement="inside"
+            selectedKeys={[selectedCompany]}
+            onChange={(e) => setSelectedCompany(e.target.value || 'all')}
+            className="w-full sm:w-64"
+            size="sm"
+          >
+            {[
+              <SelectItem key="all">{t('allCompanies')}</SelectItem>,
+              ...companies.map((c) => <SelectItem key={c.id}>{c.name}</SelectItem>),
+            ]}
+          </Select>
+        </div>
+      </div>
 
-      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', sortIcon: 'hidden', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }} sortDescriptor={tableSortDescriptor} onSortChange={handleSortChange}>
-        <TableHeader>
-          <TableColumn key="invoice_code" className="font-semibold" allowsSorting>{t('table.invoice')}{getSortBadge('invoice_code')}</TableColumn>
-          <TableColumn key="customer_name" className="font-semibold" allowsSorting>{t('table.customer')}{getSortBadge('customer_name')}</TableColumn>
-          <TableColumn key="issue_date" className="font-semibold" allowsSorting>{t('table.date')}{getSortBadge('issue_date')}</TableColumn>
-          <TableColumn key="due_date" className="font-semibold" allowsSorting>{t('table.dueDate')}{getSortBadge('due_date')}</TableColumn>
-          <TableColumn key="status" className="font-semibold" allowsSorting>{t('table.status')}{getSortBadge('status')}</TableColumn>
-          <TableColumn key="total_amount" className="font-semibold text-right" allowsSorting>{t('table.total')}{getSortBadge('total_amount')}</TableColumn>
-          <TableColumn key="actions" className="w-25">
-            <div className="flex items-center gap-1">
-              {t('table.action')}
-              {!isDefaultSort ? (
-                <button
-                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors"
-                  onClick={() => setSortDescriptors([{ column: 'created_at', direction: 'descending' }])}
-                  aria-label="Reset sort"
-                >
-                  <X className="size-3.5 text-default-400" />
-                </button>
-              ) : null}
-            </div>
-          </TableColumn>
-        </TableHeader>
-        <TableBody 
-          isLoading={loadingState === 'loading'}
-          loadingContent={<div className="flex justify-center py-12">{t('messages.loadingInvoices')}</div>}
-          emptyContent={<div className="text-center py-12">{loading ? t('messages.loadingInvoices') : t('messages.noInvoices')}</div>}
-        >
-          {filteredInvoices.map((invoice) => (
-            <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.invoice_code}</TableCell>
-              <TableCell>{invoice.customer_name}</TableCell>
-              <TableCell>
-                {format(new Date(invoice.issue_date || invoice.created_at || ''), 'MMM dd, yyyy')}
-              </TableCell>
-              <TableCell>
-                {invoice.due_date
-                  ? format(new Date(invoice.due_date), 'MMM dd, yyyy')
-                  : '-'}
-              </TableCell>
-              <TableCell>{getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {
-                pending: t('status.pending'),
-                paid: t('status.paid'),
-                overdue: t('status.overdue'),
-                cancelled: t('status.cancelled')
-              })}</TableCell>
-              <TableCell className="text-right font-semibold">
-                {formatCurrencyAmount(currencies, invoice.currency_id, invoice.total_amount?.toFixed(2) || '0.00')}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button
-                    color="primary"
-                    variant="light"
-                    size="sm"
-                    onClick={() => handleViewInvoice(invoice)}
-                    startContent={<Eye className="size-4" />}
-                  />
-                  <Dropdown>
-                    <DropdownTrigger asChild>
-                      <Button variant="light" size="sm" startContent={<EllipsisVertical className="size-4" />}/>                            
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem key="download"
-                        onClick={() => handleDownloadPDF(invoice.id)}
-                        startContent={<Download className="size-4" />}
-                      >
-                        {t('actions.downloadPdf')}
-                      </DropdownItem>
-                      <DropdownItem key="edit"
-                        onClick={() => router.push(`/invoice/${invoice.id}/edit`)}
-                        startContent={<Edit className="size-4" />}
-                      >
-                        {tCommon('actions.edit')}
-                      </DropdownItem>
-                      {invoice.status !== 'paid' ? (
-                      <DropdownItem color="success" key="paid" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.markAsPaidTitle'),
-                          message: t('confirm.markAsPaid'),
-                          confirmColor: 'success',
-                          confirmLabel: t('actions.markAsPaid'),
-                          action: async () => {
-                            try {
-                              await handleMarkAsPaid(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.markedAsPaid'), description: t('messages.markedAsPaidDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to mark as paid:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        className="text-success"
-                        startContent={<HandCoins className="size-4" />}
-                      >
-                        {t('actions.markAsPaid')}
-                      </DropdownItem>
-                      ) : null}
-                      {invoice.status !== 'pending' ? (
-                      <DropdownItem key="pending" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.markAsPendingTitle'),
-                          message: t('confirm.markAsPending'),
-                          confirmColor: 'primary',
-                          confirmLabel: t('actions.markAsPending'),
-                          action: async () => {
-                            try {
-                              await handleMarkAsPending(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.markedAsPending'), description: t('messages.markedAsPendingDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to mark as pending:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        startContent={<Clock className="size-4" />}
-                      >
-                        {t('actions.markAsPending')}
-                      </DropdownItem>
-                      ) : null}
-                      <DropdownItem key="duplicate" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.duplicateTitle'),
-                          message: t('confirm.duplicate'),
-                          confirmColor: 'primary',
-                          confirmLabel: t('actions.duplicate'),
-                          action: async () => {
-                            try {
-                              await handleDuplicate(invoice.id, router);
-                              addToast({ title: t('messages.duplicated'), description: t('messages.duplicatedDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to duplicate invoice:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.duplicateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        startContent={<Copy className="size-4" />}
-                      >
-                        {t('actions.duplicate')}
-                      </DropdownItem>
-                      {invoice.status !== 'cancelled' ? (
-                      <DropdownItem color="danger" key="cancelled" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.cancelTitle'),
-                          message: t('confirm.cancel'),
-                          confirmColor: 'danger',
-                          confirmLabel: t('actions.cancel'),
-                          action: async () => {
-                            try {
-                              await handleVoid(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.cancelled'), description: t('messages.cancelledDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to void invoice:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.voidError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        className="text-danger"
-                        startContent={<Ban className="size-4" />}
-                      >
-                        {t('actions.cancel')}
-                      </DropdownItem>
-                      ) : null}
-                      {invoice.status === 'cancelled' ? (
-                      <DropdownItem color="danger" key="delete" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.deleteTitle'),
-                          message: t('confirm.delete'),
-                          confirmColor: 'danger',
-                          confirmLabel: tCommon('actions.delete'),
-                          action: () => handleDelete(invoice.id),
-                        })}
-                        className="text-danger"
-                        startContent={<Trash className="size-4" />}
-                      >
-                        {tCommon('actions.delete')}
-                      </DropdownItem>
-                      ) : null}
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-
-      {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-center sm:justify-end gap-3 sm:gap-4 text-sm">
-        {/* Page Navigation */}
-        <div className="flex items-center gap-2">
-          <Button
-            isIconOnly
-            isDisabled={!hasPrevPage}
-            onClick={goToPrevPage}
-            aria-label={t('pagination.previous')}
-            startContent={<ChevronLeft className="size-6" />}
-          />
-          <span className="text-default-500">{t('pagination.pageLabel')}</span>
-          <Form onSubmit={(e) => { e.preventDefault(); handlePageInputSubmit(); }} className="inline">
-            <Input
-              type="number"
-              className="w-18"
-              classNames={{ input: "text-center" }}
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value)}
-              min={1}
-              max={totalPages || 1}
-              aria-label={t('pagination.pageLabel')}
+      {loading ? (
+        <div className="flex items-center justify-center py-20"><Spinner size="lg" /></div>
+      ) : (
+        <>
+          {/* ---- KPI Row (3 cards) --------------------------------------- */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <KpiCard
+              title={t('totalInvoices')}
+              value={computed.total.toLocaleString()}
+              icon={<FileText className="h-5 w-5 text-primary" />}
+              iconBg="bg-primary/10"
+              trendValue={`${paidPct}%`}
+              trendDirection={paidPct >= 50 ? 'up' : paidPct > 0 ? 'neutral' : 'down'}
+              onViewAll={() => router.push('/')}
+              viewAllLabel={t('viewAll')}
             />
-          </Form>
-          {/* Show total pages */}
-          <span className="text-default-500">
-            {totalPages > 0 
-              ? t('pagination.ofPages', { total: totalPages.toLocaleString() })
-              : ''}
-          </span>
-          <Button
-            isIconOnly
-            isDisabled={!hasNextPage}
-            onClick={goToNextPage}
-            aria-label={t('pagination.next')}
-            startContent={<ChevronRight className="size-6" />}
-          />
-        </div>
+            <KpiCard
+              title={t('totalRevenue')}
+              value={fmt(computed.paid.amount)}
+              subtitle={`${computed.paid.count} ${tInvoice('status.paid').toLowerCase()}`}
+              icon={<TrendingUp className="h-5 w-5 text-success" />}
+              iconBg="bg-success/10"
+              trendValue={paidPct ? `${paidPct}%` : undefined}
+              trendDirection="up"
+              onViewAll={() => router.push('/')}
+              viewAllLabel={t('viewAll')}
+            />
+            <KpiCard
+              title={t('outstanding')}
+              value={fmt(computed.pending.amount + computed.overdue.amount)}
+              subtitle={`${computed.pending.count + computed.overdue.count} ${tInvoice('status.pending').toLowerCase()} / ${tInvoice('status.overdue').toLowerCase()}`}
+              icon={<AlertTriangle className="h-5 w-5 text-danger" />}
+              iconBg="bg-danger/10"
+              trendValue={overduePct ? `${overduePct}%` : undefined}
+              trendDirection={overduePct > 20 ? 'down' : overduePct > 0 ? 'neutral' : 'up'}
+              onViewAll={() => router.push('/')}
+              viewAllLabel={t('viewAll')}
+            />
+          </div>
 
-        <div className="w-full sm:w-fit flex items-center justify-center gap-3">
-          {/* Rows per page */}
-          <Select
-            aria-label={t('pagination.rowsPerPage')}
-            className="w-42"
-            selectedKeys={[String(rowsPerPage)]}
-            onSelectionChange={(keys) => {
-              const value = Number(Array.from(keys)[0]);
-              setRowsPerPage(value);
-            }}
-          >
-            <SelectItem key="10" textValue="10 rows">10 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="25" textValue="25 rows">25 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="50" textValue="50 rows">50 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="100" textValue="100 rows">100 {t('pagination.rows')}</SelectItem>
-          </Select>
+          {/* ---- Analytics Card (area chart + inline KPIs) --------------- */}
+          <Card className="border border-default-200 dark:border-default-100 shadow-sm">
+            <CardBody className="p-5">
+              <h3 className="text-base font-bold mb-4">{t('monthlyTrend')}</h3>
+              {/* Inline stat chips */}
+              <div className="flex flex-wrap gap-x-8 gap-y-3 mb-5">
+                {[
+                  { label: tInvoice('status.paid'), value: fmt(computed.paid.amount), color: 'text-success' },
+                  { label: tInvoice('status.pending'), value: fmt(computed.pending.amount), color: 'text-warning' },
+                  { label: tInvoice('status.overdue'), value: fmt(computed.overdue.amount), color: 'text-danger' },
+                  { label: tInvoice('status.cancelled'), value: fmt(computed.cancelled.amount), color: 'text-default-400' },
+                ].map((item) => (
+                  <div key={item.label} className="flex flex-col">
+                    <span className={`text-xs font-medium ${item.color}`}>{item.label}</span>
+                    <span className="text-lg font-bold">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Area Chart */}
+              {stats.length === 0 ? (
+                <div className="flex items-center justify-center h-56 text-default-400">{t('noData')}</div>
+              ) : (
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient id="gradPaid" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={STATUS_COLORS.paid} stopOpacity={0.4} />
+                        <stop offset="100%" stopColor={STATUS_COLORS.paid} stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="gradPending" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={STATUS_COLORS.pending} stopOpacity={0.3} />
+                        <stop offset="100%" stopColor={STATUS_COLORS.pending} stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-default-200 dark:text-default-100" />
+                    <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="currentColor" className="text-default-400" />
+                    <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-default-400" />
+                    <RechartsTooltip content={<ChartTooltip fmtValue={fmt} />} />
+                    <Area type="monotone" dataKey="paid" name={tInvoice('status.paid')} stroke={STATUS_COLORS.paid} fill="url(#gradPaid)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="pending" name={tInvoice('status.pending')} stroke={STATUS_COLORS.pending} fill="url(#gradPending)" strokeWidth={2} />
+                    <Area type="monotone" dataKey="overdue" name={tInvoice('status.overdue')} stroke={STATUS_COLORS.overdue} fill="transparent" strokeWidth={2} strokeDasharray="4 4" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </CardBody>
+          </Card>
 
-          {/* Total records */}
-          <span className="text-default-400 whitespace-nowrap">
-            {formatRecordCount(totalCount)} {t('pagination.records')}
-          </span>
-        </div>
-      </div>
+          {/* ---- Bottom Row: Donut + Stacked Bar -------------------------*/}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Status Donut with side legend */}
+            <Card className="border border-default-200 dark:border-default-100 shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-0">
+                <h3 className="text-base font-bold">{t('statusDistribution')}</h3>
+              </CardHeader>
+              <CardBody className="px-5 pb-5">
+                {pieData.length === 0 ? (
+                  <div className="flex items-center justify-center h-56 text-default-400">{t('noData')}</div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-8">
+                      {/* Donut */}
+                      <div className="relative shrink-0" style={{ width: 200, height: 200 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                              {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                            </Pie>
+                            <RechartsTooltip content={<ChartTooltip fmtValue={(v) => String(v)} />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                        {/* Center label */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                          <span className="text-2xl font-bold">{computed.total}</span>
+                          <span className="text-xs text-default-400">{t('totalInvoices')}</span>
+                        </div>
+                      </div>
+                      {/* Legend */}
+                      <div className="flex flex-col gap-1 min-w-0 flex-1">
+                        {[
+                          { key: 'pending', label: tInvoice('status.pending'), color: STATUS_COLORS.pending, count: computed.pending.count, amount: computed.pending.amount },
+                          { key: 'paid', label: tInvoice('status.paid'), color: STATUS_COLORS.paid, count: computed.paid.count, amount: computed.paid.amount },
+                          { key: 'overdue', label: tInvoice('status.overdue'), color: STATUS_COLORS.overdue, count: computed.overdue.count, amount: computed.overdue.amount },
+                          { key: 'cancelled', label: tInvoice('status.cancelled'), color: STATUS_COLORS.cancelled, count: computed.cancelled.count, amount: computed.cancelled.amount },
+                        ].filter((d) => d.count > 0).map((d) => (
+                          <LegendDot
+                            key={d.key}
+                            color={d.color}
+                            label={d.label}
+                            count={d.count}
+                            amount={fmt(d.amount)}
+                            pct={computed.total ? Math.round((d.count / computed.total) * 100) : 0}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    {/* Proportional breakdown bar */}
+                    <div className="mt-4">
+                      <div className="flex h-2.5 rounded-full overflow-hidden">
+                        {[
+                          { key: 'paid', color: STATUS_COLORS.paid, count: computed.paid.count },
+                          { key: 'pending', color: STATUS_COLORS.pending, count: computed.pending.count },
+                          { key: 'overdue', color: STATUS_COLORS.overdue, count: computed.overdue.count },
+                          { key: 'cancelled', color: STATUS_COLORS.cancelled, count: computed.cancelled.count },
+                        ].filter((d) => d.count > 0).map((d) => (
+                          <div
+                            key={d.key}
+                            className="h-full transition-all"
+                            style={{
+                              backgroundColor: d.color,
+                              width: `${computed.total ? (d.count / computed.total) * 100 : 0}%`,
+                            }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardBody>
+            </Card>
 
-      <InvoicePreviewModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        invoice={selectedInvoice}
-        onDownload={handleDownloadPDF}
-      />
-
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={handleConfirm}
-        title={confirmModal.title}
-        message={confirmModal.message}
-        confirmColor={confirmModal.confirmColor}
-        confirmLabel={confirmModal.confirmLabel}
-        isLoading={confirmLoading}
-      />
-    </main>
+            {/* Monthly Stacked Bar with large stat header */}
+            <Card className="border border-default-200 dark:border-default-100 shadow-sm">
+              <CardHeader className="px-5 pt-5 pb-0 flex-col items-start gap-1">
+                <h3 className="text-base font-bold">{t('amountByStatus')}</h3>
+                <p className="text-2xl font-bold">{fmt(computed.totalAmount)}</p>
+              </CardHeader>
+              <CardBody className="px-2 pb-4">
+                {stats.length === 0 ? (
+                  <div className="flex items-center justify-center h-56 text-default-400">{t('noData')}</div>
+                ) : (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={monthlyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-default-200 dark:text-default-100" />
+                      <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="currentColor" className="text-default-400" />
+                      <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-default-400" />
+                      <RechartsTooltip content={<ChartTooltip fmtValue={fmt} />} />
+                      <Bar dataKey="paid" name={tInvoice('status.paid')} stackId="a" fill={STATUS_COLORS.paid} />
+                      <Bar dataKey="pending" name={tInvoice('status.pending')} stackId="a" fill={STATUS_COLORS.pending} />
+                      <Bar dataKey="overdue" name={tInvoice('status.overdue')} stackId="a" fill={STATUS_COLORS.overdue} radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+                {/* Bottom legend */}
+                <div className="flex items-center justify-center gap-4 mt-2">
+                  {[
+                    { label: tInvoice('status.paid'), color: STATUS_COLORS.paid },
+                    { label: tInvoice('status.pending'), color: STATUS_COLORS.pending },
+                    { label: tInvoice('status.overdue'), color: STATUS_COLORS.overdue },
+                  ].map((d) => (
+                    <div key={d.label} className="flex items-center gap-1.5">
+                      <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: d.color }} />
+                      <span className="text-xs text-default-500">{d.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

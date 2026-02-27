@@ -1,12 +1,7 @@
 import 'server-only';
 import fs from 'fs';
 import path from 'path';
-
-export interface LanguageConfig {
-  key: string;
-  name: string;
-  flag: string;
-}
+import type { LanguageConfig } from './settings';
 
 export function getLanguageConfig(): LanguageConfig[] {
   const localesPath = path.join(process.cwd(), 'locales');
