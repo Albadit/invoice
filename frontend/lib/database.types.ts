@@ -25,6 +25,8 @@ export interface Companies {
   city: string | null
   zip_code: string | null
   country: string | null
+  vat_number: string | null
+  coc_number: string | null
   logo_url: string | null
   template_id: string | null
   currency_id: string | null

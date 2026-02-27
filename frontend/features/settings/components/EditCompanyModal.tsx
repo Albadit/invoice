@@ -17,6 +17,8 @@ interface EditCompanyModalProps {
     city: string;
     zipCode: string;
     country: string;
+    vatNumber: string;
+    cocNumber: string;
   }) => Promise<void>;
   initialData: {
     name: string;
@@ -26,6 +28,8 @@ interface EditCompanyModalProps {
     city: string;
     zipCode: string;
     country: string;
+    vatNumber: string;
+    cocNumber: string;
   };
 }
 
@@ -39,6 +43,8 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
   const [country, setCountry] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [cocNumber, setCocNumber] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,6 +56,8 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
       setCity(initialData.city);
       setZipCode(initialData.zipCode);
       setCountry(initialData.country);
+      setVatNumber(initialData.vatNumber);
+      setCocNumber(initialData.cocNumber);
     }
   }, [isOpen, initialData]);
 
@@ -68,6 +76,8 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
         city,
         zipCode,
         country,
+        vatNumber,
+        cocNumber,
       });
       onClose();
     } catch (error) {
@@ -130,6 +140,20 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
               onChange={(e) => setCountry(e.target.value)}
               placeholder="United States"
             />
+            <div className="flex gap-4">
+              <Input
+                label={t('companies.fields.vatNumber')}
+                value={vatNumber}
+                onChange={(e) => setVatNumber(e.target.value)}
+                placeholder="NL123456789B01"
+              />
+              <Input
+                label={t('companies.fields.cocNumber')}
+                value={cocNumber}
+                onChange={(e) => setCocNumber(e.target.value)}
+                placeholder="12345678"
+              />
+            </div>
           </div>
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">

@@ -288,10 +288,10 @@ export const invoicesApi = {
   /**
    * Get invoice by ID with items
    */
-  async getById(id: string): Promise<InvoiceWithItems> {
+  async getById(id: string, authToken?: string): Promise<InvoiceWithItems> {
     const response = await fetch(
       `${API_URL}/invoices?id=eq.${id}&select=*,invoice_items(*),currencies(*),companies(*),clients(*)`,
-      { headers: await getHeaders() }
+      { headers: await getHeaders(undefined, authToken) }
     );
     
     if (!response.ok) {

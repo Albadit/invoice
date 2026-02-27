@@ -6,6 +6,7 @@ import { renderInvoiceToHtml } from '@/lib/renderTemplate';
 import { formatWithCurrency } from '@/lib/utils';
 import { tl } from '@/lib/i18n/translate';
 import { loadTranslations } from '@/lib/i18n/translate.server';
+import { createClient } from '@/lib/supabase/server';
 import type { Translations } from '@/lib/i18n/translate';
 import type { InvoiceWithItems, InvoiceItem } from '@/lib/types';
 
@@ -102,8 +103,13 @@ export async function GET(
   try {
     const { id: invoiceId } = await params;
 
+    // Get auth token from server-side session (required for RLS)
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const authToken = session?.access_token;
+
     // Fetch real invoice data from database
-    const invoice = await invoicesApi.getById(invoiceId);
+    const invoice = await invoicesApi.getById(invoiceId, authToken);
     if (!invoice) {
       return new NextResponse('Invoice not found', { status: 404 });
     }
@@ -115,7 +121,7 @@ export async function GET(
     // Fetch template info
     let template = null;
     if (invoice.template_id) {
-      const templates = await templatesApi.getAll();
+      const templates = await templatesApi.getAll(authToken);
       template = templates.find(t => t.id === invoice.template_id) || null;
     }
 

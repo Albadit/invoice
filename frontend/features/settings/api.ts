@@ -94,10 +94,10 @@ export const templatesApi = {
   /**
    * Get all templates
    */
-  async getAll(): Promise<Template[]> {
+  async getAll(authToken?: string): Promise<Template[]> {
     const response = await fetch(
       `${API_URL}/templates?select=*&order=name.asc`,
-      { headers: await getHeaders() }
+      { headers: await getHeaders(undefined, authToken) }
     );
     
     if (!response.ok) {

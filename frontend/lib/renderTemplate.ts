@@ -703,6 +703,8 @@ export function renderInvoiceToHtmlExplicit(
     'company.country': company?.country || '',
     'company.email': company?.email || '',
     'company.phone': company?.phone || '',
+    'company.vat_number': company?.vat_number || '',
+    'company.coc_number': company?.coc_number || '',
   });
 
   // Handle conditionals

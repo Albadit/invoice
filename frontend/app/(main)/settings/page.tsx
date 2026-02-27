@@ -57,6 +57,8 @@ export default function SettingsPage() {
   const [companyCity, setCompanyCity] = useState('');
   const [companyZipCode, setCompanyZipCode] = useState('');
   const [companyCountry, setCompanyCountry] = useState('');
+  const [companyVatNumber, setCompanyVatNumber] = useState('');
+  const [companyCocNumber, setCompanyCocNumber] = useState('');
   const [isAddCompanyModalOpen, setIsAddCompanyModalOpen] = useState(false);
   const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
   const [isManageCompaniesModalOpen, setIsManageCompaniesModalOpen] = useState(false);
@@ -82,6 +84,7 @@ export default function SettingsPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{ template?: boolean; currency?: boolean; tax?: boolean }>({});
 
   // Refs for scrolling to sections
   const companiesRef = useRef<HTMLDivElement>(null);
@@ -198,6 +201,8 @@ export default function SettingsPage() {
       setCompanyCity(company.city || '');
       setCompanyZipCode(company.zip_code || '');
       setCompanyCountry(company.country || '');
+      setCompanyVatNumber(company.vat_number || '');
+      setCompanyCocNumber(company.coc_number || '');
       setLogoUrl(company.logo_url || '');
       savedLogoUrlRef.current = company.logo_url || '';
       setPendingLogoFile(null);
@@ -219,6 +224,8 @@ export default function SettingsPage() {
     city: string;
     zipCode: string;
     country: string;
+    vatNumber: string;
+    cocNumber: string;
   }) {
     try {
       const newCompany = await companiesApi.create({
@@ -229,6 +236,8 @@ export default function SettingsPage() {
         city: companyData.city || null,
         zip_code: companyData.zipCode || null,
         country: companyData.country || null,
+        vat_number: companyData.vatNumber || null,
+        coc_number: companyData.cocNumber || null,
         logo_url: logoUrl || null,
         template_id: templateId,
         currency_id: currencyId,
@@ -271,6 +280,8 @@ export default function SettingsPage() {
     city: string;
     zipCode: string;
     country: string;
+    vatNumber: string;
+    cocNumber: string;
   }) {
     if (!companyId) return;
 
@@ -283,6 +294,8 @@ export default function SettingsPage() {
         city: companyData.city || null,
         zip_code: companyData.zipCode || null,
         country: companyData.country || null,
+        vat_number: companyData.vatNumber || null,
+        coc_number: companyData.cocNumber || null,
       });
 
       // Update local state
@@ -293,6 +306,8 @@ export default function SettingsPage() {
       setCompanyCity(companyData.city);
       setCompanyZipCode(companyData.zipCode);
       setCompanyCountry(companyData.country);
+      setCompanyVatNumber(companyData.vatNumber);
+      setCompanyCocNumber(companyData.cocNumber);
 
       // Reload companies list
       await loadCompanies();
@@ -337,6 +352,8 @@ export default function SettingsPage() {
             setCompanyCity('');
             setCompanyZipCode('');
             setCompanyCountry('');
+            setCompanyVatNumber('');
+            setCompanyCocNumber('');
             setLogoUrl('');
           }
           
@@ -703,6 +720,8 @@ export default function SettingsPage() {
         setCompanyCity(firstCompany.city || '');
         setCompanyZipCode(firstCompany.zip_code || '');
         setCompanyCountry(firstCompany.country || '');
+        setCompanyVatNumber(firstCompany.vat_number || '');
+        setCompanyCocNumber(firstCompany.coc_number || '');
         setLogoUrl(firstCompany.logo_url || '');
         savedLogoUrlRef.current = firstCompany.logo_url || '';
         setTemplateId(firstCompany.template_id);
@@ -728,7 +747,22 @@ export default function SettingsPage() {
       return;
     }
 
+    if (!templateId || !currencyId || tax === null) {
+      setValidationErrors({
+        template: !templateId,
+        currency: !currencyId,
+        tax: tax === null,
+      });
+      addToast({
+        title: t('messages.error'),
+        description: t('messages.requiredFieldsMissing'),
+        color: "danger"
+      });
+      return;
+    }
+
     setSaving(true);
+    setValidationErrors({});
     try {
       // Upload pending logo file if any
       let finalLogoUrl = logoUrl;
@@ -928,10 +962,14 @@ export default function SettingsPage() {
                 selectedKeys={templateId ? [String(templateId)] : []}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0];
-                  if (selected) setTemplateId(String(selected));
+                  if (selected) {
+                    setTemplateId(String(selected));
+                    setValidationErrors(prev => ({ ...prev, template: false }));
+                  }
                 }}
                 labelPlacement="outside"
                 isRequired
+                isInvalid={!!validationErrors.template}
               >
                 {templates.map((tmpl) => (
                   <SelectItem key={String(tmpl.id)}>
@@ -961,10 +999,14 @@ export default function SettingsPage() {
                 selectedKeys={currencyId ? [String(currencyId)] : []}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0];
-                  if (selected) setCurrencyId(String(selected));
+                  if (selected) {
+                    setCurrencyId(String(selected));
+                    setValidationErrors(prev => ({ ...prev, currency: false }));
+                  }
                 }}
                 labelPlacement="outside"
                 isRequired
+                isInvalid={!!validationErrors.currency}
               >
                 {currencies.map((currency) => (
                   <SelectItem 
@@ -985,11 +1027,16 @@ export default function SettingsPage() {
                 labelPlacement="outside"
                 type="number"
                 value={tax !== null ? String(tax) : ''}
-                onChange={(e) => setTax(e.target.value ? parseFloat(e.target.value) : null)}
+                onChange={(e) => {
+                  const val = e.target.value ? parseFloat(e.target.value) : null;
+                  setTax(val);
+                  if (val !== null) setValidationErrors(prev => ({ ...prev, tax: false }));
+                }}
                 placeholder="0"
                 min="0"
                 step="0.01"
                 isRequired
+                isInvalid={!!validationErrors.tax}
               />
             </div>
             <div className='flex flex-col gap-2'>
@@ -1070,6 +1117,8 @@ export default function SettingsPage() {
           setCompanyCity(company.city || '');
           setCompanyZipCode(company.zip_code || '');
           setCompanyCountry(company.country || '');
+          setCompanyVatNumber(company.vat_number || '');
+          setCompanyCocNumber(company.coc_number || '');
           setIsManageCompaniesModalOpen(false);
           setIsEditCompanyModalOpen(true);
         }}
@@ -1105,6 +1154,8 @@ export default function SettingsPage() {
           city: companyCity,
           zipCode: companyZipCode,
           country: companyCountry,
+          vatNumber: companyVatNumber,
+          cocNumber: companyCocNumber,
         }}
       />
 

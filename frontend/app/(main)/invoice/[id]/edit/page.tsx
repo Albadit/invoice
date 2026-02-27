@@ -588,14 +588,34 @@ export default function InvoiceEditPage() {
                     showMonthAndYearPickers 
                     className="w-full font-semibold [&_span]:text-default-600"
                   />
-                  <DatePicker
-                    label={t('dueDate')}
-                    labelPlacement="outside"
-                    value={dueDate}
-                    onChange={setDueDate}
-                    showMonthAndYearPickers 
-                    className="w-full font-semibold [&_span]:text-default-600"
-                  />
+                  <div className="flex gap-2 items-end">
+                    <DatePicker
+                      label={t('dueDate')}
+                      labelPlacement="outside"
+                      value={dueDate}
+                      onChange={setDueDate}
+                      showMonthAndYearPickers 
+                      className="w-2/3 sm:w-1/2 font-semibold [&_span]:text-default-600"
+                    />
+                    <Input
+                      label={t('dueDays')}
+                      labelPlacement="outside"
+                      type="number"
+                      min="0"
+                      value={dueDate && dateCreated ? String(Math.max(0, Math.round((new Date(dueDate.toString()).getTime() - new Date(dateCreated.toString()).getTime()) / 86400000))) : ''}
+                      onChange={(e) => {
+                        const days = parseInt(e.target.value);
+                        if (!isNaN(days) && days >= 0 && dateCreated) {
+                          const base = new Date(dateCreated.toString());
+                          base.setDate(base.getDate() + days);
+                          setDueDate(parseDate(format(base, 'yyyy-MM-dd')));
+                        } else if (e.target.value === '') {
+                          setDueDate(null);
+                        }
+                      }}
+                      className="w-1/3 sm:w-1/2 font-semibold [&_span]:text-default-600"
+                    />
+                  </div>
                 </div>
               </div>
 

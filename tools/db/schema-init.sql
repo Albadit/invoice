@@ -57,7 +57,7 @@ BEGIN
         END IF;
     END LOOP;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Function to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -66,7 +66,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Function to calculate invoice item total
 CREATE OR REPLACE FUNCTION calculate_invoice_item_total()
@@ -75,7 +75,7 @@ BEGIN
     NEW.total_amount := NEW.quantity * NEW.unit_price;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- =============================================
 -- Tables
@@ -117,6 +117,8 @@ CREATE TABLE IF NOT EXISTS companies (
     city TEXT,
     zip_code TEXT,
     country TEXT,
+    vat_number TEXT,
+    coc_number TEXT,
     logo_url TEXT,
     template_id UUID REFERENCES templates(id) ON DELETE SET NULL,
     currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
@@ -257,7 +259,8 @@ CREATE INDEX IF NOT EXISTS idx_invoices_search_text_trgm ON invoices USING GIN (
 -- =============================================
 
 -- Invoice summary view with company and customer details
-CREATE OR REPLACE VIEW invoice_summary AS
+CREATE OR REPLACE VIEW invoice_summary
+WITH (security_invoker = true) AS
 SELECT 
     i.id,
     i.invoice_code,
@@ -279,7 +282,8 @@ LEFT JOIN companies c ON i.company_id = c.id
 LEFT JOIN currencies cur ON i.currency_id = cur.id;
 
 -- Company invoice statistics
-CREATE OR REPLACE VIEW company_invoice_stats AS
+CREATE OR REPLACE VIEW company_invoice_stats
+WITH (security_invoker = true) AS
 SELECT 
     c.id,
     c.name,
@@ -294,7 +298,8 @@ LEFT JOIN invoices i ON c.id = i.company_id
 GROUP BY c.id, c.name;
 
 -- Overdue invoices view
-CREATE OR REPLACE VIEW overdue_invoices AS
+CREATE OR REPLACE VIEW overdue_invoices
+WITH (security_invoker = true) AS
 SELECT 
     i.id,
     i.invoice_code,
@@ -380,7 +385,7 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Function to update invoice status based on due date
 CREATE OR REPLACE FUNCTION update_invoice_status()
@@ -391,7 +396,7 @@ BEGIN
     WHERE status = 'pending'
       AND due_date < CURRENT_DATE;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- =============================================
 -- Triggers

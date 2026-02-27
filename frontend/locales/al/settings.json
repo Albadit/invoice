@@ -29,6 +29,8 @@
       "phone": "Telefoni",
       "email": "Email",
       "taxId": "Numri Fiskal",
+      "vatNumber": "Numri i TVSH-së",
+      "cocNumber": "Numri i Regjistrit Tregtar",
       "taxPercent": "TVSH e Paracaktuar %",
       "logo": "Logo",
       "terms": "Kushtet e Paracaktuara",
@@ -171,6 +173,7 @@
     "saveError": "Dështoi ruajtja e cilësimeve. Provo përsëri.",
     "settingsSaved": "Cilësimet u Ruajtën",
     "settingsSavedDescription": "Preferencat e faturës u përditësuan me sukses.",
-    "noCompanySelected": "Asnjë kompani e zgjedhur. Zgjidh një kompani së pari."
+    "noCompanySelected": "Asnjë kompani e zgjedhur. Zgjidh një kompani së pari.",
+    "requiredFieldsMissing": "Shablloni, valuta dhe taksa janë të detyrueshme. Plotëso të gjitha fushat e detyrueshme."
   }
 }

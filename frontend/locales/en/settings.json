@@ -29,6 +29,8 @@
       "phone": "Phone",
       "email": "Email",
       "taxId": "Tax ID",
+      "vatNumber": "VAT Number",
+      "cocNumber": "CoC Number",
       "taxPercent": "Default Tax %",
       "logo": "Logo",
       "terms": "Default Terms & Conditions",
@@ -171,6 +173,7 @@
     "saveError": "Failed to save settings. Please try again.",
     "settingsSaved": "Settings Saved",
     "settingsSavedDescription": "Your invoice preferences have been updated successfully.",
-    "noCompanySelected": "No company selected. Please select a company first."
+    "noCompanySelected": "No company selected. Please select a company first.",
+    "requiredFieldsMissing": "Template, currency, and tax are required. Please fill in all required fields."
   }
 }

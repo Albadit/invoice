@@ -19,15 +19,21 @@ export const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 /**
  * Common headers for API requests.
  * Includes Authorization header when a user session is available (required for RLS).
+ * 
+ * On the client side, the token is fetched automatically from the browser session.
+ * On the server side (Route Handlers), pass authToken explicitly.
  */
-export async function getHeaders(prefer?: string) {
+export async function getHeaders(prefer?: string, authToken?: string) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': API_KEY,
   };
   
-  // Attach auth token so RLS policies can resolve auth.uid()
-  if (typeof window !== 'undefined') {
+  if (authToken) {
+    // Explicit token provided (server-side callers)
+    headers['Authorization'] = `Bearer ${authToken}`;
+  } else if (typeof window !== 'undefined') {
+    // Client-side: use browser supabase client
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();

@@ -7,6 +7,7 @@
   "invoiceNumber": "Број на Фактура",
   "invoiceDate": "Датум на Фактура",
   "dueDate": "Рок на Плаќање",
+  "dueDays": "Денови",
   "customer": "Клиент",
   "customerName": "Име на Клиент",
   "streetAddress": "Адреса",

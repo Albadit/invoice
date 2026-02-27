@@ -18,6 +18,8 @@ interface AddCompanyModalProps {
     city: string;
     zipCode: string;
     country: string;
+    vatNumber: string;
+    cocNumber: string;
   }) => Promise<void>;
 }
 
@@ -31,6 +33,8 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
   const [companyCity, setCompanyCity] = useState('');
   const [companyZipCode, setCompanyZipCode] = useState('');
   const [companyCountry, setCompanyCountry] = useState('');
+  const [companyVatNumber, setCompanyVatNumber] = useState('');
+  const [companyCocNumber, setCompanyCocNumber] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -48,6 +52,8 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
         city: companyCity,
         zipCode: companyZipCode,
         country: companyCountry,
+        vatNumber: companyVatNumber,
+        cocNumber: companyCocNumber,
       });
       
       // Clear form
@@ -58,6 +64,8 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
       setCompanyCity('');
       setCompanyZipCode('');
       setCompanyCountry('');
+      setCompanyVatNumber('');
+      setCompanyCocNumber('');
     } finally {
       setSaving(false);
     }
@@ -73,6 +81,8 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
       setCompanyCity('');
       setCompanyZipCode('');
       setCompanyCountry('');
+      setCompanyVatNumber('');
+      setCompanyCocNumber('');
       onClose();
     }
   };
@@ -152,6 +162,22 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
               placeholder="United States"
               disabled={saving}
             />
+            <div className="flex gap-4">
+              <Input 
+                label={t('companies.fields.vatNumber')}
+                value={companyVatNumber} 
+                onChange={(e) => setCompanyVatNumber(e.target.value)}
+                placeholder="NL123456789B01"
+                disabled={saving}
+              />
+              <Input 
+                label={t('companies.fields.cocNumber')}
+                value={companyCocNumber} 
+                onChange={(e) => setCompanyCocNumber(e.target.value)}
+                placeholder="12345678"
+                disabled={saving}
+              />
+            </div>
           </div>
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">

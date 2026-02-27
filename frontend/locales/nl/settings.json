@@ -29,6 +29,8 @@
       "phone": "Telefoon",
       "email": "E-mail",
       "taxId": "BTW-nummer",
+      "vatNumber": "BTW-nummer",
+      "cocNumber": "KVK-nummer",
       "taxPercent": "Standaard BTW %",
       "logo": "Logo",
       "terms": "Standaard Voorwaarden",
@@ -171,6 +173,7 @@
     "saveError": "Kon instellingen niet opslaan. Probeer het opnieuw.",
     "settingsSaved": "Instellingen Opgeslagen",
     "settingsSavedDescription": "Je factuurvoorkeuren zijn succesvol bijgewerkt.",
-    "noCompanySelected": "Geen bedrijf geselecteerd. Selecteer eerst een bedrijf."
+    "noCompanySelected": "Geen bedrijf geselecteerd. Selecteer eerst een bedrijf.",
+    "requiredFieldsMissing": "Sjabloon, valuta en belasting zijn verplicht. Vul alle verplichte velden in."
   }
 }
