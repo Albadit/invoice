@@ -4,6 +4,7 @@
   "loading": "Instellingen laden...",
   "sections": {
     "companies": "Bedrijven",
+    "clients": "Klanten",
     "templates": "Sjablonen",
     "currencies": "Valuta's",
     "preferences": "Voorkeuren"
@@ -59,7 +60,9 @@
     "defaultCurrency": "Standaard Valuta",
     "currencyDescription": "Valuta",
     "defaultTax": "Standaard BTW (%)",
-    "taxDescription": "BTW %"
+    "taxDescription": "BTW %",
+    "defaultLanguage": "Standaard Factuurtaal",
+    "languageDescription": "Taal"
   },
   "templates": {
     "title": "Factuursjablonen",
@@ -69,6 +72,7 @@
     "deleteTemplate": "Sjabloon verwijderen",
     "manageTemplates": "Sjablonen beheren",
     "noData": "Geen sjablonen beschikbaar",
+    "system": "Systeem",
     "fields": {
       "name": "Sjabloonnaam",
       "content": "Sjablooninhoud",
@@ -102,6 +106,7 @@
       "preview": "Voorbeeld"
     },
     "noData": "Geen valuta's beschikbaar",
+    "system": "Systeem",
     "messages": {
       "created": "Valuta succesvol aangemaakt",
       "updated": "Valuta succesvol bijgewerkt",
@@ -110,6 +115,38 @@
       "updateError": "Kon valuta niet bijwerken. Probeer het opnieuw.",
       "deleteError": "Kon valuta niet verwijderen. Het wordt mogelijk gebruikt door facturen.",
       "confirmDelete": "Weet je zeker dat je deze valuta wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
+    }
+  },
+  "clients": {
+    "title": "Klantenbeheer",
+    "subtitle": "Beheer uw klantcontacten en informatie",
+    "addClient": "Klant Toevoegen",
+    "editClient": "Klant Bewerken",
+    "deleteClient": "Klant Verwijderen",
+    "manageClients": "Klanten Beheren",
+    "selectClient": "Klant Selecteren",
+    "selectDescription": "Klant",
+    "selectPlaceholder": "Selecteer een klant",
+    "fields": {
+      "name": "Klantnaam",
+      "email": "E-mail",
+      "phone": "Telefoon",
+      "street": "Straat",
+      "city": "Stad",
+      "zipCode": "Postcode",
+      "country": "Land",
+      "taxId": "BTW-nummer",
+      "notes": "Notities"
+    },
+    "noData": "Geen klanten beschikbaar",
+    "messages": {
+      "created": "Klant succesvol aangemaakt",
+      "updated": "Klant succesvol bijgewerkt",
+      "deleted": "Klant succesvol verwijderd",
+      "createError": "Kon klant niet aanmaken. Probeer het opnieuw.",
+      "updateError": "Kon klant niet bijwerken. Probeer het opnieuw.",
+      "deleteError": "Kon klant niet verwijderen. Het is mogelijk gekoppeld aan facturen.",
+      "confirmDelete": "Weet je zeker dat je deze klant wilt verwijderen? Dit kan niet ongedaan worden gemaakt."
     }
   },
   "terms": {

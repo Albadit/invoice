@@ -4,6 +4,7 @@
   "loading": "Loading settings...",
   "sections": {
     "companies": "Companies",
+    "clients": "Clients",
     "templates": "Templates",
     "currencies": "Currencies",
     "preferences": "Preferences"
@@ -59,7 +60,9 @@
     "defaultCurrency": "Default Currency",
     "currencyDescription": "Currency",
     "defaultTax": "Default Tax (%)",
-    "taxDescription": "Tax %"
+    "taxDescription": "Tax %",
+    "defaultLanguage": "Default Invoice Language",
+    "languageDescription": "Language"
   },
   "templates": {
     "title": "Invoice Templates",
@@ -69,6 +72,7 @@
     "deleteTemplate": "Delete Template",
     "manageTemplates": "Manage Templates",
     "noData": "No templates available",
+    "system": "System",
     "fields": {
       "name": "Template Name",
       "content": "Template Content",
@@ -102,6 +106,7 @@
       "preview": "Preview"
     },
     "noData": "No currencies available",
+    "system": "System",
     "messages": {
       "created": "Currency created successfully",
       "updated": "Currency updated successfully",
@@ -110,6 +115,38 @@
       "updateError": "Failed to update currency. Please try again.",
       "deleteError": "Failed to delete currency. It may be in use by invoices.",
       "confirmDelete": "Are you sure you want to delete this currency? This action cannot be undone."
+    }
+  },
+  "clients": {
+    "title": "Client Management",
+    "subtitle": "Manage your client contacts and information",
+    "addClient": "Add Client",
+    "editClient": "Edit Client",
+    "deleteClient": "Delete Client",
+    "manageClients": "Manage Clients",
+    "selectClient": "Select Client",
+    "selectDescription": "Client",
+    "selectPlaceholder": "Select a client",
+    "fields": {
+      "name": "Client Name",
+      "email": "Email",
+      "phone": "Phone",
+      "street": "Street Address",
+      "city": "City",
+      "zipCode": "Zip Code",
+      "country": "Country",
+      "taxId": "Tax ID",
+      "notes": "Notes"
+    },
+    "noData": "No clients available",
+    "messages": {
+      "created": "Client created successfully",
+      "updated": "Client updated successfully",
+      "deleted": "Client deleted successfully",
+      "createError": "Failed to create client. Please try again.",
+      "updateError": "Failed to update client. Please try again.",
+      "deleteError": "Failed to delete client. It may be linked to invoices.",
+      "confirmDelete": "Are you sure you want to delete this client? This action cannot be undone."
     }
   },
   "terms": {

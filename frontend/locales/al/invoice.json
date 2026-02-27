@@ -95,12 +95,14 @@
   },
   "settings": {
     "company": "Kompania",
+    "client": "Klienti",
     "invoiceSettings": "Cilësimet e Faturës",
     "template": "Shablloni",
     "currency": "Valuta",
     "selectCompany": "Zgjidh kompaninë",
     "selectTemplate": "Zgjidh shabllonin",
     "selectCurrency": "Zgjidh valutën",
+    "selectClient": "Zgjidh klientin",
     "language": "Gjuha",
     "selectLanguage": "Zgjidh gjuhën"
   },

@@ -4,6 +4,7 @@ import {
   Palette,
   Coins,
   Plus,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -58,6 +59,12 @@ export const sidebarSections: NavSection[] = [
         labelKey: 'navigation.companies',
         icon: Building2,
         href: '/settings?tab=companies',
+      },
+      {
+        key: 'clients',
+        labelKey: 'navigation.clients',
+        icon: Users,
+        href: '/settings?tab=clients',
       },
       {
         key: 'templates',

@@ -84,18 +84,24 @@ $$ LANGUAGE plpgsql;
 -- Currencies table
 CREATE TABLE IF NOT EXISTS currencies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     symbol TEXT NOT NULL,
     symbol_position symbol_position_type NOT NULL DEFAULT 'left',
-    symbol_space BOOLEAN NOT NULL DEFAULT false
+    symbol_space BOOLEAN NOT NULL DEFAULT false,
+    is_system BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Templates table
 CREATE TABLE IF NOT EXISTS templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     styling TEXT,
+    is_system BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -103,6 +109,7 @@ CREATE TABLE IF NOT EXISTS templates (
 -- Companies table
 CREATE TABLE IF NOT EXISTS companies (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     email TEXT,
     phone TEXT,
@@ -115,6 +122,25 @@ CREATE TABLE IF NOT EXISTS companies (
     currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
     tax_percent DECIMAL(5, 2),
     terms TEXT,
+    language TEXT DEFAULT 'en',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Clients table (record linking for invoices)
+CREATE TABLE IF NOT EXISTS clients (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+    company_id UUID REFERENCES companies(id) ON DELETE SET NULL,
+    name TEXT NOT NULL,
+    email TEXT,
+    phone TEXT,
+    street TEXT,
+    city TEXT,
+    zip_code TEXT,
+    country TEXT,
+    tax_id TEXT,
+    notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -122,9 +148,11 @@ CREATE TABLE IF NOT EXISTS companies (
 -- Invoices table
 CREATE TABLE IF NOT EXISTS invoices (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     company_id UUID NOT NULL REFERENCES companies(id) ON DELETE RESTRICT,
     currency_id UUID NOT NULL REFERENCES currencies(id) ON DELETE RESTRICT,
     template_id UUID REFERENCES templates(id) ON DELETE SET NULL,
+    client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
     invoice_code TEXT UNIQUE NOT NULL DEFAULT generate_invoice_code(),
     status status_type NOT NULL DEFAULT 'pending',
     customer_name TEXT NOT NULL,
@@ -185,11 +213,21 @@ CREATE TABLE IF NOT EXISTS invoice_items (
 -- =============================================
 
 -- Basic indexes
+CREATE INDEX IF NOT EXISTS idx_clients_user_id ON clients(user_id);
+CREATE INDEX IF NOT EXISTS idx_clients_company_id ON clients(company_id);
+CREATE INDEX IF NOT EXISTS idx_clients_name ON clients(name);
+CREATE INDEX IF NOT EXISTS idx_companies_user_id ON companies(user_id);
 CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
+CREATE INDEX IF NOT EXISTS idx_currencies_user_id ON currencies(user_id);
+CREATE INDEX IF NOT EXISTS idx_currencies_is_system ON currencies(is_system);
 CREATE INDEX IF NOT EXISTS idx_currencies_code ON currencies(code);
+CREATE INDEX IF NOT EXISTS idx_templates_user_id ON templates(user_id);
+CREATE INDEX IF NOT EXISTS idx_templates_is_system ON templates(is_system);
+CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_company_id ON invoices(company_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_currency_id ON invoices(currency_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_template_id ON invoices(template_id);
+CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_invoice_code ON invoices(invoice_code);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_issue_date ON invoices(issue_date);
@@ -372,7 +410,31 @@ CREATE OR REPLACE TRIGGER update_companies_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Note: currencies table has no updated_at column, so no trigger needed
+-- Trigger for currencies updated_at
+DO $$ BEGIN
+    DROP TRIGGER IF EXISTS update_currencies_updated_at ON currencies;
+EXCEPTION
+    WHEN undefined_table THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+CREATE OR REPLACE TRIGGER update_currencies_updated_at
+    BEFORE UPDATE ON currencies
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger for clients updated_at
+DO $$ BEGIN
+    DROP TRIGGER IF EXISTS update_clients_updated_at ON clients;
+EXCEPTION
+    WHEN undefined_table THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+CREATE OR REPLACE TRIGGER update_clients_updated_at
+    BEFORE UPDATE ON clients
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
 
 DO $$ BEGIN
     DROP TRIGGER IF EXISTS update_templates_updated_at ON templates;
@@ -439,16 +501,90 @@ CREATE OR REPLACE TRIGGER calculate_invoice_totals_on_change
     EXECUTE FUNCTION calculate_invoice_totals();
 
 -- =============================================
--- Row Level Security (RLS) - Optional
+-- Row Level Security (RLS)
 -- =============================================
--- Uncomment and customize based on your authentication setup
 
--- ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE currencies ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE currencies    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE templates     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE companies     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clients       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoices      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
 
--- Example policy (customize based on your auth)
--- CREATE POLICY "Users can view their company data" ON invoices
---     FOR SELECT USING (company_id = (SELECT company_id FROM user_sessions WHERE user_id = auth.uid()));
+-- Currencies: read system + own; write own non-system only
+CREATE POLICY currencies_select ON currencies FOR SELECT
+    USING (is_system = true OR user_id = auth.uid());
+CREATE POLICY currencies_insert ON currencies FOR INSERT
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY currencies_update ON currencies FOR UPDATE
+    USING (user_id = auth.uid() AND is_system = false)
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY currencies_delete ON currencies FOR DELETE
+    USING (user_id = auth.uid() AND is_system = false);
+
+-- Templates: read system + own; write own non-system only
+CREATE POLICY templates_select ON templates FOR SELECT
+    USING (is_system = true OR user_id = auth.uid());
+CREATE POLICY templates_insert ON templates FOR INSERT
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY templates_update ON templates FOR UPDATE
+    USING (user_id = auth.uid() AND is_system = false)
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY templates_delete ON templates FOR DELETE
+    USING (user_id = auth.uid() AND is_system = false);
+
+-- Companies: own rows only
+CREATE POLICY companies_select ON companies FOR SELECT
+    USING (user_id = auth.uid());
+CREATE POLICY companies_insert ON companies FOR INSERT
+    WITH CHECK (user_id = auth.uid());
+CREATE POLICY companies_update ON companies FOR UPDATE
+    USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY companies_delete ON companies FOR DELETE
+    USING (user_id = auth.uid());
+
+-- Clients: own rows only
+CREATE POLICY clients_select ON clients FOR SELECT
+    USING (user_id = auth.uid());
+CREATE POLICY clients_insert ON clients FOR INSERT
+    WITH CHECK (user_id = auth.uid());
+CREATE POLICY clients_update ON clients FOR UPDATE
+    USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY clients_delete ON clients FOR DELETE
+    USING (user_id = auth.uid());
+
+-- Invoices: own rows only
+CREATE POLICY invoices_select ON invoices FOR SELECT
+    USING (user_id = auth.uid());
+CREATE POLICY invoices_insert ON invoices FOR INSERT
+    WITH CHECK (user_id = auth.uid());
+CREATE POLICY invoices_update ON invoices FOR UPDATE
+    USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY invoices_delete ON invoices FOR DELETE
+    USING (user_id = auth.uid());
+
+-- Invoice items: inherited via parent invoice
+CREATE POLICY invoice_items_select ON invoice_items FOR SELECT
+    USING (EXISTS (
+        SELECT 1 FROM invoices WHERE invoices.id = invoice_items.invoice_id
+          AND invoices.user_id = auth.uid()
+    ));
+CREATE POLICY invoice_items_insert ON invoice_items FOR INSERT
+    WITH CHECK (EXISTS (
+        SELECT 1 FROM invoices WHERE invoices.id = invoice_items.invoice_id
+          AND invoices.user_id = auth.uid()
+    ));
+CREATE POLICY invoice_items_update ON invoice_items FOR UPDATE
+    USING (EXISTS (
+        SELECT 1 FROM invoices WHERE invoices.id = invoice_items.invoice_id
+          AND invoices.user_id = auth.uid()
+    ))
+    WITH CHECK (EXISTS (
+        SELECT 1 FROM invoices WHERE invoices.id = invoice_items.invoice_id
+          AND invoices.user_id = auth.uid()
+    ));
+CREATE POLICY invoice_items_delete ON invoice_items FOR DELETE
+    USING (EXISTS (
+        SELECT 1 FROM invoices WHERE invoices.id = invoice_items.invoice_id
+          AND invoices.user_id = auth.uid()
+    ));

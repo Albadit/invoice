@@ -95,12 +95,14 @@
   },
   "settings": {
     "company": "Компанија",
+    "client": "Клиент",
     "invoiceSettings": "Поставки за Фактура",
     "template": "Шаблон",
     "currency": "Валута",
     "selectCompany": "Избери компанија",
     "selectTemplate": "Избери шаблон",
     "selectCurrency": "Избери валута",
+    "selectClient": "Избери клиент",
     "language": "Јазик",
     "selectLanguage": "Избери јазик"
   },

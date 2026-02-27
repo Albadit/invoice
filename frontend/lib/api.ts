@@ -6,6 +6,8 @@
  * and NEXT_PUBLIC_SUPABASE_URL for client-side calls (browser).
  */
 
+import { createClient } from '@/lib/supabase/client';
+
 const baseUrl = typeof window === 'undefined'
   ? (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000')
   : (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000');
@@ -15,14 +17,28 @@ export const API_URL = `${baseUrl}/rest/v1`;
 export const API_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
- * Common headers for API requests
+ * Common headers for API requests.
+ * Includes Authorization header when a user session is available (required for RLS).
  */
-export function getHeaders(prefer?: string) {
+export async function getHeaders(prefer?: string) {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': API_KEY,
   };
   
+  // Attach auth token so RLS policies can resolve auth.uid()
+  if (typeof window !== 'undefined') {
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+    } catch {
+      // Silently ignore — unauthenticated requests still work for public data
+    }
+  }
+
   if (prefer) {
     headers['Prefer'] = prefer;
   }

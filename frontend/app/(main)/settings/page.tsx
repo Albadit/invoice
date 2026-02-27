@@ -3,11 +3,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { currenciesApi, templatesApi, companiesApi, storageApi } from '@/features/settings/api';
-import type { Currency, Template, Company } from '@/lib/types';
+import { clientsApi } from '@/features/clients/api';
+import type { Currency, Template, Company, Client } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
+import Image from 'next/image';
 import { Save, Edit } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import {
@@ -22,11 +24,17 @@ import {
   AddCurrencyModal,
   LogoUpload,
 } from '@/features/settings/components';
+import {
+  AddClientModal,
+  EditClientModal,
+  ManageClientsModal,
+} from '@/features/clients/components';
 import { ConfirmModal } from '@/components/ui';
-import { useTranslation } from '@/contexts/LocaleProvider';
+import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 
 export default function SettingsPage() {
   const { t } = useTranslation('settings');
+  const { languageConfig } = useLocale();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -37,6 +45,7 @@ export default function SettingsPage() {
   const [terms, setTerms] = useState('');
   const [tax, setTax] = useState<number | null>(null);
   const [currencyId, setCurrencyId] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>('en');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [companyId, setCompanyId] = useState<string | null>(null);
@@ -60,6 +69,11 @@ export default function SettingsPage() {
   const [isEditCurrencyModalOpen, setIsEditCurrencyModalOpen] = useState(false);
   const [isAddCurrencyModalOpen, setIsAddCurrencyModalOpen] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
+  const [isManageClientsModalOpen, setIsManageClientsModalOpen] = useState(false);
+  const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false);
+  const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [allClients, setAllClients] = useState<Client[]>([]);
   const [imageError, setImageError] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -71,6 +85,7 @@ export default function SettingsPage() {
 
   // Refs for scrolling to sections
   const companiesRef = useRef<HTMLDivElement>(null);
+  const clientsRef = useRef<HTMLDivElement>(null);
   const templatesRef = useRef<HTMLDivElement>(null);
   const currenciesRef = useRef<HTMLDivElement>(null);
   const scrollUpdateRef = useRef(false);
@@ -83,6 +98,7 @@ export default function SettingsPage() {
     loadCurrencies();
     loadTemplates();
     loadCompanies();
+    loadClients();
   }, []);
 
   // Handle tab query parameter for scrolling (skip when triggered by scroll listener)
@@ -95,6 +111,7 @@ export default function SettingsPage() {
     if (tab && !loading) {
       const refs: Record<string, React.RefObject<HTMLElement | null>> = {
         companies: companiesRef,
+        clients: clientsRef,
         templates: templatesRef,
         currencies: currenciesRef,
       };
@@ -112,6 +129,7 @@ export default function SettingsPage() {
     if (loading) return;
     const sections = [
       { id: 'companies', ref: companiesRef },
+      { id: 'clients', ref: clientsRef },
       { id: 'templates', ref: templatesRef },
       { id: 'currencies', ref: currenciesRef },
     ];
@@ -187,6 +205,7 @@ export default function SettingsPage() {
       setTerms(company.terms || '');
       setTax(company.tax_percent);
       setCurrencyId(company.currency_id);
+      setLanguage(company.language || 'en');
     } catch (error) {
       console.error('Failed to load company data:', error);
     }
@@ -215,6 +234,7 @@ export default function SettingsPage() {
         currency_id: currencyId,
         tax_percent: tax,
         terms: terms || null,
+        language: language,
       });
 
       // Reload companies list
@@ -539,6 +559,137 @@ export default function SettingsPage() {
     }
   }
 
+  async function loadClients() {
+    try {
+      const clientsData = await clientsApi.list();
+      setAllClients(clientsData);
+    } catch (error) {
+      console.error('Failed to load clients:', error);
+    }
+  }
+
+  async function handleAddClient(clientData: {
+    name: string;
+    email: string;
+    phone: string;
+    street: string;
+    city: string;
+    zipCode: string;
+    country: string;
+    taxId: string;
+    notes: string;
+  }) {
+    try {
+      await clientsApi.create({
+        name: clientData.name,
+        email: clientData.email || null,
+        phone: clientData.phone || null,
+        street: clientData.street || null,
+        city: clientData.city || null,
+        zip_code: clientData.zipCode || null,
+        country: clientData.country || null,
+        tax_id: clientData.taxId || null,
+        notes: clientData.notes || null,
+        company_id: companyId || null,
+      });
+
+      await loadClients();
+      
+      setIsAddClientModalOpen(false);
+      setIsManageClientsModalOpen(true);
+      
+      addToast({
+        title: t('messages.success'),
+        description: t('clients.messages.created'),
+        color: "success"
+      });
+    } catch (error) {
+      console.error('Failed to create client:', error);
+      addToast({
+        title: t('messages.error'),
+        description: t('clients.messages.createError'),
+        color: "danger"
+      });
+      throw error;
+    }
+  }
+
+  async function handleEditClient(clientData: {
+    name: string;
+    email: string;
+    phone: string;
+    street: string;
+    city: string;
+    zipCode: string;
+    country: string;
+    taxId: string;
+    notes: string;
+  }) {
+    if (!selectedClient) return;
+
+    try {
+      await clientsApi.update(selectedClient.id, {
+        name: clientData.name,
+        email: clientData.email || null,
+        phone: clientData.phone || null,
+        street: clientData.street || null,
+        city: clientData.city || null,
+        zip_code: clientData.zipCode || null,
+        country: clientData.country || null,
+        tax_id: clientData.taxId || null,
+        notes: clientData.notes || null,
+      });
+
+      await loadClients();
+      
+      setIsEditClientModalOpen(false);
+      setSelectedClient(null);
+      setIsManageClientsModalOpen(true);
+      
+      addToast({
+        title: t('messages.success'),
+        description: t('clients.messages.updated'),
+        color: "success"
+      });
+    } catch (error) {
+      console.error('Failed to update client:', error);
+      addToast({
+        title: t('messages.error'),
+        description: t('clients.messages.updateError'),
+        color: "danger"
+      });
+      throw error;
+    }
+  }
+
+  function handleDeleteClient(clientId: string) {
+    setConfirmModal({
+      isOpen: true,
+      title: t('clients.deleteClient'),
+      message: t('clients.messages.confirmDelete'),
+      action: async () => {
+        try {
+          await clientsApi.delete(clientId);
+          
+          await loadClients();
+          
+          addToast({
+            title: t('messages.success'),
+            description: t('clients.messages.deleted'),
+            color: "success"
+          });
+        } catch (error) {
+          console.error('Failed to delete client:', error);
+          addToast({
+            title: t('messages.error'),
+            description: t('clients.messages.deleteError'),
+            color: "danger"
+          });
+        }
+      },
+    });
+  }
+
   async function loadSettings() {
     try {
       const companiesData = await companiesApi.getAll();
@@ -558,6 +709,7 @@ export default function SettingsPage() {
         setTerms(firstCompany.terms || '');
         setTax(firstCompany.tax_percent);
         setCurrencyId(firstCompany.currency_id);
+        setLanguage(firstCompany.language || 'en');
       }
     } catch (error) {
       console.error('Failed to load settings:', error);
@@ -603,6 +755,7 @@ export default function SettingsPage() {
         terms: terms || null,
         tax_percent: tax,
         currency_id: currencyId,
+        language: language,
       });
       addToast({
         title: t('messages.settingsSaved'),
@@ -652,7 +805,7 @@ export default function SettingsPage() {
 
       <Card>
         <CardBody className='flex gap-6 sm:gap-8 p-4 sm:p-6'>
-          <section id="companies" ref={companiesRef} className="flex flex-col gap-2 border-b pb-6 scroll-mt-20">
+          <section id="companies" ref={companiesRef} className="flex flex-col gap-2 scroll-mt-20">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <span className="text-base font-semibold">
                 {t('companies.selectCompany')}
@@ -670,7 +823,10 @@ export default function SettingsPage() {
             <Select
               label={t('companies.selectDescription')}
               selectedKeys={companyId ? [String(companyId)] : []}
-              onSelectionChange={(keys) => handleCompanyChange(String(Array.from(keys)[0]))}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0];
+                if (selected) handleCompanyChange(String(selected));
+              }}
               placeholder={t('companies.selectPlaceholder')}
               labelPlacement="outside"
               isRequired
@@ -683,6 +839,29 @@ export default function SettingsPage() {
             </Select>
           </section>
 
+          <section id="clients" ref={clientsRef} className="flex flex-col gap-2 scroll-mt-20">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex flex-col gap-1">
+                <h2 className="text-2xl font-bold">{t('clients.title')}</h2>
+                <p className="text-sm text-default-500">{t('clients.subtitle')}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="flat"
+                color="primary"
+                startContent={<Edit className="size-4" />}
+                onClick={() => setIsManageClientsModalOpen(true)}
+              >
+                {t('clients.manageClients')}
+              </Button>
+            </div>
+          </section>
+        </CardBody>
+      </Card>
+
+      {companyId && (
+      <Card>
+        <CardBody className='flex gap-6 sm:gap-8 p-4 sm:p-6'>
           <section className="flex flex-col gap-2">
             <h2 className="text-2xl font-bold">{t('logo.title')}</h2>
             <div className="space-y-4">
@@ -747,7 +926,10 @@ export default function SettingsPage() {
               <Select
                 label={t('invoiceSettings.templateDescription')}
                 selectedKeys={templateId ? [String(templateId)] : []}
-                onSelectionChange={(keys) => setTemplateId(String(Array.from(keys)[0]))}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0];
+                  if (selected) setTemplateId(String(selected));
+                }}
                 labelPlacement="outside"
                 isRequired
               >
@@ -777,7 +959,10 @@ export default function SettingsPage() {
               <Select
                 label={t('invoiceSettings.currencyDescription')}
                 selectedKeys={currencyId ? [String(currencyId)] : []}
-                onSelectionChange={(keys) => setCurrencyId(String(Array.from(keys)[0]))}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0];
+                  if (selected) setCurrencyId(String(selected));
+                }}
                 labelPlacement="outside"
                 isRequired
               >
@@ -807,6 +992,41 @@ export default function SettingsPage() {
                 isRequired
               />
             </div>
+            <div className='flex flex-col gap-2'>
+              <span className="text-base font-semibold">
+                {t('invoiceSettings.defaultLanguage')}
+              </span>
+              <Select
+                label={t('invoiceSettings.languageDescription')}
+                selectedKeys={new Set([language])}
+                onSelectionChange={(keys) => {
+                  const selected = Array.from(keys)[0];
+                  if (selected) setLanguage(String(selected));
+                }}
+                labelPlacement="outside"
+                isRequired
+                renderValue={() => {
+                  const selected = languageConfig.find(l => l.key === language);
+                  if (!selected) return null;
+                  return (
+                    <div className="flex items-center gap-2">
+                      <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
+                      <span>{selected.name}</span>
+                    </div>
+                  );
+                }}
+              >
+                {languageConfig.map((lang) => (
+                  <SelectItem
+                    key={lang.key}
+                    textValue={lang.name}
+                    startContent={<Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />}
+                  >
+                    {lang.name}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
           </section>
 
           <section className="flex flex-col gap-6">
@@ -834,6 +1054,7 @@ export default function SettingsPage() {
           </div>
         </CardFooter>
       </Card>
+      )}
 
       <ManageCompaniesModal
         isOpen={isManageCompaniesModalOpen}
@@ -957,6 +1178,42 @@ export default function SettingsPage() {
         }}
         onSave={handleEditCurrency}
         currency={selectedCurrency}
+      />
+
+      <ManageClientsModal
+        isOpen={isManageClientsModalOpen}
+        onClose={() => setIsManageClientsModalOpen(false)}
+        clients={allClients}
+        onEdit={(client) => {
+          setSelectedClient(client);
+          setIsManageClientsModalOpen(false);
+          setIsEditClientModalOpen(true);
+        }}
+        onDelete={handleDeleteClient}
+        onAdd={() => {
+          setIsManageClientsModalOpen(false);
+          setIsAddClientModalOpen(true);
+        }}
+      />
+
+      <AddClientModal
+        isOpen={isAddClientModalOpen}
+        onClose={() => {
+          setIsAddClientModalOpen(false);
+          setIsManageClientsModalOpen(true);
+        }}
+        onSave={handleAddClient}
+      />
+
+      <EditClientModal
+        isOpen={isEditClientModalOpen}
+        onClose={() => {
+          setIsEditClientModalOpen(false);
+          setSelectedClient(null);
+          setIsManageClientsModalOpen(true);
+        }}
+        onSave={handleEditClient}
+        client={selectedClient}
       />
 
       <ConfirmModal

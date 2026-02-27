@@ -95,12 +95,14 @@
   },
   "settings": {
     "company": "Bedrijf",
+    "client": "Klant",
     "invoiceSettings": "Factuurinstellingen",
     "template": "Sjabloon",
     "currency": "Valuta",
     "selectCompany": "Selecteer bedrijf",
     "selectTemplate": "Selecteer sjabloon",
     "selectCurrency": "Selecteer valuta",
+    "selectClient": "Selecteer klant",
     "language": "Taal",
     "selectLanguage": "Selecteer taal"
   },

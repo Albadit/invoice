@@ -4,6 +4,7 @@
   "loading": "Duke ngarkuar cilësimet...",
   "sections": {
     "companies": "Kompanitë",
+    "clients": "Klientët",
     "templates": "Shabllonet",
     "currencies": "Valutat",
     "preferences": "Preferencat"
@@ -59,7 +60,9 @@
     "defaultCurrency": "Valuta e Paracaktuar",
     "currencyDescription": "Valuta",
     "defaultTax": "TVSH e Paracaktuar (%)",
-    "taxDescription": "TVSH %"
+    "taxDescription": "TVSH %",
+    "defaultLanguage": "Gjuha e Paracaktuar e Faturës",
+    "languageDescription": "Gjuha"
   },
   "templates": {
     "title": "Shabllonet e Faturës",
@@ -69,6 +72,7 @@
     "deleteTemplate": "Fshi Shabllon",
     "manageTemplates": "Menaxho Shabllonet",
     "noData": "Nuk ka shabllone të disponueshme",
+    "system": "Sistemi",
     "fields": {
       "name": "Emri i Shablonit",
       "content": "Përmbajtja e Shablonit",
@@ -102,6 +106,7 @@
       "preview": "Parashikimi"
     },
     "noData": "Nuk ka valuta të disponueshme",
+    "system": "Sistemi",
     "messages": {
       "created": "Valuta u krijua me sukses",
       "updated": "Valuta u përditësua me sukses",
@@ -110,6 +115,38 @@
       "updateError": "Dështoi përditësimi i valutës. Provo përsëri.",
       "deleteError": "Dështoi fshirja e valutës. Mund të jetë në përdorim nga faturat.",
       "confirmDelete": "Je i sigurt që dëshiron të fshish këtë valutë? Ky veprim nuk mund të kthehet."
+    }
+  },
+  "clients": {
+    "title": "Menaxhimi i Klientëve",
+    "subtitle": "Menaxho kontaktet e klientëve dhe informacionet",
+    "addClient": "Shto Klient",
+    "editClient": "Ndrysho Klientin",
+    "deleteClient": "Fshi Klientin",
+    "manageClients": "Menaxho Klientët",
+    "selectClient": "Zgjidh Klientin",
+    "selectDescription": "Klient",
+    "selectPlaceholder": "Zgjidh një klient",
+    "fields": {
+      "name": "Emri i Klientit",
+      "email": "Email",
+      "phone": "Telefon",
+      "street": "Adresa e Rrugës",
+      "city": "Qyteti",
+      "zipCode": "Kodi Postar",
+      "country": "Shteti",
+      "taxId": "Numri Fiskal",
+      "notes": "Shënime"
+    },
+    "noData": "Nuk ka klientë të disponueshëm",
+    "messages": {
+      "created": "Klienti u krijua me sukses",
+      "updated": "Klienti u përditësua me sukses",
+      "deleted": "Klienti u fshi me sukses",
+      "createError": "Dështoi krijimi i klientit. Provo përsëri.",
+      "updateError": "Dështoi përditësimi i klientit. Provo përsëri.",
+      "deleteError": "Dështoi fshirja e klientit. Mund të jetë i lidhur me fatura.",
+      "confirmDelete": "Je i sigurt që dëshiron të fshish këtë klient? Ky veprim nuk mund të kthehet."
     }
   },
   "terms": {

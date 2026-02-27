@@ -17,6 +17,7 @@ export type SymbolPositionType = 'left' | 'right'
 
 export interface Companies {
   id: string
+  user_id: string
   name: string
   email: string | null
   phone: string | null
@@ -29,17 +30,39 @@ export interface Companies {
   currency_id: string | null
   tax_percent: number | null
   terms: string | null
+  language: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface Clients {
+  id: string
+  user_id: string
+  company_id: string | null
+  name: string
+  email: string | null
+  phone: string | null
+  street: string | null
+  city: string | null
+  zip_code: string | null
+  country: string | null
+  tax_id: string | null
+  notes: string | null
   created_at: string | null
   updated_at: string | null
 }
 
 export interface Currencies {
   id: string
+  user_id: string | null
   code: string
   name: string
   symbol: string
   symbol_position: SymbolPositionType
   symbol_space: boolean
+  is_system: boolean
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface InvoiceItems {
@@ -56,9 +79,11 @@ export interface InvoiceItems {
 
 export interface Invoices {
   id: string
+  user_id: string
   company_id: string
   currency_id: string
   template_id: string | null
+  client_id: string | null
   invoice_code: string
   status: StatusType
   customer_name: string
@@ -90,21 +115,29 @@ export interface Invoices {
 
 export interface Templates {
   id: string
+  user_id: string | null
   name: string
   styling: string | null
+  is_system: boolean
   created_at: string | null
   updated_at: string | null
 }
 
 // Helper types for REST API operations
 export type CompaniesGet = Companies
-export type CompaniesPost = Omit<Companies, 'id' | 'created_at' | 'updated_at'>
+export type CompaniesPost = Omit<Companies, 'id' | 'created_at' | 'updated_at' | 'user_id'>
 export type CompaniesPut = Omit<Companies, 'created_at' | 'updated_at'>
 export type CompaniesPatch = Partial<CompaniesPost>
 export type CompaniesDelete = Pick<Companies, 'id'>
 
+export type ClientsGet = Clients
+export type ClientsPost = Omit<Clients, 'id' | 'created_at' | 'updated_at' | 'user_id'>
+export type ClientsPut = Omit<Clients, 'created_at' | 'updated_at'>
+export type ClientsPatch = Partial<ClientsPost>
+export type ClientsDelete = Pick<Clients, 'id'>
+
 export type CurrenciesGet = Currencies
-export type CurrenciesPost = Omit<Currencies, 'id' | 'created_at' | 'updated_at'>
+export type CurrenciesPost = Omit<Currencies, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'user_id'>
 export type CurrenciesPut = Omit<Currencies, 'created_at' | 'updated_at'>
 export type CurrenciesPatch = Partial<CurrenciesPost>
 export type CurrenciesDelete = Pick<Currencies, 'id'>
@@ -116,13 +149,13 @@ export type InvoiceItemsPatch = Partial<InvoiceItemsPost>
 export type InvoiceItemsDelete = Pick<InvoiceItems, 'id'>
 
 export type InvoicesGet = Invoices
-export type InvoicesPost = Omit<Invoices, 'id' | 'created_at' | 'updated_at' | 'search_tsv' | 'search_text'>
+export type InvoicesPost = Omit<Invoices, 'id' | 'created_at' | 'updated_at' | 'search_tsv' | 'search_text' | 'invoice_code' | 'user_id'>
 export type InvoicesPut = Omit<Invoices, 'created_at' | 'updated_at'>
 export type InvoicesPatch = Partial<InvoicesPost>
 export type InvoicesDelete = Pick<Invoices, 'id'>
 
 export type TemplatesGet = Templates
-export type TemplatesPost = Omit<Templates, 'id' | 'created_at' | 'updated_at'>
+export type TemplatesPost = Omit<Templates, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'user_id'>
 export type TemplatesPut = Omit<Templates, 'created_at' | 'updated_at'>
 export type TemplatesPatch = Partial<TemplatesPost>
 export type TemplatesDelete = Pick<Templates, 'id'>
@@ -145,6 +178,14 @@ export interface Database {
         Put: CurrenciesPut
         Patch: CurrenciesPatch
         Delete: CurrenciesDelete
+      }
+      clients: {
+        Row: Clients
+        Get: ClientsGet
+        Post: ClientsPost
+        Put: ClientsPut
+        Patch: ClientsPatch
+        Delete: ClientsDelete
       }
       invoice_items: {
         Row: InvoiceItems

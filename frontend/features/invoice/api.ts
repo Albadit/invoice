@@ -148,7 +148,7 @@ export const invoicesApi = {
     
     // Only fetch count on first page (no cursor) - cursor pagination would return remaining count
     const countHeader = cursor ? undefined : 'count=exact';
-    const response = await fetch(url.toString(), { headers: getHeaders(countHeader), signal });
+    const response = await fetch(url.toString(), { headers: await getHeaders(countHeader), signal });
     
     if (!response.ok) {
       throw new Error('Failed to fetch invoices');
@@ -259,7 +259,7 @@ export const invoicesApi = {
     }
     
     // Use exact count for accurate totals
-    const response = await fetch(url.toString(), { headers: getHeaders('count=exact'), signal });
+    const response = await fetch(url.toString(), { headers: await getHeaders('count=exact'), signal });
     
     if (!response.ok) {
       throw new Error('Failed to fetch invoices');
@@ -290,8 +290,8 @@ export const invoicesApi = {
    */
   async getById(id: string): Promise<InvoiceWithItems> {
     const response = await fetch(
-      `${API_URL}/invoices?id=eq.${id}&select=*,invoice_items(*),currencies(*),companies(*)`,
-      { headers: getHeaders() }
+      `${API_URL}/invoices?id=eq.${id}&select=*,invoice_items(*),currencies(*),companies(*),clients(*)`,
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -304,12 +304,13 @@ export const invoicesApi = {
     }
     
     const invoice = data[0];
-    const { invoice_items, currencies, companies, ...rest } = invoice;
+    const { invoice_items, currencies, companies, clients, ...rest } = invoice;
     return {
       ...rest,
       items: invoice_items || [],
       currency: currencies || null,
-      company: companies || null
+      company: companies || null,
+      client: clients || null
     };
   },
 
@@ -323,7 +324,7 @@ export const invoicesApi = {
     // Create invoice
     const invoiceResponse = await fetch(`${API_URL}/invoices`, {
       method: 'POST',
-      headers: getHeaders('return=representation'),
+      headers: await getHeaders('return=representation'),
       body: JSON.stringify(invoiceData)
     });
     
@@ -345,7 +346,7 @@ export const invoicesApi = {
       
       const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
         method: 'POST',
-        headers: getHeaders(),
+        headers: await getHeaders(),
         body: JSON.stringify(itemsData)
       });
       
@@ -370,7 +371,7 @@ export const invoicesApi = {
     // Update invoice
     const updateResponse = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
       method: 'PATCH',
-      headers: getHeaders('return=minimal'),
+      headers: await getHeaders('return=minimal'),
       body: JSON.stringify(invoiceData)
     });
     
@@ -383,7 +384,7 @@ export const invoicesApi = {
       // Delete existing items
       const deleteResponse = await fetch(`${API_URL}/invoice_items?invoice_id=eq.${id}`, {
         method: 'DELETE',
-        headers: getHeaders()
+        headers: await getHeaders()
       });
       
       if (!deleteResponse.ok) {
@@ -402,7 +403,7 @@ export const invoicesApi = {
         
         const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
           method: 'POST',
-          headers: getHeaders(),
+          headers: await getHeaders(),
           body: JSON.stringify(itemsData)
         });
         
@@ -422,13 +423,13 @@ export const invoicesApi = {
     // Delete invoice items first
     await fetch(`${API_URL}/invoice_items?invoice_id=eq.${id}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: await getHeaders()
     });
     
     // Delete invoice
     const response = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: await getHeaders()
     });
     
     if (!response.ok) {
@@ -442,7 +443,7 @@ export const invoicesApi = {
   async updateStatus(id: string, status: string): Promise<void> {
     const response = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
       method: 'PATCH',
-      headers: getHeaders('return=minimal'),
+      headers: await getHeaders('return=minimal'),
       body: JSON.stringify({ status })
     });
     

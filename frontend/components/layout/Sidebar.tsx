@@ -19,7 +19,6 @@ import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { authApi } from '@/features/auth/api';
 
 // Sidebar Context
 interface SidebarContextType {
@@ -304,7 +303,8 @@ export function Sidebar() {
                   size="sm"
                   color="danger"
                   onPress={async () => {
-                    await authApi.logout();
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
                     window.location.href = '/auth/login';
                   }}
                 >
@@ -319,7 +319,8 @@ export function Sidebar() {
                   size="sm"
                   color="danger"
                   onPress={async () => {
-                    await authApi.logout();
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
                     window.location.href = '/auth/login';
                   }}
                 >

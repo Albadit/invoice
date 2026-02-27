@@ -29,7 +29,7 @@ export const currenciesApi = {
   async getAll(): Promise<Currency[]> {
     const response = await fetch(
       `${API_URL}/currencies?select=*&order=code.asc`,
-      { headers: getHeaders() }
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -45,7 +45,7 @@ export const currenciesApi = {
   async create(currencyData: CurrenciesPost): Promise<Currency> {
     const response = await fetch(`${API_URL}/currencies`, {
       method: 'POST',
-      headers: getHeaders('return=representation'),
+      headers: await getHeaders('return=representation'),
       body: JSON.stringify(currencyData)
     });
     
@@ -63,7 +63,7 @@ export const currenciesApi = {
   async update(id: string, currencyData: CurrenciesPatch): Promise<void> {
     const response = await fetch(`${API_URL}/currencies?id=eq.${id}`, {
       method: 'PATCH',
-      headers: getHeaders('return=minimal'),
+      headers: await getHeaders('return=minimal'),
       body: JSON.stringify(currencyData)
     });
     
@@ -78,7 +78,7 @@ export const currenciesApi = {
   async delete(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/currencies?id=eq.${id}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: await getHeaders()
     });
     
     if (!response.ok) {
@@ -97,7 +97,7 @@ export const templatesApi = {
   async getAll(): Promise<Template[]> {
     const response = await fetch(
       `${API_URL}/templates?select=*&order=name.asc`,
-      { headers: getHeaders() }
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -113,7 +113,7 @@ export const templatesApi = {
   async create(templateData: TemplatesPost): Promise<Template> {
     const response = await fetch(`${API_URL}/templates`, {
       method: 'POST',
-      headers: getHeaders('return=representation'),
+      headers: await getHeaders('return=representation'),
       body: JSON.stringify(templateData)
     });
     
@@ -131,7 +131,7 @@ export const templatesApi = {
   async update(id: string, templateData: TemplatesPatch): Promise<void> {
     const response = await fetch(`${API_URL}/templates?id=eq.${id}`, {
       method: 'PATCH',
-      headers: getHeaders('return=minimal'),
+      headers: await getHeaders('return=minimal'),
       body: JSON.stringify(templateData)
     });
     
@@ -146,7 +146,7 @@ export const templatesApi = {
   async getById(id: string): Promise<Template> {
     const response = await fetch(
       `${API_URL}/templates?id=eq.${id}&select=*`,
-      { headers: getHeaders() }
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -167,7 +167,7 @@ export const templatesApi = {
   async delete(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/templates?id=eq.${id}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: await getHeaders()
     });
     
     if (!response.ok) {
@@ -252,7 +252,7 @@ export const companiesApi = {
   async getAll(): Promise<Company[]> {
     const response = await fetch(
       `${API_URL}/companies?select=*&order=name.asc`,
-      { headers: getHeaders() }
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -268,7 +268,7 @@ export const companiesApi = {
   async getById(id: string): Promise<Company> {
     const response = await fetch(
       `${API_URL}/companies?id=eq.${id}&select=*`,
-      { headers: getHeaders() }
+      { headers: await getHeaders() }
     );
     
     if (!response.ok) {
@@ -289,7 +289,7 @@ export const companiesApi = {
   async create(companyData: CompaniesPost): Promise<Company> {
     const response = await fetch(`${API_URL}/companies`, {
       method: 'POST',
-      headers: getHeaders('return=representation'),
+      headers: await getHeaders('return=representation'),
       body: JSON.stringify(companyData)
     });
     
@@ -307,7 +307,7 @@ export const companiesApi = {
   async delete(id: string): Promise<void> {
     const response = await fetch(`${API_URL}/companies?id=eq.${id}`, {
       method: 'DELETE',
-      headers: getHeaders()
+      headers: await getHeaders()
     });
     
     if (!response.ok) {
@@ -321,7 +321,7 @@ export const companiesApi = {
   async update(id: string, companyData: CompaniesPatch): Promise<void> {
     const response = await fetch(`${API_URL}/companies?id=eq.${id}`, {
       method: 'PATCH',
-      headers: getHeaders('return=minimal'),
+      headers: await getHeaders('return=minimal'),
       body: JSON.stringify(companyData)
     });
     

@@ -95,12 +95,14 @@
   },
   "settings": {
     "company": "Company",
+    "client": "Client",
     "invoiceSettings": "Invoice Settings",
     "template": "Template",
     "currency": "Currency",
     "selectCompany": "Select company",
     "selectTemplate": "Select template",
     "selectCurrency": "Select currency",
+    "selectClient": "Select client",
     "language": "Language",
     "selectLanguage": "Select language"
   },

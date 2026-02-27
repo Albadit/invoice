@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useRef, useSyncExternalStore, type ReactNode } from 'react';
 import i18next from 'i18next';
 import { initReactI18next, useTranslation as useTranslationOrg } from 'react-i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
@@ -68,15 +68,15 @@ export function LocaleProvider({ children, languageConfig, initialLocale, namesp
   
   const [locale, setLocaleState] = useState<Locale>(startLocale);
   const [currentNs, setCurrentNs] = useState<string | string[]>('common');
-  const [mounted, setMounted] = useState(false);
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
   
   // Use i18next translation with ready state
   const { t: tOrg, i18n, ready } = useTranslationOrg(currentNs, { useSuspense: false });
   const activeLngRef = useRef<Locale>(i18n.resolvedLanguage as Locale);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Sync i18next language with locale
   useEffect(() => {

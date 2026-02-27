@@ -5,7 +5,8 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi, companiesApi, templatesApi } from '@/features/settings/api';
-import type { InvoiceItem, Currency, Company, Template } from '@/lib/types';
+import { clientsApi } from '@/features/clients/api';
+import type { InvoiceItem, Currency, Company, Template, Client } from '@/lib/types';
 import type { InvoicesPost } from '@/lib/database.types';
 import { getCurrencySymbol, formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
@@ -44,6 +45,8 @@ export default function InvoiceEditPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [templateId, setTemplateId] = useState<string | null>(null);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [language, setLanguage] = useState<string>('en');
   const [items, setItems] = useState<Partial<InvoiceItem>[]>([
     { name: '', quantity: 1, unit_price: 0 },
@@ -64,15 +67,17 @@ export default function InvoiceEditPage() {
     async function initialize() {
       try {
         // Load all dropdown options first
-        const [currenciesData, companiesData, templatesData] = await Promise.all([
+        const [currenciesData, companiesData, templatesData, clientsData] = await Promise.all([
           currenciesApi.getAll(),
           companiesApi.getAll(),
-          templatesApi.getAll()
+          templatesApi.getAll(),
+          clientsApi.list()
         ]);
         
         setCurrencies(currenciesData);
         setCompanies(companiesData);
         setTemplates(templatesData);
+        setClients(clientsData);
 
         if (!isNewInvoice) {
           // Load invoice data with company, currency, and items included
@@ -106,6 +111,9 @@ export default function InvoiceEditPage() {
           setTemplateId(templateExists ? (invoice.template_id || null) : (templatesData[0]?.id || null));
           setLanguage(invoice.language || 'en');
 
+          // Set client
+          setClientId(invoice.client_id || null);
+
           // Set company logo from invoice.company
           setLogoUrl(invoice.company?.logo_url || '');
           
@@ -130,6 +138,7 @@ export default function InvoiceEditPage() {
             setTerms(firstCompany.terms || '');
             setTemplateId(firstCompany.template_id);
             setCurrencyId(firstCompany.currency_id);
+            setLanguage(firstCompany.language || 'en');
             
             if (firstCompany.tax_percent !== null && firstCompany.tax_percent !== undefined && firstCompany.tax_percent > 0) {
               setTaxType('percent');
@@ -160,6 +169,7 @@ export default function InvoiceEditPage() {
       setTerms(company.terms || '');
       setTemplateId(company.template_id);
       setCurrencyId(company.currency_id);
+      setLanguage(company.language || 'en');
       
       // Update tax settings from company
       if (company.tax_percent !== null && company.tax_percent !== undefined && company.tax_percent > 0) {
@@ -174,6 +184,19 @@ export default function InvoiceEditPage() {
       }
     }
   }, [companyId, companies]);
+
+  // Auto-fill customer fields when client changes
+  useEffect(() => {
+    if (!clientId) return;
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+      setCustomerName(client.name);
+      setCustomerStreet(client.street || '');
+      setCustomerCity(client.city || '');
+      setCustomerZipCode(client.zip_code || '');
+      setCustomerCountry(client.country || '');
+    }
+  }, [clientId, clients]);
 
   function getSubtotal(): number {
     return items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0), 0);
@@ -267,7 +290,7 @@ export default function InvoiceEditPage() {
       const invoiceData: InvoicesPost = {
         company_id: companyId,
         template_id: templateId,
-        invoice_code: invoiceCode,
+        client_id: clientId || null,
         customer_name: customerName,
         customer_street: customerStreet,
         customer_city: customerCity,
@@ -400,6 +423,24 @@ export default function InvoiceEditPage() {
                     >
                       {companies.map((company) => (
                         <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <h3 className="text-lg font-semibold text-foreground">{t('settings.client')}</h3>
+                    <Select
+                      aria-label={t('settings.client')}
+                      selectionMode="single"
+                      selectedKeys={clientId ? new Set([clientId]) : new Set()}
+                      onSelectionChange={(keys) => {
+                        const selected = Array.from(keys)[0];
+                        setClientId(selected ? String(selected) : null);
+                      }}
+                      placeholder={t('settings.selectClient')}
+                      classNames={{ trigger: "font-semibold" }}
+                    >
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} textValue={client.name}>{client.name}</SelectItem>
                       ))}
                     </Select>
                   </div>
@@ -819,6 +860,32 @@ export default function InvoiceEditPage() {
                   </SelectItem>
                 ))}
               </Select>
+              </div>
+
+              <div className="flex flex-col gap-4">
+                <h3 className="text-lg font-semibold text-foreground">{t('settings.client')}</h3>
+                <Select
+                  aria-label={t('settings.client')}
+                  selectionMode="single"
+                  selectedKeys={clientId ? new Set([clientId]) : new Set()}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0];
+                    setClientId(selected ? String(selected) : null);
+                  }}
+                  placeholder={t('settings.selectClient')}
+                  classNames={{
+                    trigger: "font-semibold"
+                  }}
+                >
+                  {clients.map((client) => (
+                    <SelectItem 
+                      key={client.id} 
+                      textValue={client.name}
+                    >
+                      {client.name}
+                    </SelectItem>
+                  ))}
+                </Select>
               </div>
 
             <div className="flex flex-col gap-4">
