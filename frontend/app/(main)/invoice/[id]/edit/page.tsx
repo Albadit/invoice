@@ -28,7 +28,7 @@ export default function InvoiceEditPage() {
   const [loading, setLoading] = useState(!isNewInvoice);
   const [saving, setSaving] = useState(false);
   const [logoUrl, setLogoUrl] = useState('');
-  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceCode, setInvoiceCode] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [customerStreet, setCustomerStreet] = useState('');
   const [customerCity, setCustomerCity] = useState('');
@@ -78,7 +78,7 @@ export default function InvoiceEditPage() {
           // Load invoice data with company, currency, and items included
           const invoice = await invoicesApi.getById(params.id as string);
           
-          setInvoiceNumber(invoice.invoice_number);
+          setInvoiceCode(invoice.invoice_code);
           setCustomerName(invoice.customer_name);
           setCustomerStreet(invoice.customer_street);
           setCustomerCity(invoice.customer_city);
@@ -138,8 +138,8 @@ export default function InvoiceEditPage() {
             }
           }
           
-          // Generate invoice number
-          setInvoiceNumber(`INV-${Date.now()}`);
+          // Generate invoice code
+          setInvoiceCode(`${Date.now()}`);
         }
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -267,7 +267,7 @@ export default function InvoiceEditPage() {
       const invoiceData: InvoicesPost = {
         company_id: companyId,
         template_id: templateId,
-        invoice_number: invoiceNumber,
+        invoice_code: invoiceCode,
         customer_name: customerName,
         customer_street: customerStreet,
         customer_city: customerCity,
@@ -355,7 +355,7 @@ export default function InvoiceEditPage() {
           <div className="flex flex-col gap-6 flex-1">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <h1 className="text-xl sm:text-3xl font-bold">
-                {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceNumber}`}
+                {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}
               </h1>
               <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
                 <Button 
@@ -491,7 +491,7 @@ export default function InvoiceEditPage() {
                 </div>
                 <div className="sm:text-right flex flex-col gap-1">
                   <h2 className="text-2xl sm:text-3xl font-bold text-foreground">INVOICE</h2>
-                  {!isNewInvoice && <p className="text-lg sm:text-xl text-default-500">#{invoiceNumber}</p>}
+                  {!isNewInvoice && <p className="text-lg sm:text-xl text-default-500">#{invoiceCode}</p>}
                 </div>
               </div>
 

@@ -36,3 +36,21 @@ export function getLanguageConfig(): LanguageConfig[] {
 export function getLanguages(): string[] {
   return getLanguageConfig().map(l => l.key);
 }
+
+/**
+ * Dynamically discover all translation namespaces from the fallback locale folder.
+ * Each .json file in locales/en/ becomes a namespace (e.g. common.json → 'common').
+ */
+export function getNamespaces(): string[] {
+  const localesPath = path.join(process.cwd(), 'locales');
+  const fallbackFolder = 'en';
+  const nsPath = path.join(localesPath, fallbackFolder);
+  
+  try {
+    return fs.readdirSync(nsPath)
+      .filter(file => file.endsWith('.json'))
+      .map(file => file.replace('.json', ''));
+  } catch {
+    return ['common'];
+  }
+}

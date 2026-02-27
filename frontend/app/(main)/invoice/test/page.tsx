@@ -64,7 +64,7 @@ export default function InvoiceTestPage() {
       )}
       <div className="flex flex-col gap-2 text-right">
         <h2 className="text-4xl font-bold text-slate-900">INVOICE</h2>
-        <p className="text-2xl text-slate-600 font-semibold">#{invoice.invoice_number}</p>
+        <p className="text-2xl text-slate-600 font-semibold">#{invoice.invoice_code}</p>
       </div>
     </div>
     

@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { fontInter } from "@/config/fonts";
 import { Providers } from "@/contexts/HeroProviders";
 import { LocaleProvider } from "@/contexts/LocaleProvider";
-import { SidebarLayout } from "@/components/layout";
-import { getLanguageConfig, getLanguages } from "@/lib/i18n/settings.server";
+import { getLanguageConfig, getLanguages, getNamespaces } from "@/lib/i18n/settings.server";
 import { fallbackLng } from "@/lib/i18n/settings";
 import "@/styles/globals.css";
 
@@ -16,6 +15,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children, }: Readonly<{ children: React.ReactNode; }>) {
   const languageConfig = getLanguageConfig();
   const languages = getLanguages();
+  const namespaces = getNamespaces();
   
   // Read locale from cookie on server
   const cookieStore = await cookies();
@@ -26,10 +26,8 @@ export default async function RootLayout({ children, }: Readonly<{ children: Rea
     <html lang={initialLocale} suppressHydrationWarning>
       <body className={`${fontInter.className} antialiased`}>
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <LocaleProvider languageConfig={languageConfig} initialLocale={initialLocale}>
-            <SidebarLayout>
-              {children}
-            </SidebarLayout>
+          <LocaleProvider languageConfig={languageConfig} initialLocale={initialLocale} namespaces={namespaces}>
+            {children}
           </LocaleProvider>
         </Providers>
       </body>

@@ -168,7 +168,7 @@ export async function GET(
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="invoice-${invoice.invoice_number}.pdf"`,
+        'Content-Disposition': `attachment; filename="invoice-${invoice.invoice_code}.pdf"`,
         'Content-Length': pdfBuffer.length.toString(),
         'Cache-Control': 'no-cache, no-store, must-revalidate',
       },
@@ -228,7 +228,7 @@ function InvoiceHtml(invoice: InvoiceWithItems, labels: Translations): string {
             `}
             <div class="flex flex-col gap-2 text-right">
               <h2 class="text-4xl font-bold text-slate-900">${tl(labels, 'preview.invoiceTitle')}</h2>
-              <p class="text-2xl text-slate-600 font-semibold">#${invoice.invoice_number}</p>
+              <p class="text-2xl text-slate-600 font-semibold">#${invoice.invoice_code}</p>
             </div>
           </div>
 

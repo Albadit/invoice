@@ -48,7 +48,7 @@ export interface CursorPaginatedResponse<T> {
 /**
  * Invoice list columns (only what's needed for the table view)
  */
-const LIST_COLUMNS = 'id,invoice_number,customer_name,status,issue_date,due_date,total_amount,currency_id,created_at,currencies(symbol,code,symbol_position,symbol_space)';
+const LIST_COLUMNS = 'id,invoice_code,customer_name,status,issue_date,due_date,total_amount,currency_id,created_at,currencies(symbol,code,symbol_position,symbol_space)';
 
 /**
  * Invoice API functions
@@ -116,7 +116,7 @@ export const invoicesApi = {
     // PostgREST uses fts for full-text search operators
     if (search) {
       // Try FTS first (for word-based search like "payment failed")
-      // Also include trigram fallback for partial matches (like "INV-00")
+      // Also include trigram fallback for partial matches (like "00123")
       // Using OR to combine: FTS match OR trigram match
       const searchTerm = search.trim();
       

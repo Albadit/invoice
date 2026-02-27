@@ -12,8 +12,8 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 CREATE INDEX IF NOT EXISTS idx_invoices_customer_name_trgm 
     ON invoices USING GIN (customer_name gin_trgm_ops);
 
-CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number_trgm 
-    ON invoices USING GIN (invoice_number gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_invoices_invoice_code_trgm 
+    ON invoices USING GIN (invoice_code gin_trgm_ops);
 
 -- Optional: Create a combined search column for even faster searches
 -- This creates a computed column that combines searchable fields
@@ -21,7 +21,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number_trgm
 
 -- ALTER TABLE invoices ADD COLUMN IF NOT EXISTS search_text TEXT 
 --     GENERATED ALWAYS AS (
---         COALESCE(invoice_number, '') || ' ' || 
+--         COALESCE(invoice_code, '') || ' ' || 
 --         COALESCE(customer_name, '') || ' ' || 
 --         COALESCE(customer_city, '')
 --     ) STORED;

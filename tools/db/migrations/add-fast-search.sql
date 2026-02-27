@@ -15,13 +15,13 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- 1. Full-Text Search (FTS) Setup
 -- =============================================
 -- Generated tsvector column for fast word-based search
--- Combines invoice_number, customer_name, and notes into searchable text
+-- Combines invoice_code, customer_name, and notes into searchable text
 
 ALTER TABLE invoices 
 ADD COLUMN IF NOT EXISTS search_tsv tsvector 
 GENERATED ALWAYS AS (
     to_tsvector('english', 
-        coalesce(invoice_number, '') || ' ' || 
+        coalesce(invoice_code, '') || ' ' || 
         coalesce(customer_name, '') || ' ' ||
         coalesce(customer_city, '') || ' ' ||
         coalesce(customer_country, '') || ' ' ||
@@ -40,14 +40,14 @@ CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_search_tsv_gin
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_customer_name_trgm 
     ON invoices USING GIN (customer_name gin_trgm_ops);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_invoice_number_trgm 
-    ON invoices USING GIN (invoice_number gin_trgm_ops);
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_invoices_invoice_code_trgm 
+    ON invoices USING GIN (invoice_code gin_trgm_ops);
 
 -- Combined search text for trigram (faster than OR on multiple columns)
 ALTER TABLE invoices 
 ADD COLUMN IF NOT EXISTS search_text text 
 GENERATED ALWAYS AS (
-    coalesce(invoice_number, '') || ' ' || 
+    coalesce(invoice_code, '') || ' ' || 
     coalesce(customer_name, '')
 ) STORED;
 
@@ -153,7 +153,7 @@ CREATE OR REPLACE FUNCTION search_invoices(
 )
 RETURNS TABLE (
     id uuid,
-    invoice_number text,
+    invoice_code text,
     customer_name text,
     status status_type,
     issue_date date,
@@ -168,7 +168,7 @@ BEGIN
     RETURN QUERY
     SELECT 
         i.id,
-        i.invoice_number,
+        i.invoice_code,
         i.customer_name,
         i.status,
         i.issue_date,

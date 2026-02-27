@@ -51,7 +51,7 @@ function formatRecordCount(count: number): string {
 
 // Map UI column keys to DB column names (constant, never changes)
 const COLUMN_TO_DB_FIELD: Record<string, string> = {
-  invoice_number: 'invoice_number',
+  invoice_code: 'invoice_code',
   customer_name: 'customer_name',
   issue_date: 'issue_date',
   due_date: 'due_date',
@@ -379,7 +379,7 @@ export default function InvoicesPage() {
 
   // Only pass sortDescriptor to Table when the primary sort column is visible in the table
   // (created_at is a DB-only column, not rendered as a TableColumn, causing hydration mismatch)
-  const VISIBLE_SORT_COLUMNS = new Set(['invoice_number', 'customer_name', 'issue_date', 'due_date', 'status', 'total_amount']);
+  const VISIBLE_SORT_COLUMNS = new Set(['invoice_code', 'customer_name', 'issue_date', 'due_date', 'status', 'total_amount']);
   const tableSortDescriptor = sortDescriptors[0]?.column && VISIBLE_SORT_COLUMNS.has(sortDescriptors[0].column as string)
     ? sortDescriptors[0]
     : undefined;
@@ -485,7 +485,7 @@ export default function InvoicesPage() {
 
       <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', sortIcon: 'hidden', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }} sortDescriptor={tableSortDescriptor} onSortChange={handleSortChange}>
         <TableHeader>
-          <TableColumn key="invoice_number" className="font-semibold" allowsSorting>{t('table.invoice')}{getSortBadge('invoice_number')}</TableColumn>
+          <TableColumn key="invoice_code" className="font-semibold" allowsSorting>{t('table.invoice')}{getSortBadge('invoice_code')}</TableColumn>
           <TableColumn key="customer_name" className="font-semibold" allowsSorting>{t('table.customer')}{getSortBadge('customer_name')}</TableColumn>
           <TableColumn key="issue_date" className="font-semibold" allowsSorting>{t('table.date')}{getSortBadge('issue_date')}</TableColumn>
           <TableColumn key="due_date" className="font-semibold" allowsSorting>{t('table.dueDate')}{getSortBadge('due_date')}</TableColumn>
@@ -513,7 +513,7 @@ export default function InvoicesPage() {
         >
           {filteredInvoices.map((invoice) => (
             <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.invoice_number}</TableCell>
+              <TableCell className="font-medium">{invoice.invoice_code}</TableCell>
               <TableCell>{invoice.customer_name}</TableCell>
               <TableCell>
                 {format(new Date(invoice.issue_date || invoice.created_at || ''), 'MMM dd, yyyy')}

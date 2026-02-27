@@ -37,8 +37,8 @@ END $$;
 -- Functions
 -- =============================================
 
--- Function to generate random invoice number
-CREATE OR REPLACE FUNCTION generate_invoice_number()
+-- Function to generate random invoice code
+CREATE OR REPLACE FUNCTION generate_invoice_code()
 RETURNS TEXT AS $$
 DECLARE
     new_number TEXT;
@@ -49,7 +49,7 @@ BEGIN
         new_number := LPAD(FLOOR(RANDOM() * 10000000000)::TEXT, 10, '0');
         
         -- Check if this number already exists
-        SELECT EXISTS(SELECT 1 FROM invoices WHERE invoice_number = new_number) INTO number_exists;
+        SELECT EXISTS(SELECT 1 FROM invoices WHERE invoice_code = new_number) INTO number_exists;
         
         -- If it doesn't exist, return it
         IF NOT number_exists THEN
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     company_id UUID NOT NULL REFERENCES companies(id) ON DELETE RESTRICT,
     currency_id UUID NOT NULL REFERENCES currencies(id) ON DELETE RESTRICT,
     template_id UUID REFERENCES templates(id) ON DELETE SET NULL,
-    invoice_number TEXT UNIQUE NOT NULL DEFAULT generate_invoice_number(),
+    invoice_code TEXT UNIQUE NOT NULL DEFAULT generate_invoice_code(),
     status status_type NOT NULL DEFAULT 'pending',
     customer_name TEXT NOT NULL,
     customer_street TEXT NOT NULL,
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     -- Full-text search vector (generated, for fast FTS queries)
     search_tsv tsvector GENERATED ALWAYS AS (
         to_tsvector('english', 
-            coalesce(invoice_number, '') || ' ' || 
+            coalesce(invoice_code, '') || ' ' || 
             coalesce(customer_name, '') || ' ' ||
             coalesce(customer_city, '') || ' ' ||
             coalesce(customer_country, '') || ' ' ||
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     ) STORED,
     -- Combined search text for trigram (generated, for ILIKE queries)
     search_text text GENERATED ALWAYS AS (
-        coalesce(invoice_number, '') || ' ' || 
+        coalesce(invoice_code, '') || ' ' || 
         coalesce(customer_name, '')
     ) STORED
 );
@@ -190,7 +190,7 @@ CREATE INDEX IF NOT EXISTS idx_currencies_code ON currencies(code);
 CREATE INDEX IF NOT EXISTS idx_invoices_company_id ON invoices(company_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_currency_id ON invoices(currency_id);
 CREATE INDEX IF NOT EXISTS idx_invoices_template_id ON invoices(template_id);
-CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON invoices(invoice_number);
+CREATE INDEX IF NOT EXISTS idx_invoices_invoice_code ON invoices(invoice_code);
 CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
 CREATE INDEX IF NOT EXISTS idx_invoices_issue_date ON invoices(issue_date);
 CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date);
@@ -209,9 +209,9 @@ CREATE INDEX IF NOT EXISTS idx_invoices_date_cursor ON invoices(issue_date, crea
 CREATE INDEX IF NOT EXISTS idx_invoices_search_tsv_gin ON invoices USING GIN (search_tsv);
 
 -- Trigram (pg_trgm) GIN indexes for fast ILIKE/substring search
--- Enables queries like "%INV-00%" in ~10-50ms instead of seconds
+-- Enables queries like "%00123%" in ~10-50ms instead of seconds
 CREATE INDEX IF NOT EXISTS idx_invoices_customer_name_trgm ON invoices USING GIN (customer_name gin_trgm_ops);
-CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number_trgm ON invoices USING GIN (invoice_number gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_invoices_invoice_code_trgm ON invoices USING GIN (invoice_code gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_invoices_search_text_trgm ON invoices USING GIN (search_text gin_trgm_ops);
 
 -- =============================================
@@ -222,7 +222,7 @@ CREATE INDEX IF NOT EXISTS idx_invoices_search_text_trgm ON invoices USING GIN (
 CREATE OR REPLACE VIEW invoice_summary AS
 SELECT 
     i.id,
-    i.invoice_number,
+    i.invoice_code,
     i.status,
     i.issue_date,
     i.due_date,
@@ -259,7 +259,7 @@ GROUP BY c.id, c.name;
 CREATE OR REPLACE VIEW overdue_invoices AS
 SELECT 
     i.id,
-    i.invoice_number,
+    i.invoice_code,
     i.company_id,
     c.name AS company_name,
     i.customer_name,

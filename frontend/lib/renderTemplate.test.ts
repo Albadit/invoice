@@ -41,7 +41,7 @@ export async function testRenderInvoice() {
   
   const templateString = dbTemplate.styling!;
     
-  console.log(`Using invoice: ${invoice.invoice_number}`);
+  console.log(`Using invoice: ${invoice.invoice_code}`);
   console.log(`Using template: ${dbTemplate.name}`);
   
   // Prepare context with database data
@@ -97,7 +97,7 @@ export async function runTest() {
       console.log('❌ ERROR:', result.error);
       console.log('\nDEBUG INFO:');
       console.log('- Template length:', result.template?.length);
-      console.log('- Invoice number:', result.invoice?.invoice_number);
+      console.log('- Invoice code:', result.invoice?.invoice_code);
       console.log('- Company name:', result.company?.name);
       console.log('- Currency:', result.currency?.code);
     }

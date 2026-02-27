@@ -27,7 +27,7 @@ INSERT INTO invoices (
     company_id, 
     currency_id, 
     template_id,
-    invoice_number, 
+    invoice_code, 
     status, 
     customer_name, 
     customer_street, 
@@ -71,7 +71,7 @@ CROSS JOIN currencies cur
 CROSS JOIN (SELECT id FROM templates LIMIT 1) t
 WHERE c.name = 'Acme Corporation'
   AND cur.code = 'USD'
-ON CONFLICT (invoice_number) DO NOTHING;
+ON CONFLICT (invoice_code) DO NOTHING;
 
 -- Insert invoice items for the sample invoice (only if invoice exists and items don't)
 INSERT INTO invoice_items (invoice_id, name, quantity, unit_price, sort_order)
@@ -82,7 +82,7 @@ SELECT
     item.unit_price,
     item.sort_order
 FROM (
-    SELECT id FROM invoices WHERE invoice_number = '1234567890' LIMIT 1
+    SELECT id FROM invoices WHERE invoice_code = '1234567890' LIMIT 1
 ) i,
 (VALUES
     ('Web Development Services', 40.00, 75.00, 1),

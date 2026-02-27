@@ -59,7 +59,7 @@ export interface Invoices {
   company_id: string
   currency_id: string
   template_id: string | null
-  invoice_number: string
+  invoice_code: string
   status: StatusType
   customer_name: string
   customer_street: string

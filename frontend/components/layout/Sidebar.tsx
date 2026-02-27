@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, createContext, useContext, type ReactNode } from 'react';
+import { useState, useEffect, createContext, useContext, type ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@heroui/button';
 import { Tooltip } from '@heroui/tooltip';
@@ -11,12 +11,15 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  LogOut,
   Menu,
   X,
 } from 'lucide-react';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { authApi } from '@/features/auth/api';
 
 // Sidebar Context
 interface SidebarContextType {
@@ -163,6 +166,25 @@ export function Sidebar() {
   const searchParams = useSearchParams();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const sidebarSections = useSidebarSections();
+  const { t } = useTranslation('auth');
+  const [userName, setUserName] = useState<string>('');
+  const [userEmail, setUserEmail] = useState<string>('');
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data?.user;
+      if (user) {
+        setUserEmail(user.email || '');
+        setUserName(
+          user.user_metadata?.full_name ||
+          user.user_metadata?.name ||
+          user.email?.split('@')[0] ||
+          ''
+        );
+      }
+    });
+  }, []);
 
   return (
     <>
@@ -264,14 +286,46 @@ export function Sidebar() {
           >
             <Avatar
               size="sm"
-              name="User"
+              name={userName || userEmail || 'U'}
               className="shrink-0"
             />
             {!isCollapsed && (
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium">User Name</p>
-                <p className="truncate text-xs text-default-500">user@email.com</p>
+                <p className="truncate text-sm font-medium">{userName}</p>
+                <p className="truncate text-xs text-default-500">{userEmail}</p>
               </div>
+            )}
+            {/* Logout Button */}
+            {isCollapsed ? (
+              <Tooltip content={t('logout')} placement="right">
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  color="danger"
+                  onPress={async () => {
+                    await authApi.logout();
+                    window.location.href = '/auth/login';
+                  }}
+                >
+                  <LogOut className="size-4" />
+                </Button>
+              </Tooltip>
+            ) : (
+              <Tooltip content={t('logout')}>
+                <Button
+                  isIconOnly
+                  variant="light"
+                  size="sm"
+                  color="danger"
+                  onPress={async () => {
+                    await authApi.logout();
+                    window.location.href = '/auth/login';
+                  }}
+                >
+                  <LogOut className="size-4" />
+                </Button>
+              </Tooltip>
             )}
           </div>
         </div>

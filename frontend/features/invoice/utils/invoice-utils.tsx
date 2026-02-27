@@ -97,7 +97,7 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
   
   // Create new invoice (without id, created_at, updated_at)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_number: _invoice_number, search_tsv: _search_tsv, search_text: _search_text, ...invoiceData } = invoice;
+  const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_code: _invoice_code, search_tsv: _search_tsv, search_text: _search_text, ...invoiceData } = invoice;
   const newInvoiceData = {
     ...invoiceData,
     status: 'pending',

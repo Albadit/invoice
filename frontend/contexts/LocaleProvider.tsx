@@ -9,12 +9,9 @@ import { type Locale, type LanguageConfig, fallbackLng, getOptions, setLanguageC
 // Track if i18next has been initialized
 let i18nextInitialized = false;
 
-function initI18next(lng: string) {
+function initI18next(lng: string, namespaces: string[]) {
   if (i18nextInitialized) {
-    // Already initialized, just change language if needed
-    if (i18next.language !== lng) {
-      i18next.changeLanguage(lng);
-    }
+    // Language sync is handled by useEffect, not during render
     return;
   }
   
@@ -27,9 +24,10 @@ function initI18next(lng: string) {
       )
     )
     .init({
-      ...getOptions(),
+      ...getOptions(lng, namespaces),
       lng,
       fallbackLng,
+      ns: namespaces,
       interpolation: {
         escapeValue: false,
       },
@@ -53,14 +51,15 @@ interface LocaleProviderProps {
   children: ReactNode;
   languageConfig: LanguageConfig[];
   initialLocale?: string;
+  namespaces?: string[];
 }
 
-export function LocaleProvider({ children, languageConfig, initialLocale }: LocaleProviderProps) {
+export function LocaleProvider({ children, languageConfig, initialLocale, namespaces = ['common'] }: LocaleProviderProps) {
   const languages = languageConfig.map(l => l.key);
   const startLocale = initialLocale || fallbackLng;
   
-  // Initialize i18next with the server-provided locale
-  initI18next(startLocale);
+  // Initialize i18next with the server-provided locale and namespaces
+  initI18next(startLocale, namespaces);
   
   // Set global language config for use outside of React context
   useEffect(() => {
@@ -69,10 +68,15 @@ export function LocaleProvider({ children, languageConfig, initialLocale }: Loca
   
   const [locale, setLocaleState] = useState<Locale>(startLocale);
   const [currentNs, setCurrentNs] = useState<string | string[]>('common');
+  const [mounted, setMounted] = useState(false);
   
-  // Use i18next translation
-  const { t: tOrg, i18n } = useTranslationOrg(currentNs);
+  // Use i18next translation with ready state
+  const { t: tOrg, i18n, ready } = useTranslationOrg(currentNs, { useSuspense: false });
   const activeLngRef = useRef<Locale>(i18n.resolvedLanguage as Locale);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sync i18next language with locale
   useEffect(() => {
@@ -101,6 +105,20 @@ export function LocaleProvider({ children, languageConfig, initialLocale }: Loca
   const t = useCallback((key: string, options?: Record<string, unknown>): string => {
     return String(tOrg(key, options as never));
   }, [tOrg]);
+
+  // Show loading screen until mounted and translations are ready.
+  // Server and client first-render both show the spinner (mounted=false),
+  // so there's no hydration mismatch. Once useEffect fires, mounted+ready
+  // flips and children render with fully loaded translations.
+  if (!mounted || !ready) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-3">
+          <div className="size-8 animate-spin rounded-full border-3 border-default-200 border-t-primary" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <LocaleContext.Provider value={{ locale, setLocale, languages, languageConfig, t, changeNamespace }}>

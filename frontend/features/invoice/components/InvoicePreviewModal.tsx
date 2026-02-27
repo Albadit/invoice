@@ -75,7 +75,7 @@ export function InvoicePreviewModal({
                 )}
                 <div className="flex flex-col gap-1 sm:gap-2 sm:text-right">
                   <h2 className="text-2xl sm:text-4xl font-bold text-foreground">{tl(labels, 'preview.invoiceTitle') || 'INVOICE'}</h2>
-                  <p className="text-lg sm:text-2xl text-default-500 font-semibold">#{invoice.invoice_number}</p>
+                  <p className="text-lg sm:text-2xl text-default-500 font-semibold">#{invoice.invoice_code}</p>
                 </div>
               </div>
               
@@ -108,7 +108,12 @@ export function InvoicePreviewModal({
                     )}
                     <div>
                       <span className="font-semibold">{t('preview.status') || 'Status:'} </span>
-                      {getStatusBadge(invoice.status)}
+                      {getStatusBadge(invoice.status, {
+                        pending: t('status.pending'),
+                        paid: t('status.paid'),
+                        overdue: t('status.overdue'),
+                        cancelled: t('status.cancelled'),
+                      })}
                     </div>
                   </div>
                 </div>

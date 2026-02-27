@@ -19,7 +19,7 @@ import { formatWithCurrency } from '@/lib/utils';
  */
 export interface TemplateContext {
   invoice: InvoiceWithItems & {
-    invoice_number: string;
+    invoice_code: string;
     issue_date: string | null;
     due_date: string | null;
     customer_name: string;
@@ -56,10 +56,10 @@ export interface TemplateContext {
  * @example
  * ```ts
  * const html = renderInvoiceToHtml(
- *   '<div className="invoice">{invoice.invoice_number}</div>',
+ *   '<div className="invoice">{invoice.invoice_code}</div>',
  *   { invoice, company, currency, currencySymbol: '$' }
  * );
- * // Returns: '<div class="invoice">INV-001</div>'
+ * // Returns: '<div class="invoice">001</div>'
  * ```
  */
 export function renderInvoiceToHtml(
@@ -681,7 +681,7 @@ export function renderInvoiceToHtmlExplicit(
 
   // Replace simple variable references
   html = replaceVariables(html, {
-    'invoice.invoice_number': invoice.invoice_number,
+    'invoice.invoice_code': invoice.invoice_code,
     'invoice.issue_date': invoice.issue_date || '',
     'invoice.due_date': invoice.due_date || '',
     'invoice.customer_name': invoice.customer_name,
@@ -757,14 +757,14 @@ function handleLoops(template: string, _context: Record<string, unknown>): strin
  * ```ts
  * const template = `
  *   <div class="invoice">
- *     <h1>Invoice #{invoice.invoice_number}</h1>
+ *     <h1>Invoice #{invoice.invoice_code}</h1>
  *     <p>Customer: {invoice.customer_name}</p>
  *     <p>Total: {currencySymbol}{invoice.total_amount.toFixed(2)}</p>
  *   </div>
  * `;
  * 
  * const html = renderInvoiceToHtml(template, {
- *   invoice: { invoice_number: 'INV-001', customer_name: 'John Doe', total_amount: 1500.00 },
+ *   invoice: { invoice_code: '001', customer_name: 'John Doe', total_amount: 1500.00 },
  *   company: null,
  *   currency: null,
  *   currencySymbol: '$'
@@ -830,7 +830,7 @@ function handleLoops(template: string, _context: Record<string, unknown>): strin
  *     <div class="header">
  *       {company?.logo_url ? \`<img src="\${company.logo_url}" />\` : ''}
  *       <h1>INVOICE</h1>
- *       <p>#{invoice.invoice_number}</p>
+ *       <p>#{invoice.invoice_code}</p>
  *     </div>
  *     
  *     <div class="company">

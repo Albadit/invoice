@@ -33,7 +33,7 @@ INSERT INTO invoices (
     company_id, 
     currency_id, 
     template_id,
-    invoice_number, 
+    invoice_code, 
     status, 
     customer_name, 
     customer_street, 
@@ -80,7 +80,7 @@ FROM generate_series(1, 1000) AS i
 CROSS JOIN (SELECT id FROM companies WHERE name = 'Acme Corporation' LIMIT 1) c
 CROSS JOIN (SELECT id FROM currencies WHERE code = 'USD' LIMIT 1) cur
 CROSS JOIN (SELECT id FROM templates LIMIT 1) t
-ON CONFLICT (invoice_number) DO NOTHING;
+ON CONFLICT (invoice_code) DO NOTHING;
 
 -- Bulk insert invoice items (3 items per invoice on average)
 INSERT INTO invoice_items (invoice_id, name, quantity, unit_price, total_amount, sort_order)
@@ -93,7 +93,7 @@ SELECT
     row_number() OVER (PARTITION BY inv.id)
 FROM invoices inv
 CROSS JOIN generate_series(1, 3) AS item_num
-WHERE inv.invoice_number LIKE 'TEST-%'
+WHERE inv.invoice_code LIKE 'TEST-%'
   AND NOT EXISTS (SELECT 1 FROM invoice_items WHERE invoice_id = inv.id);
 
 -- Reset statement timeout to default
