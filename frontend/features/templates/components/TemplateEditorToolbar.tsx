@@ -53,7 +53,6 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
       <Button
         color="primary"
         size="sm"
-        radius="md"
         onPress={handleDownload}
       >
         Download PDF
