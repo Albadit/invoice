@@ -19,6 +19,7 @@
     "selectCompany": "Избери Компанија",
     "selectDescription": "Компанија",
     "selectPlaceholder": "Избери компанија",
+    "editingCompany": "Моментално се уредуваат поставките за",
     "fields": {
       "name": "Име на Компанија",
       "street": "Улица",

@@ -8,6 +8,7 @@ import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
 import { loadTranslations } from '@/lib/i18n/translate.server';
 import { createClient } from '@/lib/supabase/server';
+import type { InvoiceWithItems } from '@/lib/types';
 
 // ── Shared helpers ─────────────────────────────────────────────────
 
@@ -90,23 +91,33 @@ export async function GET(request: Request) {
  */
 export async function POST(request: Request) {
   try {
-    const { id: invoiceId, styling } = await request.json() as {
+    const body = await request.json() as {
       id?: string;
+      invoice?: InvoiceWithItems;
       styling?: string;
     };
 
     const authToken = await getAuthToken();
-    const invoice = await resolveInvoice(invoiceId ?? null, authToken);
+
+    // Prefer inline invoice data (from template editor), fall back to DB lookup
+    let invoice: InvoiceWithItems | null;
+    if (body.invoice) {
+      invoice = body.invoice as InvoiceWithItems;
+    } else {
+      invoice = await resolveInvoice(body.id ?? null, authToken);
+    }
+
     if (!invoice) {
       return new NextResponse('No invoice found', { status: 404 });
     }
 
     const labels = loadTranslations(invoice.language || 'en');
+    const { styling } = body;
 
     let html: string;
     if (styling) {
-      const body = renderTemplate(styling, invoice, labels);
-      html = customInvoiceHtml(body, { preview: true });
+      const rendered = renderTemplate(styling, invoice, labels);
+      html = customInvoiceHtml(rendered, { preview: true });
     } else {
       html = InvoiceHtml(invoice, labels);
     }

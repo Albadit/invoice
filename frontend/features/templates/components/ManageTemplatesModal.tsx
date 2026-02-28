@@ -40,7 +40,7 @@ export function ManageTemplatesModal({
                 return (
                 <div
                   key={template.id}
-                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-divider rounded-lg hover:bg-default-100 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <p className="font-semibold">{template.name}</p>

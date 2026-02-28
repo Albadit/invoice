@@ -16,7 +16,8 @@
     "companies": "Companies",
     "clients": "Clients",
     "templates": "Templates",
-    "currencies": "Currencies"
+    "currencies": "Currencies",
+    "templateEditor": "Template Editor"
   },
   "actions": {
     "save": "Save",

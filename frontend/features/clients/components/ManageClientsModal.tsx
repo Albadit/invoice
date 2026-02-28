@@ -38,16 +38,16 @@ export function ManageClientsModal({
               clients.map((client) => (
                 <div
                   key={client.id}
-                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-divider rounded-lg hover:bg-default-100 transition-colors"
                 >
                   <div className="flex flex-col gap-1">
                     <p className="font-semibold">{client.name}</p>
-                    <div className="flex flex-wrap gap-2 text-sm text-slate-600">
+                    <div className="flex flex-wrap gap-2 text-sm text-default-500">
                       {client.email && <span>{client.email}</span>}
                       {client.phone && <span>• {client.phone}</span>}
                     </div>
                     {client.city && (
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-default-400">
                         {[client.city, client.country].filter(Boolean).join(', ')}
                       </p>
                     )}

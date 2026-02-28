@@ -9,7 +9,6 @@ import { formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Form } from "@heroui/form";
-import { Tabs, Tab } from "@heroui/tabs";
 import {
   Table,
   TableHeader,
@@ -36,7 +35,7 @@ import { format } from 'date-fns';
 import { siteConfig } from '@/config/site';
 import { getStatusBadge, getEffectiveStatus, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { InvoicePreviewModal } from '@/features/invoice/components';
-import { ConfirmModal } from '@/components/ui';
+import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { addToast } from "@heroui/toast";
 
@@ -70,7 +69,6 @@ export default function InvoicesPage() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
   const [confirmModal, setConfirmModal] = useState<{
@@ -92,10 +90,9 @@ export default function InvoicesPage() {
   const abortControllerRef = useRef<AbortController | null>(null);
   
   // Ref to hold latest filter/sort state (avoids stale closures in pagination handlers)
-  const filtersRef = useRef({ currentFilters: null as typeof activeFilters | null, debouncedSearch: '', sortDescriptors: [{ column: 'created_at', direction: 'descending' as const }] as SortDescriptor[], activeTab: 'active', rowsPerPage: rowsPerPage });
+  const filtersRef = useRef({ currentFilters: null as typeof currentFilters | null, debouncedSearch: '', sortDescriptors: [{ column: 'created_at', direction: 'descending' as const }] as SortDescriptor[], rowsPerPage: rowsPerPage });
   
-  // Separate filter states for each tab
-  const [activeFilters, setActiveFilters] = useState<{
+  const [currentFilters, setCurrentFilters] = useState<{
     searchQuery: string;
     statusFilter: Set<string>;
     companyFilter: Set<string>;
@@ -106,22 +103,6 @@ export default function InvoicesPage() {
     companyFilter: new Set<string>(),
     dateRange: null
   });
-  
-  const [deletedFilters, setDeletedFilters] = useState<{
-    searchQuery: string;
-    statusFilter: Set<string>;
-    companyFilter: Set<string>;
-    dateRange: { start: DateValue; end: DateValue } | null;
-  }>({
-    searchQuery: '',
-    statusFilter: new Set<string>(),
-    companyFilter: new Set<string>(),
-    dateRange: null
-  });
-  
-  // Current filters based on active tab
-  const currentFilters = activeTab === 'active' ? activeFilters : deletedFilters;
-  const setCurrentFilters = activeTab === 'active' ? setActiveFilters : setDeletedFilters;
   
   // Debounced search value
   const [debouncedSearch, setDebouncedSearch] = useState(currentFilters.searchQuery);
@@ -130,7 +111,7 @@ export default function InvoicesPage() {
   const prevFiltersRef = useRef<string>('');
 
   // Keep filtersRef in sync with latest state
-  filtersRef.current = { currentFilters, debouncedSearch, sortDescriptors, activeTab, rowsPerPage };
+  filtersRef.current = { currentFilters, debouncedSearch, sortDescriptors, rowsPerPage };
 
   // Load currencies and companies only once on mount
   useEffect(() => {
@@ -149,7 +130,6 @@ export default function InvoicesPage() {
   useEffect(() => {
     // Create a key from current filter values
     const filterKey = JSON.stringify({
-      activeTab,
       rowsPerPage,
       debouncedSearch,
       statusFilter: Array.from(currentFilters.statusFilter).sort(),
@@ -165,7 +145,7 @@ export default function InvoicesPage() {
       setPageInput('1');
       loadInvoices(1);
     }
-  }, [activeTab, rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.dateRange, sortDescriptors]);
+  }, [rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.dateRange, sortDescriptors]);
 
   async function loadLookups() {
     try {
@@ -219,7 +199,7 @@ export default function InvoicesPage() {
     setLoading(true);
     
     // Read latest filter state from ref (avoids stale closures)
-    const { currentFilters: filters, debouncedSearch: search, sortDescriptors: sorts, activeTab: tab, rowsPerPage: limit } = filtersRef.current;
+    const { currentFilters: filters, debouncedSearch: search, sortDescriptors: sorts, rowsPerPage: limit } = filtersRef.current;
     
     try {
       // Build date range strings if provided
@@ -247,7 +227,6 @@ export default function InvoicesPage() {
       const { data, totalCount: total } = await invoicesApi.getAll({
         limit,
         offset,
-        status: tab === 'deleted' ? 'cancelled' : 'active',
         search: search || undefined,
         statusFilter: statusArr.length > 0 ? statusArr : undefined,
         companyIds: filters?.companyFilter.size ? Array.from(filters.companyFilter) : undefined,
@@ -399,23 +378,20 @@ export default function InvoicesPage() {
 
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
-      <div className="flex flex-col gap-1 sm:gap-2">
-        <h1 className="text-2xl sm:text-4xl font-bold">{t('title')}</h1>
-        <p className="text-sm sm:text-base text-default-500">{t('subtitle')}</p>
-      </div>
-      
-      <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
-        <Tabs size="lg" selectedKey={activeTab} onSelectionChange={(key) => setActiveTab(key as string)}>
-          <Tab key="active" title={t('tabs.active')}/>
-          <Tab key="deleted" title={t('tabs.cancelled')}/>
-        </Tabs>
-        <Button color="primary" variant="solid" className="w-full sm:w-auto"
-          onClick={() => router.push('/invoice/new/edit')}
-          startContent={<Plus className="h-4 w-4" />}
-        >
-          {t('createNew')}
-        </Button>
-      </div>
+      <StickyHeader title={t('title')} subtitle={t('subtitle')}>
+          <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold">{t('title')}</h1>
+            <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
+          </div>
+          <div className="sm:ml-auto shrink-0">
+            <Button color="primary" variant="solid" className='w-full lg:w-fit'
+              onClick={() => router.push('/invoice/new/edit')}
+              startContent={<Plus className="size-4" />}
+            >
+              {t('createNew')}
+            </Button>
+          </div>
+      </StickyHeader>
 
       <Card>
         <CardBody className='flex flex-col lg:grid grid-cols-2 gap-4'>
@@ -491,21 +467,18 @@ export default function InvoicesPage() {
               </div>
             )}
           >
-            {activeTab === 'active' ? (
-              [<SelectItem key="pending" textValue={t('status.pending')}>
-                <Chip color="warning" variant="flat" size="sm">{t('status.pending')}</Chip>
-              </SelectItem>,
-              <SelectItem key="paid" textValue={t('status.paid')}>
-                <Chip color="success" variant="flat" size="sm">{t('status.paid')}</Chip>
-              </SelectItem>,
-              <SelectItem key="overdue" textValue={t('status.overdue')}>
-                <Chip color="danger" variant="flat" size="sm">{t('status.overdue')}</Chip>
-              </SelectItem>]
-            ) : (
-              [<SelectItem key="cancelled" textValue={t('status.cancelled')}>
-                <Chip color="default" variant="flat" size="sm">{t('status.cancelled')}</Chip>
-              </SelectItem>]
-            )}
+            <SelectItem key="pending" textValue={t('status.pending')}>
+              <Chip color="warning" variant="flat" size="sm">{t('status.pending')}</Chip>
+            </SelectItem>
+            <SelectItem key="paid" textValue={t('status.paid')}>
+              <Chip color="success" variant="flat" size="sm">{t('status.paid')}</Chip>
+            </SelectItem>
+            <SelectItem key="overdue" textValue={t('status.overdue')}>
+              <Chip color="danger" variant="flat" size="sm">{t('status.overdue')}</Chip>
+            </SelectItem>
+            <SelectItem key="cancelled" textValue={t('status.cancelled')}>
+              <Chip color="default" variant="flat" size="sm">{t('status.cancelled')}</Chip>
+            </SelectItem>
           </Select>
           <DateRangePicker
             showMonthAndYearPickers

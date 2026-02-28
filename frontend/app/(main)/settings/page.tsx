@@ -12,7 +12,7 @@ import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
 import Image from 'next/image';
-import { Save, Edit } from 'lucide-react';
+import { Save, Edit, Building2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import {
   AddCompanyModal,
@@ -35,7 +35,7 @@ import {
   EditClientModal,
   ManageClientsModal,
 } from '@/features/clients/components';
-import { ConfirmModal } from '@/components/ui';
+import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 
 export default function SettingsPage() {
@@ -830,82 +830,44 @@ export default function SettingsPage() {
     );
   }
 
+  const selectedCompanyObj = companies.find(c => c.id === companyId);
+
   return (
-    <main className="min-h-screen max-w-4xl mx-auto p-4 sm:p-8 flex flex-col gap-6 sm:gap-8">
-      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl sm:text-4xl font-bold text-foreground">{t('title')}</h1>
-          <p className="text-sm sm:text-base text-default-500">{t('subtitle')}</p>
-        </div>
-        <div className="flex gap-3">
-          <Button
-            color="primary"
-            className="w-full"
-            onClick={handleSave}
-            disabled={saving || cooldown > 0}
-            startContent={<Save className="size-4" />}
-            >
-            {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
-          </Button>
-        </div>
-      </section>
+    <main className="min-h-screen max-w-6xl mx-auto p-4 sm:p-8 flex flex-col gap-6 sm:gap-8">
+      <StickyHeader title={t('title')} subtitle={t('subtitle')}>
+          <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('title')}</h1>
+            <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
+          </div>
 
-      <Card>
-        <CardBody className='flex gap-6 sm:gap-8 p-4 sm:p-6'>
-          <section id="companies" ref={companiesRef} className="flex flex-col gap-2 scroll-mt-20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <span className="text-base font-semibold">
-                {t('companies.selectCompany')}
-              </span>
-              <Button
-                size="sm"
-                variant="flat"
-                color="primary"
-                startContent={<Edit className="size-4" />}
-                onClick={() => setIsManageCompaniesModalOpen(true)}
-              >
-                {t('companies.manageCompanies')}
-              </Button>
-            </div>
-            <Select
-              label={t('companies.selectDescription')}
-              selectedKeys={companyId ? [String(companyId)] : []}
-              onSelectionChange={(keys) => {
-                const selected = Array.from(keys)[0];
-                if (selected) handleCompanyChange(String(selected));
-              }}
-              placeholder={t('companies.selectPlaceholder')}
-              labelPlacement="outside"
-              isRequired
-            >
-              {companies.map((company) => (
-                <SelectItem key={String(company.id)} textValue={company.name}>
-                  {company.name}
-                </SelectItem>
-              ))}
-            </Select>
-          </section>
-
-          <section id="clients" ref={clientsRef} className="flex flex-col gap-2 scroll-mt-20">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-2xl font-bold">{t('clients.title')}</h2>
-                <p className="text-sm text-default-500">{t('clients.subtitle')}</p>
+          {/* Company context banner (inline) */}
+          {selectedCompanyObj && (
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
+              <Building2 className="size-4 text-primary shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] leading-tight text-primary-600 dark:text-primary-400 font-medium">{t('companies.editingCompany')}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{selectedCompanyObj.name}</p>
               </div>
-              <Button
-                size="sm"
-                variant="flat"
-                color="primary"
-                startContent={<Edit className="size-4" />}
-                onClick={() => setIsManageClientsModalOpen(true)}
-              >
-                {t('clients.manageClients')}
-              </Button>
             </div>
-          </section>
-        </CardBody>
-      </Card>
+          )}
 
+          <div className="sm:ml-auto shrink-0">
+            <Button
+              color="primary"
+              className="w-full ms:w-fit"
+              onClick={handleSave}
+              disabled={saving || cooldown > 0}
+              startContent={<Save className="size-4" />}
+            >
+              {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
+            </Button>
+          </div>
+      </StickyHeader>
+
+      {/* Two-column layout: settings left, company/client selector right (sticky) */}
+      <div className="flex flex-col-reverse lg:flex-row gap-6 sm:gap-8">
+        {/* Left column: main settings */}
+        <div className="flex-1 min-w-0 flex flex-col gap-6 sm:gap-8">
       {companyId && (
       <Card>
         <CardBody className='flex gap-6 sm:gap-8 p-4 sm:p-6'>
@@ -1115,6 +1077,72 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
       )}
+        </div>
+
+        {/* Right column: company & client selectors (sticky) */}
+        <div className="w-full lg:w-72 shrink-0">
+          <div className="lg:sticky lg:top-28">
+            <Card>
+              <CardBody className="flex flex-col gap-6 p-4">
+                <section id="companies" ref={companiesRef} className="flex flex-col gap-2 scroll-mt-20">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">
+                      {t('companies.selectCompany')}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="primary"
+                      isIconOnly
+                      onClick={() => setIsManageCompaniesModalOpen(true)}
+                    >
+                      <Edit className="size-3.5" />
+                    </Button>
+                  </div>
+                  <Select
+                    label={t('companies.selectDescription')}
+                    selectedKeys={companyId ? [String(companyId)] : []}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0];
+                      if (selected) handleCompanyChange(String(selected));
+                    }}
+                    placeholder={t('companies.selectPlaceholder')}
+                    labelPlacement="outside"
+                    size="sm"
+                    isRequired
+                  >
+                    {companies.map((company) => (
+                      <SelectItem key={String(company.id)} textValue={company.name}>
+                        {company.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </section>
+
+                <div className="border-t border-divider" />
+
+                <section id="clients" ref={clientsRef} className="flex flex-col gap-2 scroll-mt-20">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-semibold">
+                      {t('clients.title')}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      color="primary"
+                      isIconOnly
+                      onClick={() => setIsManageClientsModalOpen(true)}
+                    >
+                      <Edit className="size-3.5" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-default-500">{t('clients.subtitle')}</p>
+                </section>
+              </CardBody>
+            </Card>
+          </div>
+        </div>
+      </div>
 
       <ManageCompaniesModal
         isOpen={isManageCompaniesModalOpen}

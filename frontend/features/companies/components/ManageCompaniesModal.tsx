@@ -37,15 +37,15 @@ export function ManageCompaniesModal({
               companies.map((company) => (
                 <div
                   key={company.id}
-                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-divider rounded-lg hover:bg-default-100 transition-colors"
                 >
                   <div>
                     <p className="font-semibold">{company.name}</p>
                     {company.email && (
-                      <p className="text-sm text-slate-600">{company.email}</p>
+                      <p className="text-sm text-default-500">{company.email}</p>
                     )}
                     {company.city && company.country && (
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-default-500">
                         {company.city}, {company.country}
                       </p>
                     )}

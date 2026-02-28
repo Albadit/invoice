@@ -3,6 +3,7 @@
 import { Button } from '@heroui/button';
 import { Switch } from '@heroui/switch';
 import { Select, SelectItem } from '@heroui/select';
+import { Chip } from '@heroui/chip';
 import type { TemplateEditorState } from '../hooks/useTemplateEditor';
 
 interface TemplateEditorToolbarProps {
@@ -11,16 +12,21 @@ interface TemplateEditorToolbarProps {
 
 export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
   const {
-    invoices,
-    selectedId,
+    companies,
+    selectedCompanyId,
+    languageConfig,
+    previewLanguage,
+    templates,
+    selectedTemplateId,
+    isSystemTemplate,
     editorDirty,
     wordWrap,
     setWordWrap,
     showPreview,
     setShowPreview,
-    scaleMode,
-    setScaleMode,
-    handleSelectInvoice,
+    handleSelectCompany,
+    handleSelectLanguage,
+    handleSelectTemplate,
     handleDownload,
     handleResetStyling,
     setConfirmSaveOpen,
@@ -28,21 +34,67 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
   } = editor;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 bg-content1 border-b border-divider shrink-0">
-      {/* Invoice select */}
+    <div className="flex items-center gap-3 px-4 py-2 bg-content1 border-b border-divider shrink-0 flex-wrap">
+      {/* Template select */}
       <Select
-        aria-label="Invoice"
+        aria-label="Template"
         size="sm"
         className="w-56"
-        selectedKeys={selectedId ? new Set([selectedId]) : new Set()}
+        selectedKeys={selectedTemplateId ? new Set([selectedTemplateId]) : new Set()}
         onSelectionChange={(keys) => {
           const id = Array.from(keys)[0] as string;
-          if (id) handleSelectInvoice(id);
+          if (id) handleSelectTemplate(id);
         }}
       >
-        {invoices.map((inv) => (
-          <SelectItem key={inv.id} textValue={`${inv.invoice_code} - ${inv.customer_name}`}>
-            {inv.invoice_code} - {inv.customer_name}
+        {templates.map((tpl) => (
+          <SelectItem key={tpl.id} textValue={`${tpl.name}${tpl.is_system ? ' (System)' : ''}`}>
+            <div className="flex items-center gap-2">
+              <span>{tpl.name}</span>
+              {tpl.is_system && (
+                <Chip size="sm" variant="flat" color="warning" className="h-5 text-[10px]">System</Chip>
+              )}
+            </div>
+          </SelectItem>
+        ))}
+      </Select>
+
+      {/* Company select (for preview data) — clearable */}
+      <Select
+        aria-label="Company"
+        size="sm"
+        className="w-56"
+        placeholder="Dummy Company"
+        selectedKeys={selectedCompanyId ? new Set([selectedCompanyId]) : new Set()}
+        onSelectionChange={(keys) => {
+          const arr = Array.from(keys);
+          handleSelectCompany(arr.length > 0 ? (arr[0] as string) : '');
+        }}
+      >
+        {companies.map((company) => (
+          <SelectItem key={company.id} textValue={company.name}>
+            {company.name}
+          </SelectItem>
+        ))}
+      </Select>
+
+      {/* Language select */}
+      <Select
+        aria-label="Language"
+        size="sm"
+        className="w-40"
+        selectedKeys={new Set([previewLanguage])}
+        onSelectionChange={(keys) => {
+          const val = Array.from(keys)[0] as string;
+          if (val) handleSelectLanguage(val);
+        }}
+      >
+        {languageConfig.map((lang) => (
+          <SelectItem key={lang.key} textValue={lang.name}>
+            <span className="flex items-center gap-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={lang.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+              {lang.name}
+            </span>
           </SelectItem>
         ))}
       </Select>
@@ -68,14 +120,16 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
           >
             Reset
           </Button>
-          <Button
-            size="sm"
-            color="success"
-            variant="flat"
-            onPress={() => setConfirmSaveOpen(true)}
-          >
-            Save
-          </Button>
+          {!isSystemTemplate && (
+            <Button
+              size="sm"
+              color="success"
+              variant="flat"
+              onPress={() => setConfirmSaveOpen(true)}
+            >
+              Save
+            </Button>
+          )}
           <Button
             size="sm"
             color="secondary"
@@ -85,6 +139,13 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
             Save As New
           </Button>
         </>
+      )}
+
+      {/* System template notice */}
+      {isSystemTemplate && editorDirty && (
+        <Chip size="sm" variant="flat" color="warning" className="text-[11px]">
+          System template – use &quot;Save As New&quot;
+        </Chip>
       )}
 
       <div className="flex-1" />
@@ -125,29 +186,6 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
       >
         Preview
       </Button>
-
-      {/* Scale select (only when preview is on) */}
-      {showPreview && (
-        <>
-          <div className="w-px h-5 bg-default-300" />
-          <Select
-            aria-label="Scale"
-            size="sm"
-            className="w-28"
-            selectedKeys={new Set([scaleMode])}
-            onSelectionChange={(keys) => {
-              const val = Array.from(keys)[0] as string;
-              if (val) setScaleMode(val);
-            }}
-          >
-            <SelectItem key="auto">Auto</SelectItem>
-            <SelectItem key="25">25%</SelectItem>
-            <SelectItem key="50">50%</SelectItem>
-            <SelectItem key="75">75%</SelectItem>
-            <SelectItem key="100">100%</SelectItem>
-          </Select>
-        </>
-      )}
     </div>
   );
 }

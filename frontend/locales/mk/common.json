@@ -16,7 +16,8 @@
     "companies": "Компании",
     "clients": "Клиенти",
     "templates": "Шаблони",
-    "currencies": "Валути"
+    "currencies": "Валути",
+    "templateEditor": "Уредувач на Шаблони"
   },
   "actions": {
     "save": "Зачувај",

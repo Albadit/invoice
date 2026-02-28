@@ -19,6 +19,7 @@
     "selectCompany": "Zgjidh Kompani",
     "selectDescription": "Kompania",
     "selectPlaceholder": "Zgjidh një kompani",
+    "editingCompany": "Aktualisht duke ndryshuar cilësimet për",
     "fields": {
       "name": "Emri i Kompanisë",
       "street": "Rruga",

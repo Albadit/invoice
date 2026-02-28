@@ -15,10 +15,25 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
 import { createClient } from '@/lib/supabase/client';
+
+// Page-title context – lets StickyHeader push its title up to the mobile header
+interface PageTitleContextType {
+  pageTitle: string;
+  pageSubtitle: string;
+  setPageTitle: (title: string) => void;
+  setPageSubtitle: (subtitle: string) => void;
+}
+
+const PageTitleContext = createContext<PageTitleContextType>({ pageTitle: '', pageSubtitle: '', setPageTitle: () => {}, setPageSubtitle: () => {} });
+
+export function usePageTitle() {
+  return useContext(PageTitleContext);
+}
 
 // Sidebar Context
 interface SidebarContextType {
@@ -217,7 +232,7 @@ export function Sidebar() {
       <aside
         className={cn(
           'fixed left-0 top-0 z-50 flex h-full flex-col border-r border-divider bg-background transition-all duration-300',
-          isCollapsed ? 'w-28' : 'w-65',
+          isCollapsed ? 'w-18' : 'w-65',
           // Mobile styles
           'lg:translate-x-0',
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
@@ -295,59 +310,60 @@ export function Sidebar() {
             <ThemeSwitch />
           </div>
 
-          {/* User Section */}
-          <div
-            className={cn(
-              'flex items-center gap-3 rounded-lg p-2',
-              !isCollapsed && 'hover:bg-default-100'
-            )}
-          >
-            <Avatar
-              size="sm"
-              name={userName || userEmail || 'U'}
-              className="shrink-0"
-            />
-            {!isCollapsed && (
-              <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium">{userName}</p>
-                <p className="truncate text-xs text-default-500">{userEmail}</p>
+          {/* User Section with Popover */}
+          <Popover placement={isCollapsed ? 'right-end' : 'top-start'}>
+            <PopoverTrigger>
+              <div
+                className={cn(
+                  'flex items-center gap-3 rounded-lg p-2 cursor-pointer transition-colors',
+                  !isCollapsed && 'hover:bg-default-100',
+                  isCollapsed && 'hover:bg-default-100 justify-center'
+                )}
+              >
+                <Avatar
+                  size="sm"
+                  name={userName || userEmail || 'U'}
+                  className="shrink-0"
+                />
+                {!isCollapsed && (
+                  <div className="flex-1 overflow-hidden">
+                    <p className="truncate text-sm font-medium">{userName}</p>
+                    <p className="truncate text-xs text-default-500">{userEmail}</p>
+                  </div>
+                )}
               </div>
-            )}
-            {/* Logout Button */}
-            {isCollapsed ? (
-              <Tooltip content={t('logout')} placement="right">
+            </PopoverTrigger>
+            <PopoverContent className="p-3 w-57">
+              <div className="w-full flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <Avatar
+                    size="sm"
+                    name={userName || userEmail || 'U'}
+                    className="shrink-0"
+                  />
+                  <div className="flex-1 overflow-hidden">
+                    <p className="truncate text-sm font-medium">{userName}</p>
+                    <p className="truncate text-xs text-default-500">{userEmail}</p>
+                  </div>
+                </div>
+                <div className="border-t border-divider" />
                 <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
+                  variant="flat"
                   color="danger"
+                  size="sm"
+                  className="w-full justify-start"
+                  startContent={<LogOut className="size-4" />}
                   onPress={async () => {
                     const supabase = createClient();
                     await supabase.auth.signOut();
                     window.location.href = '/auth/login';
                   }}
                 >
-                  <LogOut className="size-4" />
+                  {t('logout')}
                 </Button>
-              </Tooltip>
-            ) : (
-              <Tooltip content={t('logout')}>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  color="danger"
-                  onPress={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signOut();
-                    window.location.href = '/auth/login';
-                  }}
-                >
-                  <LogOut className="size-4" />
-                </Button>
-              </Tooltip>
-            )}
-          </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </aside>
     </>
@@ -374,18 +390,39 @@ export function SidebarMobileToggle() {
 export function SidebarLayout({ children }: { children: ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [pageTitle, setPageTitle] = useState('');
+  const [pageSubtitle, setPageSubtitle] = useState('');
 
   return (
     <SidebarContext.Provider
       value={{ isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen }}
     >
-      <SidebarLayoutInner>{children}</SidebarLayoutInner>
+      <PageTitleContext.Provider value={{ pageTitle, pageSubtitle, setPageTitle, setPageSubtitle }}>
+        <SidebarLayoutInner>{children}</SidebarLayoutInner>
+      </PageTitleContext.Provider>
     </SidebarContext.Provider>
   );
 }
 
 function SidebarLayoutInner({ children }: { children: ReactNode }) {
   const { isCollapsed } = useSidebar();
+  const { pageTitle, pageSubtitle } = usePageTitle();
+  const pathname = usePathname();
+  const { t } = useTranslation('common');
+
+  // Derive a fallback title from navigation config when no StickyHeader sets one
+  const fallbackTitle = (() => {
+    if (pageTitle) return pageTitle;
+    for (const section of sidebarSections) {
+      for (const item of section.items) {
+        const itemPath = item.href.split('?')[0];
+        if (pathname === itemPath || (itemPath !== '/' && pathname.startsWith(itemPath + '/'))) {
+          return t(item.labelKey);
+        }
+      }
+    }
+    return 'Invoice';
+  })();
 
   return (
     <div className={cn(
@@ -394,13 +431,11 @@ function SidebarLayoutInner({ children }: { children: ReactNode }) {
     )}>
       <Sidebar />
       {/* Mobile Header */}
-      <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-divider bg-background px-4 lg:hidden">
+      <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-divider bg-background px-4 lg:hidden">
         <SidebarMobileToggle />
-        <div className="flex items-center gap-2">
-          <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-            <FileText className="size-5 text-primary-foreground" />
-          </div>
-          <span className="text-lg font-bold">Invoice</span>
+        <div className="flex flex-col justify-center min-w-0">
+          <span className="text-base font-bold truncate leading-tight">{fallbackTitle}</span>
+          {pageSubtitle && <span className="text-xs text-default-500 truncate leading-tight">{pageSubtitle}</span>}
         </div>
       </header>
 

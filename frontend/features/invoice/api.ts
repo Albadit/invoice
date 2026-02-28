@@ -176,7 +176,6 @@ export const invoicesApi = {
   async getAll(options?: {
     limit?: number;
     offset?: number;
-    status?: 'active' | 'cancelled';
     search?: string;
     statusFilter?: string[];
     companyIds?: string[];
@@ -188,7 +187,6 @@ export const invoicesApi = {
     const { 
       limit = 10, 
       offset = 0,
-      status = 'active', 
       search, 
       statusFilter, 
       companyIds,
@@ -205,14 +203,7 @@ export const invoicesApi = {
     url.searchParams.set('limit', String(limit));
     url.searchParams.set('offset', String(offset));
     
-    // Status filter (active vs cancelled tab)
-    if (status === 'cancelled') {
-      url.searchParams.append('status', 'eq.cancelled');
-    } else {
-      url.searchParams.append('status', 'neq.cancelled');
-    }
-    
-    // Additional status filter (pending, paid, etc.)
+    // Status filter (unified – no tab split)
     if (statusFilter && statusFilter.length > 0) {
       if (statusFilter.length === 1) {
         url.searchParams.append('status', `eq.${statusFilter[0]}`);

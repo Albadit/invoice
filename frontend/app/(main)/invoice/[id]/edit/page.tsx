@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
+import { StickyHeader } from '@/components/ui';
 
 export default function InvoiceEditPage() {
   const { t } = useTranslation('invoice');
@@ -376,24 +377,25 @@ export default function InvoiceEditPage() {
       )}
       
       <div className="max-w-7xl mx-auto">
+        <StickyHeader className="mb-6" title={isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}>
+            <h1 className="hidden lg:block text-xl sm:text-3xl font-bold min-w-0 truncate">
+              {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}
+            </h1>
+            <div className="sm:ml-auto shrink-0 flex flex-row gap-2 items-center">
+              <Button 
+                color="primary"
+                className="w-full lg:w-fit"
+                onClick={handleSave}
+                disabled={saving}
+                startContent={<Save className="size-4" />}
+              >
+                {saving ? t('actions.saving') : t('actions.save')}
+              </Button>
+            </div>
+        </StickyHeader>
+
         <div className="flex max-xl:flex-col gap-6 relative">
           <div className="flex flex-col gap-6 flex-1">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <h1 className="text-xl sm:text-3xl font-bold">
-                {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}
-              </h1>
-              <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
-                <Button 
-                  color="primary"
-                  className="w-full sm:w-auto"
-                  onClick={handleSave}
-                  disabled={saving}
-                  startContent={<Save className="size-4" />}
-                >
-                  {saving ? t('actions.saving') : t('actions.save')}
-                </Button>
-              </div>
-            </div>
 
             {/* Mobile collapsible settings panel */}
             <div className="xl:hidden bg-content1 rounded-xl shadow-xs border border-default-200">
@@ -856,8 +858,7 @@ export default function InvoiceEditPage() {
 
           <div className="w-full xl:min-w-xs xl:max-w-xs hidden xl:flex flex-col gap-6">
             {/* Spacer to align with invoice card */}
-            <div className="h-10 max-xl:hidden" aria-hidden="true" />
-            <div className="h-fit xl:sticky xl:top-8 bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-6 flex flex-col gap-6">
+            <div className="h-fit xl:sticky xl:top-22 bg-content1 rounded-xl shadow-xs border border-default-200 p-4 sm:p-6 flex flex-col gap-6">
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
                 <Select

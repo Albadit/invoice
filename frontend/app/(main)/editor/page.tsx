@@ -8,7 +8,7 @@ import {
   SaveTemplateModal,
 } from '@/features/templates/components';
 
-export default function InvoiceTestPage() {
+export default function TemplateEditorPage() {
   const editor = useTemplateEditor();
   const { loading, error, showPreview, handleMouseDown } = editor;
 

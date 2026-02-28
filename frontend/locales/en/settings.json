@@ -19,6 +19,7 @@
     "selectCompany": "Select Company",
     "selectDescription": "Company",
     "selectPlaceholder": "Select a company",
+    "editingCompany": "Currently editing settings for",
     "fields": {
       "name": "Company Name",
       "street": "Street Address",

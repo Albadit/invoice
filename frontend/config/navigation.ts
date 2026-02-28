@@ -4,8 +4,9 @@ import {
   Palette,
   Coins,
   Plus,
-  Users,
+  Settings,
   LayoutDashboard,
+  FileCog ,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -55,6 +56,12 @@ export const sidebarSections: NavSection[] = [
         icon: Plus,
         href: '/invoice/new/edit',
       },
+      {
+        key: 'editor',
+        labelKey: 'navigation.templateEditor',
+        icon: FileCog ,
+        href: '/editor',
+      },
     ],
   },
   {
@@ -62,16 +69,10 @@ export const sidebarSections: NavSection[] = [
     titleKey: 'navigation.settings',
     items: [
       {
-        key: 'companies',
-        labelKey: 'navigation.companies',
-        icon: Building2,
-        href: '/settings?tab=companies',
-      },
-      {
-        key: 'clients',
-        labelKey: 'navigation.clients',
-        icon: Users,
-        href: '/settings?tab=clients',
+        key: 'settings',
+        labelKey: 'navigation.settings',
+        icon: Settings,
+        href: '/settings',
       },
       {
         key: 'templates',

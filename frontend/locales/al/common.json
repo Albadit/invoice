@@ -16,7 +16,8 @@
     "companies": "Kompanitë",
     "clients": "Klientët",
     "templates": "Shabllonet",
-    "currencies": "Monedhat"
+    "currencies": "Monedhat",
+    "templateEditor": "Redaktori i Shablloneve"
   },
   "actions": {
     "save": "Ruaj",

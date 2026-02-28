@@ -40,7 +40,7 @@ export function ManageCurrenciesModal({
                 return (
                 <div
                   key={currency.id}
-                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-slate-200 rounded-lg hover:bg-slate-50"
+                  className="flex md:flex-row flex-col md:items-center gap-4 justify-between p-4 border border-divider rounded-lg hover:bg-default-100 transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <div>
@@ -54,7 +54,7 @@ export function ManageCurrenciesModal({
                           </Chip>
                         )}
                       </div>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-default-500">
                         Symbol: {currency.symbol_position === 'right' 
                           ? `100${currency.symbol_space ? ' ' : ''}${currency.symbol}` 
                           : `${currency.symbol}${currency.symbol_space ? ' ' : ''}100`}

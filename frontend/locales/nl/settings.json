@@ -19,6 +19,7 @@
     "selectCompany": "Selecteer bedrijf",
     "selectDescription": "Bedrijf",
     "selectPlaceholder": "Selecteer een bedrijf",
+    "editingCompany": "Momenteel instellingen bewerken voor",
     "fields": {
       "name": "Bedrijfsnaam",
       "street": "Straat",

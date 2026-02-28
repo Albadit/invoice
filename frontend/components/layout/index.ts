@@ -1,2 +1,2 @@
 // Shared layout components
-export { Sidebar, SidebarLayout, SidebarMobileToggle, useSidebar } from './Sidebar';
+export { Sidebar, SidebarLayout, SidebarMobileToggle, useSidebar, usePageTitle } from './Sidebar';

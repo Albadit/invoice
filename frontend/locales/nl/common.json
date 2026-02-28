@@ -16,7 +16,8 @@
     "companies": "Bedrijven",
     "clients": "Klanten",
     "templates": "Sjablonen",
-    "currencies": "Valuta's"
+    "currencies": "Valuta's",
+    "templateEditor": "Sjabloon Editor"
   },
   "actions": {
     "save": "Opslaan",

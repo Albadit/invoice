@@ -1,36 +1,44 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { invoicesApi } from '@/features/invoice/api';
+import { companiesApi } from '@/features/companies/api';
+import { currenciesApi } from '@/features/currencies/api';
 import { templatesApi } from '@/features/templates/api';
 import { DEFAULT_TEMPLATE_STYLING } from '@/features/invoice/utils/templateEngine';
-import type { InvoiceWithItems, Template } from '@/lib/types';
+import { DUMMY_INVOICE } from '@/features/templates/data/dummyInvoice';
+import { useLocale } from '@/contexts/LocaleProvider';
+import type { Template, Company, Currency, InvoiceWithItems } from '@/lib/types';
 
 /**
  * Custom hook encapsulating all state and logic for the template editor page.
  */
 export function useTemplateEditor() {
   // ── Core data ────────────────────────────────────────────────────
-  const [invoices, setInvoices] = useState<InvoiceWithItems[]>([]);
-  const [selectedId, setSelectedId] = useState<string>('');
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const { languageConfig } = useLocale();
+  const [previewLanguage, setPreviewLanguage] = useState<string>('en');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // ── Template state ───────────────────────────────────────────────
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [styling, setStyling] = useState<string>('');
   const [editorDirty, setEditorDirty] = useState(false);
 
   // ── UI state ─────────────────────────────────────────────────────
   const [wordWrap, setWordWrap] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [editorWidth, setEditorWidth] = useState(50);
-  const [previewScale, setPreviewScale] = useState(1);
-  const [scaleMode, setScaleMode] = useState<string>('auto');
+  const [editorWidth, setEditorWidth] = useState(65);
+  const [previewScale, setPreviewScale] = useState(0);
+  const [previewFullscreen, setPreviewFullscreen] = useState(false);
 
   // ── Refs ──────────────────────────────────────────────────────────
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const previewContainerRef = useRef<HTMLDivElement>(null);
+  const previewPanelRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const gutterRef = useRef<HTMLDivElement>(null);
@@ -47,18 +55,19 @@ export function useTemplateEditor() {
   useEffect(() => {
     async function init() {
       try {
-        const [invoiceRes, tplList] = await Promise.all([
-          invoicesApi.getAll({ limit: 50 }),
+        const [companyList, currencyList, tplList] = await Promise.all([
+          companiesApi.getAll(),
+          currenciesApi.getAll(),
           templatesApi.getAll(),
         ]);
-        setInvoices(invoiceRes.data);
+        setCompanies(companyList);
+        setCurrencies(currencyList);
         setTemplates(tplList);
 
-        if (invoiceRes.data.length > 0) {
-          const first = invoiceRes.data[0];
-          setSelectedId(first.id);
-          const tpl = tplList.find(t => t.id === first.template_id);
-          setStyling(tpl?.styling ?? DEFAULT_TEMPLATE_STYLING);
+        // Auto-select first template
+        if (tplList.length > 0) {
+          setSelectedTemplateId(tplList[0].id);
+          setStyling(tplList[0].styling ?? DEFAULT_TEMPLATE_STYLING);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load');
@@ -69,15 +78,33 @@ export function useTemplateEditor() {
     init();
   }, []);
 
+  // ── Build preview invoice (dummy + selected company data) ────────
+
+  const selectedCompany = companies.find(c => c.id === selectedCompanyId);
+  const selectedCurrency = currencies.find(
+    c => c.id === (selectedCompany?.currency_id ?? '')
+  ) ?? DUMMY_INVOICE.currency;
+
+  const previewInvoice: InvoiceWithItems = {
+    ...DUMMY_INVOICE,
+    company_id: selectedCompany?.id ?? DUMMY_INVOICE.company_id,
+    currency_id: selectedCurrency.id,
+    company: selectedCompany
+      ? { ...selectedCompany }
+      : DUMMY_INVOICE.company,
+    currency: selectedCurrency,
+    language: previewLanguage,
+  };
+
   // ── Preview rendering ────────────────────────────────────────────
 
-  const renderPreview = useCallback(async (invoiceId: string, tplStyling: string) => {
+  const renderPreview = useCallback(async (invoice: InvoiceWithItems, tplStyling: string) => {
     if (!showPreview) return;
     try {
-      const res = await fetch('/invoice/test/render', {
+      const res = await fetch('/editor/render', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: invoiceId, styling: tplStyling || undefined }),
+        body: JSON.stringify({ invoice, styling: tplStyling || undefined }),
       });
       const html = await res.text();
       const iframe = iframeRef.current;
@@ -91,12 +118,12 @@ export function useTemplateEditor() {
   }, [showPreview]);
 
   useEffect(() => {
-    if (selectedId) renderPreview(selectedId, styling);
-  }, [selectedId, styling, renderPreview]);
+    renderPreview(previewInvoice, styling);
+  }, [selectedCompanyId, previewLanguage, styling, renderPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (showPreview && selectedId) {
-      renderPreview(selectedId, styling);
+    if (showPreview) {
+      renderPreview(previewInvoice, styling);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showPreview]);
@@ -108,29 +135,56 @@ export function useTemplateEditor() {
 
   const updatePreviewScale = useCallback(() => {
     if (!showPreview) return;
-    if (scaleMode !== 'auto') {
-      setPreviewScale(parseInt(scaleMode, 10) / 100);
-      return;
-    }
     const container = previewContainerRef.current;
     if (!container) return;
     const { clientWidth, clientHeight } = container;
     const scaleX = (clientWidth - 32) / A4_WIDTH_PX;
     const scaleY = (clientHeight - 32) / A4_HEIGHT_PX;
-    setPreviewScale(Math.min(scaleX, scaleY, 1));
-  }, [scaleMode, showPreview]);
+    setPreviewScale(Math.min(scaleX, scaleY));
+  }, [showPreview]);
 
   useEffect(() => {
-    updatePreviewScale();
+    // Skip while loading — the preview container isn't mounted yet
+    if (loading) return;
+
+    const container = previewContainerRef.current;
+    if (!container) return;
+
+    // Initial calculation (may need a frame for layout to settle)
+    requestAnimationFrame(updatePreviewScale);
+
     const obs = new ResizeObserver(updatePreviewScale);
-    if (previewContainerRef.current) obs.observe(previewContainerRef.current);
+    obs.observe(container);
     return () => obs.disconnect();
-  }, [updatePreviewScale]);
+  }, [loading, updatePreviewScale]);
 
   useEffect(() => {
+    if (loading) return;
     const id = requestAnimationFrame(updatePreviewScale);
     return () => cancelAnimationFrame(id);
-  }, [editorWidth, scaleMode, showPreview, updatePreviewScale]);
+  }, [loading, editorWidth, showPreview, previewFullscreen, updatePreviewScale]);
+
+  // ── Fullscreen logic ─────────────────────────────────────────────
+
+  function handleToggleFullscreen() {
+    const el = previewPanelRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().then(() => setPreviewFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen().then(() => setPreviewFullscreen(false)).catch(() => {});
+    }
+  }
+
+  useEffect(() => {
+    function onFullscreenChange() {
+      setPreviewFullscreen(!!document.fullscreenElement);
+      // Recalculate scale after fullscreen transition
+      requestAnimationFrame(updatePreviewScale);
+    }
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, [updatePreviewScale]);
 
   // ── Drag handler ─────────────────────────────────────────────────
 
@@ -168,11 +222,19 @@ export function useTemplateEditor() {
 
   // ── Handlers ─────────────────────────────────────────────────────
 
-  function handleSelectInvoice(id: string) {
-    setSelectedId(id);
-    const inv = invoices.find(i => i.id === id);
-    const tpl = templates.find(t => t.id === inv?.template_id);
-    setStyling(tpl?.styling ?? DEFAULT_TEMPLATE_STYLING);
+  function handleSelectCompany(companyId: string) {
+    setSelectedCompanyId(companyId);
+  }
+
+  function handleSelectLanguage(lang: string) {
+    setPreviewLanguage(lang);
+  }
+
+  function handleSelectTemplate(templateId: string) {
+    const tpl = templates.find(t => t.id === templateId);
+    if (!tpl) return;
+    setSelectedTemplateId(templateId);
+    setStyling(tpl.styling ?? DEFAULT_TEMPLATE_STYLING);
     setEditorDirty(false);
   }
 
@@ -182,25 +244,24 @@ export function useTemplateEditor() {
   }
 
   function handleResetStyling() {
-    const inv = invoices.find(i => i.id === selectedId);
-    const tpl = templates.find(t => t.id === inv?.template_id);
+    const tpl = templates.find(t => t.id === selectedTemplateId);
     setStyling(tpl?.styling ?? DEFAULT_TEMPLATE_STYLING);
     setEditorDirty(false);
   }
 
   async function handleDownload() {
     try {
-      const res = await fetch(`/invoice/${selectedId}/download`, {
+      const res = await fetch('/editor/render', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ styling }),
+        body: JSON.stringify({ invoice: previewInvoice, styling, pdf: true }),
       });
       if (!res.ok) throw new Error(await res.text());
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = res.headers.get('Content-Disposition')?.match(/filename="(.+)"/)?.[1] || 'invoice.pdf';
+      a.download = `template-preview-${previewInvoice.invoice_code}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {
@@ -208,14 +269,17 @@ export function useTemplateEditor() {
     }
   }
 
+  // ── Derived state ──────────────────────────────────────────────────
+  const selectedTemplate = templates.find(t => t.id === selectedTemplateId);
+  const isSystemTemplate = selectedTemplate?.is_system ?? false;
+
   async function handleSaveTemplate() {
+    if (!selectedTemplateId || isSystemTemplate) { setSavingExisting(false); return; }
     setSavingExisting(true);
-    const inv = invoices.find(i => i.id === selectedId);
-    if (!inv?.template_id) { setSavingExisting(false); return; }
     try {
-      await templatesApi.update(inv.template_id, { styling });
+      await templatesApi.update(selectedTemplateId, { styling });
       setTemplates(prev => prev.map(t =>
-        t.id === inv.template_id ? { ...t, styling } : t
+        t.id === selectedTemplateId ? { ...t, styling } : t
       ));
       setEditorDirty(false);
     } catch (err) {
@@ -247,11 +311,15 @@ export function useTemplateEditor() {
 
   return {
     // Data
-    invoices,
-    selectedId,
+    companies,
+    selectedCompanyId,
+    languageConfig,
+    previewLanguage,
     loading,
     error,
     templates,
+    selectedTemplateId,
+    isSystemTemplate,
     styling,
     editorDirty,
 
@@ -262,12 +330,12 @@ export function useTemplateEditor() {
     setShowPreview,
     editorWidth,
     previewScale,
-    scaleMode,
-    setScaleMode,
+    previewFullscreen,
 
     // Refs
     iframeRef,
     previewContainerRef,
+    previewPanelRef,
     textareaRef,
     gutterRef,
 
@@ -282,7 +350,9 @@ export function useTemplateEditor() {
     savingExisting,
 
     // Handlers
-    handleSelectInvoice,
+    handleSelectCompany,
+    handleSelectLanguage,
+    handleSelectTemplate,
     handleStylingChange,
     handleResetStyling,
     handleDownload,
@@ -290,6 +360,7 @@ export function useTemplateEditor() {
     handleSaveAsNewTemplate,
     handleMouseDown,
     handleEditorScroll,
+    handleToggleFullscreen,
   };
 }
 
