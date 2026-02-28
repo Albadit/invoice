@@ -11,6 +11,12 @@ import { clientsApi } from '@/features/clients/api';
 import type { InvoiceItem, Currency, Company, Template, Client } from '@/lib/types';
 import type { InvoicesPost } from '@/lib/database.types';
 import { getCurrencySymbol, formatCurrencyAmount } from '@/lib/utils';
+import {
+  getSubtotal as calcSubtotal,
+  getDiscountTotal,
+  getTaxTotal,
+  getInvoiceTotal,
+} from '@/features/invoice/utils/calculations';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
@@ -202,32 +208,26 @@ export default function InvoiceEditPage() {
   }, [clientId, clients]);
 
   function getSubtotal(): number {
-    return items.reduce((sum, item) => sum + (item.quantity || 0) * (item.unit_price || 0), 0);
+    return calcSubtotal(items.map(i => ({ quantity: i.quantity || 0, unit_price: i.unit_price || 0 })));
   }
 
   function getDiscountAmount(): number {
-    const subtotal = getSubtotal();
-    if (discountType === 'percent' && discountAmount) {
-      return (subtotal * discountAmount) / 100;
-    }
-    return discountAmount || 0;
+    return getDiscountTotal(getSubtotal(), discountType, discountAmount);
   }
 
   function getTaxAmount(): number {
-    const subtotal = getSubtotal();
-    const discount = getDiscountAmount();
-    const afterDiscount = subtotal - discount;
-    if (taxType === 'percent' && taxAmount) {
-      return (afterDiscount * taxAmount) / 100;
-    }
-    return taxAmount || 0;
+    return getTaxTotal(getSubtotal() - getDiscountAmount(), taxType, taxAmount);
   }
 
   function getTotal(): number {
-    const subtotal = getSubtotal();
-    const discount = getDiscountAmount();
-    const tax = getTaxAmount();
-    return subtotal - discount + tax + (shippingAmount || 0);
+    return getInvoiceTotal({
+      items: items.map(i => ({ quantity: i.quantity || 0, unit_price: i.unit_price || 0 })),
+      discountType,
+      discountAmount,
+      taxType,
+      taxAmount,
+      shippingAmount,
+    });
   }
 
   function addItem() {
@@ -326,8 +326,6 @@ export default function InvoiceEditPage() {
         unit_price: item.unit_price || 0
       }));
 
-      console.log('Saving invoice with items:', itemsData);
-
       if (isNewInvoice) {
         await invoicesApi.create(invoiceData, itemsData);
         addToast({
@@ -335,7 +333,7 @@ export default function InvoiceEditPage() {
           description: t('messages.createdDescription'),
           color: "success"
         });
-        router.push('/');
+        router.push('/invoice');
       } else {
         await invoicesApi.update(params.id as string, invoiceData, itemsData);
         addToast({
@@ -343,7 +341,7 @@ export default function InvoiceEditPage() {
           description: t('messages.updatedDescription'),
           color: "success"
         });
-        router.push('/');
+        router.push('/invoice');
       }
     } catch (error) {
       console.error('Failed to save invoice:', error);

@@ -12,5 +12,17 @@
   "monthlyTrend": "Trendi Mujor (12 muaj)",
   "noData": "Nuk ka të dhëna",
   "viewAll": "Shiko të gjitha",
-  "outstanding": "Të papaguara"
+  "outstanding": "Të papaguara",
+  "period1Year": "1 Vit",
+  "period6Months": "6 Muaj",
+  "period3Months": "3 Muaj",
+  "period30Days": "30 Ditë",
+  "period7Days": "7 Ditë",
+  "period14Days": "14 Ditë",
+  "revenueByDay": "Të ardhurat sipas Ditës",
+  "invoicesByDay": "Faturat sipas Ditës",
+  "averageByDay": "Mesatarja sipas Ditës",
+  "viewDetails": "Shiko Detajet",
+  "exportData": "Eksporto të Dhënat",
+  "setAlert": "Vendos Njoftim"
 }

@@ -9,7 +9,8 @@ import { format } from 'date-fns';
 import { siteConfig } from '@/config/site';
 import type { InvoiceWithItems } from '@/lib/types';
 import { formatWithCurrency } from '@/lib/utils';
-import { getStatusBadge, getEffectiveStatus } from '@/features/invoice/utils/invoice-utils';
+import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
+import { getEffectiveStatus } from '@/lib/types';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
@@ -195,13 +196,13 @@ export function InvoicePreviewModal({
                 </div>
                 {invoice.discount_total_amount != null && (
                   <div className="flex justify-between text-default-600">
-                    <span className="text-default-600">{tl(labels, 'fields.discount') || 'Discount'} ({invoice.discount_type === 'percent' ? `${invoice.discount_amount}%` : formatWithCurrency(invoice.currency, invoice.discount_amount ?? 0)}):</span>
+                    <span className="text-default-600">{tl(labels, 'fields.discount') || 'Discount'}{invoice.discount_type === 'percent' ? ` (${invoice.discount_amount}%)` : ''}:</span>
                     <span className="font-semibold text-foreground">-{formatWithCurrency(invoice.currency, invoice.discount_total_amount.toFixed(2))}</span>
                   </div>
                 )}
                 {invoice.tax_total_amount != null && (
                   <div className="flex justify-between text-default-600">
-                    <span className="text-default-600">{tl(labels, 'fields.tax') || 'Tax'} ({invoice.tax_type === 'percent' ? `${invoice.tax_amount}%` : formatWithCurrency(invoice.currency, invoice.tax_amount ?? 0)}):</span>
+                    <span className="text-default-600">{tl(labels, 'fields.tax') || 'Tax'}{invoice.tax_type === 'percent' ? ` (${invoice.tax_amount}%)` : ''}:</span>
                     <span className="font-semibold text-foreground">{formatWithCurrency(invoice.currency, invoice.tax_total_amount.toFixed(2))}</span>
                   </div>
                 )}

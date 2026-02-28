@@ -5,6 +5,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+/**
+ * Map app locale keys to BCP 47 / Intl locale tags.
+ * Used by Intl.DateTimeFormat, Intl.NumberFormat, etc.
+ */
+export const LOCALE_MAP: Record<string, string> = {
+  en: 'en-US',
+  al: 'sq-AL',
+  mk: 'mk-MK',
+  nl: 'nl-NL',
+};
+
+/** Resolve an app locale key to its BCP 47 locale tag. */
+export function getIntlLocale(locale: string): string {
+  return LOCALE_MAP[locale] ?? locale;
+}
+
 /** Minimal currency shape needed for formatting */
 export type CurrencyLike = {
   symbol: string;

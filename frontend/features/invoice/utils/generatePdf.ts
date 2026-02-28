@@ -25,6 +25,12 @@ async function getBrowser(): Promise<Browser> {
       '--disable-gpu',
       '--disable-web-security',
       '--disable-features=IsolateOrigins,site-per-process',
+      '--disable-extensions',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--disable-translate',
+      '--disable-default-apps',
+      '--mute-audio',
     ],
     timeout: 60000,
   });
@@ -66,49 +72,23 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
   const page = await browser.newPage();
 
   try {
-    const fullHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <style>
-          * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          @page {
-            size: ${pdfOptions.format || 'A4'};
-            margin: ${pdfOptions.margin?.top || '16mm'} ${pdfOptions.margin?.right || '16mm'} ${pdfOptions.margin?.bottom || '16mm'} ${pdfOptions.margin?.left || '16mm'};
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-              'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-              sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            line-height: 1.6;
-            color: #000;
-          }
-          .page-break {
-            page-break-before: always;
-            break-before: page;
-          }
-          ${css}
-        </style>
-      </head>
-      <body>
-        ${html}
-      </body>
-      </html>
+    // The incoming `html` is already a full HTML document (from customInvoiceHtml)
+    // that includes Tailwind CDN. We inject print-specific CSS on top.
+    const printCss = `
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page {
+        size: ${pdfOptions.format || 'A4'};
+        margin: ${pdfOptions.margin?.top || '16mm'} ${pdfOptions.margin?.right || '16mm'} ${pdfOptions.margin?.bottom || '16mm'} ${pdfOptions.margin?.left || '16mm'};
+      }
+      .page-break { page-break-before: always; break-before: page; }
+      ${css}
     `;
 
+    // Inject print CSS into the existing HTML document
+    const fullHtml = html.replace('</head>', `<style>${printCss}</style></head>`);
+
+    // networkidle0 is required — Tailwind CDN must be fetched and executed
     await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
-    await page.evaluateHandle('document.fonts.ready');
-    await new Promise(resolve => setTimeout(resolve, 500));
 
     const puppeteerPdfOptions: PDFOptions = {
       format: pdfOptions.format || 'A4',

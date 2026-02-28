@@ -12,5 +12,17 @@
   "monthlyTrend": "Месечен Тренд (12 месеци)",
   "noData": "Нема податоци",
   "viewAll": "Прикажи ги сите",
-  "outstanding": "Неплатени"
+  "outstanding": "Неплатени",
+  "period1Year": "1 Година",
+  "period6Months": "6 Месеци",
+  "period3Months": "3 Месеци",
+  "period30Days": "30 Дена",
+  "period7Days": "7 Дена",
+  "period14Days": "14 Дена",
+  "revenueByDay": "Приход по Ден",
+  "invoicesByDay": "Фактури по Ден",
+  "averageByDay": "Просек по Ден",
+  "viewDetails": "Прикажи Детали",
+  "exportData": "Извези Податоци",
+  "setAlert": "Постави Аларм"
 }

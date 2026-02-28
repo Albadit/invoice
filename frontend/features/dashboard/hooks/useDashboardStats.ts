@@ -22,6 +22,7 @@ export interface MonthlyBucket {
   paid: number;
   pending: number;
   overdue: number;
+  cancelled: number;
 }
 
 // ── Hook ─────────────────────────────────────────────────────────
@@ -101,7 +102,7 @@ export function useDashboardComputed(
     for (let i = 0; i < 12; i++) {
       const d = new Date(year, i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      months.push({ key, label: d.toLocaleDateString(undefined, { month: 'short' }), paid: 0, pending: 0, overdue: 0 });
+      months.push({ key, label: d.toLocaleDateString(undefined, { month: 'short' }), paid: 0, pending: 0, overdue: 0, cancelled: 0 });
     }
     filteredStats.forEach((inv) => {
       if (!inv.issue_date) return;
@@ -112,6 +113,7 @@ export function useDashboardComputed(
       if (effStatus === 'paid') m.paid += a;
       else if (effStatus === 'overdue') m.overdue += a;
       else if (effStatus === 'pending') m.pending += a;
+      else if (effStatus === 'cancelled') m.cancelled += a;
     });
     return months;
   }, [filteredStats, selectedYear]);

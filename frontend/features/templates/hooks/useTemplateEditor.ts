@@ -1,9 +1,12 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+// eslint-disable-next-line boundaries/element-types -- orchestrator hook, needs cross-feature data
 import { companiesApi } from '@/features/companies/api';
+// eslint-disable-next-line boundaries/element-types
 import { currenciesApi } from '@/features/currencies/api';
 import { templatesApi } from '@/features/templates/api';
+// eslint-disable-next-line boundaries/element-types
 import { DEFAULT_TEMPLATE_STYLING } from '@/features/invoice/utils/templateEngine';
 import { DUMMY_INVOICE } from '@/features/templates/data/dummyInvoice';
 import { useLocale } from '@/contexts/LocaleProvider';
@@ -118,15 +121,9 @@ export function useTemplateEditor() {
   }, [showPreview]);
 
   useEffect(() => {
+    if (loading || !showPreview) return;
     renderPreview(previewInvoice, styling);
-  }, [selectedCompanyId, previewLanguage, styling, renderPreview]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (showPreview) {
-      renderPreview(previewInvoice, styling);
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPreview]);
+  }, [loading, selectedCompanyId, previewLanguage, styling, showPreview, renderPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── A4 scale logic ───────────────────────────────────────────────
 

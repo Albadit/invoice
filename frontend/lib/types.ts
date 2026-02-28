@@ -55,10 +55,10 @@ export type InvoiceStat = {
 
 /** Canonical colour palette for invoice statuses (used in charts, badges, etc.) */
 export const STATUS_COLORS: Record<InvoiceStatus, string> = {
-  pending: '#f5a524',
-  paid: '#17c964',
-  overdue: '#f31260',
-  cancelled: '#889096',
+  pending: 'hsl(var(--heroui-warning-400))',
+  paid: 'hsl(var(--heroui-success-400))',
+  overdue: 'hsl(var(--heroui-danger-400))',
+  cancelled: 'hsl(var(--heroui-default-400))',
 };
 
 /**

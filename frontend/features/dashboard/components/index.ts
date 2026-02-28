@@ -1,3 +1,9 @@
 // Dashboard feature components
-export { KpiCard, ChartTooltip, LegendDot } from './DashboardWidgets';
-export type { KpiCardProps, ChartTooltipProps, LegendDotProps } from './DashboardWidgets';
+export { default as DashboardGraph } from './DashboardGraph';
+export type { DashboardGraphProps } from './DashboardGraph';
+export { default as DashboardKpi } from './DashboardKpi';
+export type { DashboardKpiProps, KpiItem } from './DashboardKpi';
+export { default as DashboardCircleChart } from './DashboardCircleChart';
+export type { DashboardCircleChartProps } from './DashboardCircleChart';
+export { default as DashboardBar } from './DashboardBar';
+export type { DashboardBarProps } from './DashboardBar';

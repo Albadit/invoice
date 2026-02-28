@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-  renderTemplate,
-  customInvoiceHtml,
-  InvoiceHtml,
-} from '@/features/invoice/utils/templateEngine';
+import { renderInvoiceHtml } from '@/features/invoice/utils/renderInvoiceHtml';
 import { generatePdf } from '@/features/invoice/utils/generatePdf';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
@@ -57,16 +53,7 @@ export async function GET(request: Request) {
     const labels = loadTranslations(invoice.language || 'en');
     const styling = await getDbTemplateStyling(invoice.template_id, authToken);
 
-    let html: string;
-    if (styling) {
-      try {
-        html = customInvoiceHtml(renderTemplate(styling, invoice, labels), { preview: true });
-      } catch {
-        html = InvoiceHtml(invoice, labels);
-      }
-    } else {
-      html = InvoiceHtml(invoice, labels);
-    }
+    const html = renderInvoiceHtml(invoice, labels, { styling, preview: true });
 
     return new NextResponse(html, {
       status: 200,
@@ -116,13 +103,10 @@ export async function POST(request: Request) {
     const labels = loadTranslations(invoice.language || 'en');
     const { styling } = body;
 
-    let html: string;
-    if (styling) {
-      const rendered = renderTemplate(styling, invoice, labels);
-      html = customInvoiceHtml(rendered, { preview: !body.pdf });
-    } else {
-      html = InvoiceHtml(invoice, labels);
-    }
+    const html = renderInvoiceHtml(invoice, labels, {
+      styling,
+      preview: !body.pdf,
+    });
 
     // Return PDF binary when requested
     if (body.pdf) {

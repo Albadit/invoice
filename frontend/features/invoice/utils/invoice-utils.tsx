@@ -1,13 +1,8 @@
 import { Chip } from "@heroui/chip";
 import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
-import { STATUS_COLORS, getEffectiveStatus } from '@/lib/types';
-import type { InvoiceStat } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { invoicesApi } from '@/features/invoice/api';
-
-// Re-export shared types/constants for backwards compatibility
-export { STATUS_COLORS, getEffectiveStatus };
-export type { InvoiceStat };
+import { getSubtotal, getDiscountTotal, getTaxTotal } from '@/features/invoice/utils/calculations';
 
 /**
  * Get status badge component for invoice status
@@ -42,32 +37,17 @@ export function getStatusBadge(status: InvoiceStatus, statusLabels?: { pending: 
  * Calculate discount amount for an invoice
  */
 export function getDiscountAmount(invoice: InvoiceWithItems): number {
-  const subtotal = invoice.items.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
-  
-  if (invoice.discount_type === 'percent' && invoice.discount_amount) {
-    return (subtotal * invoice.discount_amount) / 100;
-  }
-  return invoice.discount_amount || 0;
+  const subtotal = getSubtotal(invoice.items);
+  return getDiscountTotal(subtotal, invoice.discount_type, invoice.discount_amount);
 }
 
 /**
  * Calculate tax amount for an invoice
  */
 export function getTaxAmount(invoice: InvoiceWithItems): number {
-  const subtotal = invoice.items.reduce(
-    (sum, item) => sum + item.quantity * item.unit_price,
-    0
-  );
+  const subtotal = getSubtotal(invoice.items);
   const discount = getDiscountAmount(invoice);
-  const afterDiscount = subtotal - discount;
-  
-  if (invoice.tax_type === 'percent' && invoice.tax_amount) {
-    return (afterDiscount * invoice.tax_amount) / 100;
-  }
-  return invoice.tax_amount || 0;
+  return getTaxTotal(subtotal - discount, invoice.tax_type, invoice.tax_amount);
 }
 
 /**
@@ -101,9 +81,9 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
   // Fetch the invoice to duplicate
   const invoice = await invoicesApi.getById(String(invoiceId));
   
-  // Create new invoice (without id, created_at, updated_at)
+  // Create new invoice (without id, created_at, updated_at, and joined relations)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, invoice_code: _invoice_code, search_tsv: _search_tsv, search_text: _search_text, ...invoiceData } = invoice;
+  const { id: _id, created_at: _created_at, updated_at: _updated_at, items, currency: _currency, company: _company, client: _client, invoice_code: _invoice_code, search_tsv: _search_tsv, search_text: _search_text, user_id: _user_id, ...invoiceData } = invoice;
   const newInvoiceData = {
     ...invoiceData,
     status: 'pending',

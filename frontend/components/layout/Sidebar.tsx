@@ -130,14 +130,10 @@ function SidebarItemComponent({
 function SidebarSectionComponent({
   section,
   isCollapsed,
-  pathname,
-  searchParams,
   activeKey,
 }: {
   section: SidebarSection;
   isCollapsed: boolean;
-  pathname: string;
-  searchParams: URLSearchParams;
   activeKey: string | null;
 }) {
   return (
@@ -289,8 +285,6 @@ export function Sidebar() {
                 key={section.key}
                 section={section}
                 isCollapsed={isCollapsed}
-                pathname={pathname}
-                searchParams={searchParams}
                 activeKey={activeKey}
               />
             ))}

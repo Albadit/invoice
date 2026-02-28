@@ -133,19 +133,6 @@ export const storageApi = {
   },
 
   /**
-   * Get public URL for a logo
-   */
-  async getLogoUrl(path: string): Promise<string> {
-    const supabase = createClient();
-    
-    const { data } = supabase.storage
-      .from('logos')
-      .getPublicUrl(path);
-    
-    return data.publicUrl;
-  },
-
-  /**
    * Delete a logo from storage
    */
   async deleteLogo(path: string): Promise<void> {

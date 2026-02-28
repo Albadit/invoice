@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generatePdf } from '@/features/invoice/utils/generatePdf';
-import {
-  renderTemplate,
-  customInvoiceHtml,
-  InvoiceHtml,
-} from '@/features/invoice/utils/templateEngine';
+import { renderInvoiceHtml } from '@/features/invoice/utils/renderInvoiceHtml';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
 import { loadTranslations } from '@/lib/i18n/translate.server';
@@ -46,30 +42,16 @@ export async function GET(
     const lang = invoice.language || 'en';
     const labels = loadTranslations(lang);
 
-    // Fetch template info
-    let template = null;
+    // Fetch template styling
+    let styling: string | null = null;
     if (invoice.template_id) {
       const templates = await templatesApi.getAll(authToken);
-      template = templates.find(t => t.id === invoice.template_id) || null;
+      const template = templates.find(t => t.id === invoice.template_id) || null;
+      styling = template?.styling ?? null;
     }
 
-    // Build HTML for the invoice using the template renderer
-    let html: string;
-    
-    if (template && template.styling) {
-      try {
-        // Render custom template using the mustache engine
-        const body = renderTemplate(template.styling, invoice, labels);
-        html = customInvoiceHtml(body);
-      } catch (error) {
-        // Fallback to default template if rendering fails
-        console.error('Error rendering custom template, using default:', error);
-        html = InvoiceHtml(invoice, labels);
-      }
-    } else {
-      // Use default template — {{ lang.* }} tags handle translations automatically
-      html = InvoiceHtml(invoice, labels);
-    }
+    // Build HTML using the shared renderer
+    const html = renderInvoiceHtml(invoice, labels, { styling });
     
     // Generate PDF on the server (no CSS needed - Tailwind is included in HTML)
     const pdfBuffer = await generatePdf({
@@ -132,23 +114,15 @@ export async function POST(
 
     const labels = loadTranslations(invoice.language || 'en');
 
-    let html: string;
-    if (styling) {
-      const body = renderTemplate(styling, invoice, labels);
-      html = customInvoiceHtml(body);
-    } else {
-      // No styling provided — fall back to DB template / default
-      let template = null;
-      if (invoice.template_id) {
-        const templates = await templatesApi.getAll(authToken);
-        template = templates.find(t => t.id === invoice.template_id) || null;
-      }
-      if (template?.styling) {
-        html = customInvoiceHtml(renderTemplate(template.styling, invoice, labels));
-      } else {
-        html = InvoiceHtml(invoice, labels);
-      }
+    // Resolve styling: use provided override, else fall back to DB template
+    let resolvedStyling = styling ?? null;
+    if (!resolvedStyling && invoice.template_id) {
+      const templates = await templatesApi.getAll(authToken);
+      const template = templates.find(t => t.id === invoice.template_id) || null;
+      resolvedStyling = template?.styling ?? null;
     }
+
+    const html = renderInvoiceHtml(invoice, labels, { styling: resolvedStyling });
 
     const pdfBuffer = await generatePdf({
       html,

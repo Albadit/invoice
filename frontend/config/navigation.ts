@@ -1,6 +1,5 @@
 import {
   FileText,
-  Building2,
   Palette,
   Coins,
   Plus,

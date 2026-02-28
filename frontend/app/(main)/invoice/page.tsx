@@ -29,11 +29,13 @@ import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
 import { DateRangePicker } from "@heroui/date-picker";
 import type { DateValue } from "@internationalized/date";
-import { useRouter } from 'next/navigation';
+import { CalendarDate } from "@internationalized/date";
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { siteConfig } from '@/config/site';
-import { getStatusBadge, getEffectiveStatus, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
+import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
+import { getEffectiveStatus } from '@/lib/types';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
@@ -63,6 +65,7 @@ const COLUMN_TO_DB_FIELD: Record<string, string> = {
 
 export default function InvoicesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useTranslation('invoice');
   const { t: tCommon } = useTranslation('common');
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
@@ -97,11 +100,28 @@ export default function InvoicesPage() {
     statusFilter: Set<string>;
     companyFilter: Set<string>;
     dateRange: { start: DateValue; end: DateValue } | null;
-  }>({
-    searchQuery: '',
-    statusFilter: new Set<string>(),
-    companyFilter: new Set<string>(),
-    dateRange: null
+  }>(() => {
+    const statusParam = searchParams.get('status');
+    const companyParam = searchParams.get('company');
+    const yearParam = searchParams.get('year');
+
+    let dateRange: { start: DateValue; end: DateValue } | null = null;
+    if (yearParam) {
+      const y = Number(yearParam);
+      if (!isNaN(y)) {
+        dateRange = {
+          start: new CalendarDate(y, 1, 1),
+          end: new CalendarDate(y, 12, 31),
+        };
+      }
+    }
+
+    return {
+      searchQuery: '',
+      statusFilter: statusParam ? new Set(statusParam.split(',')) : new Set<string>(),
+      companyFilter: companyParam ? new Set([companyParam]) : new Set<string>(),
+      dateRange,
+    };
   });
   
   // Debounced search value

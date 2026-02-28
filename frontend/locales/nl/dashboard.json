@@ -12,5 +12,17 @@
   "monthlyTrend": "Maandelijkse Trend (12 maanden)",
   "noData": "Geen gegevens beschikbaar",
   "viewAll": "Bekijk Alles",
-  "outstanding": "Uitstaand"
+  "outstanding": "Uitstaand",
+  "period1Year": "1 Jaar",
+  "period6Months": "6 Maanden",
+  "period3Months": "3 Maanden",
+  "period30Days": "30 Dagen",
+  "period7Days": "7 Dagen",
+  "period14Days": "14 Dagen",
+  "revenueByDay": "Omzet per Dag",
+  "invoicesByDay": "Facturen per Dag",
+  "averageByDay": "Gemiddelde per Dag",
+  "viewDetails": "Details Bekijken",
+  "exportData": "Gegevens Exporteren",
+  "setAlert": "Waarschuwing Instellen"
 }

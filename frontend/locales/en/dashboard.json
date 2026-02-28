@@ -12,5 +12,17 @@
   "monthlyTrend": "Monthly Trend (12 months)",
   "noData": "No data available",
   "viewAll": "View All",
-  "outstanding": "Outstanding"
+  "outstanding": "Outstanding",
+  "period1Year": "1 Year",
+  "period6Months": "6 Months",
+  "period3Months": "3 Months",
+  "period30Days": "30 Days",
+  "period7Days": "7 Days",
+  "period14Days": "14 Days",
+  "revenueByDay": "Revenue by Day",
+  "invoicesByDay": "Invoices by Day",
+  "averageByDay": "Average by Day",
+  "viewDetails": "View Details",
+  "exportData": "Export Data",
+  "setAlert": "Set Alert"
 }

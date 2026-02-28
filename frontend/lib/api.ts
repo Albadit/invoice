@@ -8,9 +8,7 @@
 
 import { createClient } from '@/lib/supabase/client';
 
-const baseUrl = typeof window === 'undefined'
-  ? (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000')
-  : (process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000');
+const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:8000';
 
 export const API_URL = `${baseUrl}/rest/v1`;
 
