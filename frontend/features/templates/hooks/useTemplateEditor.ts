@@ -261,7 +261,7 @@ export function useTemplateEditor() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `template-preview-${previewInvoice.invoice_code}.pdf`;
+      a.download = `preview-${previewInvoice.invoice_code}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {

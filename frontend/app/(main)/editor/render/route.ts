@@ -4,6 +4,7 @@ import {
   customInvoiceHtml,
   InvoiceHtml,
 } from '@/features/invoice/utils/templateEngine';
+import { generatePdf } from '@/features/invoice/utils/generatePdf';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
 import { loadTranslations } from '@/lib/i18n/translate.server';
@@ -95,6 +96,7 @@ export async function POST(request: Request) {
       id?: string;
       invoice?: InvoiceWithItems;
       styling?: string;
+      pdf?: boolean;
     };
 
     const authToken = await getAuthToken();
@@ -117,9 +119,21 @@ export async function POST(request: Request) {
     let html: string;
     if (styling) {
       const rendered = renderTemplate(styling, invoice, labels);
-      html = customInvoiceHtml(rendered, { preview: true });
+      html = customInvoiceHtml(rendered, { preview: !body.pdf });
     } else {
       html = InvoiceHtml(invoice, labels);
+    }
+
+    // Return PDF binary when requested
+    if (body.pdf) {
+      const pdfBuffer = await generatePdf({ html });
+      return new NextResponse(new Uint8Array(pdfBuffer), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="template-preview.pdf"`,
+        },
+      });
     }
 
     return new NextResponse(html, {
