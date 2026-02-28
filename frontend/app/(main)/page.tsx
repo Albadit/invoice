@@ -34,6 +34,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCompany, setSelectedCompany] = useState<string>('all');
   const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [chartsReady, setChartsReady] = useState(false);
+
+  useEffect(() => setChartsReady(true), []);
 
   useEffect(() => {
     async function load() {
@@ -172,7 +175,7 @@ export default function DashboardPage() {
               {/* Area Chart */}
               {stats.length === 0 ? (
                 <div className="flex items-center justify-center h-56 text-default-400">{t('noData')}</div>
-              ) : (
+              ) : chartsReady ? (
                 <ResponsiveContainer width="100%" height={260}>
                   <AreaChart data={monthlyData}>
                     <defs>
@@ -194,6 +197,8 @@ export default function DashboardPage() {
                     <Area type="monotone" dataKey="overdue" name={tInvoice('status.overdue')} stroke={STATUS_COLORS.overdue} fill="transparent" strokeWidth={2} strokeDasharray="4 4" />
                   </AreaChart>
                 </ResponsiveContainer>
+              ) : (
+                <div style={{ height: 260 }} />
               )}
             </CardBody>
           </Card>
@@ -213,14 +218,12 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-8">
                       {/* Donut */}
                       <div className="relative shrink-0" style={{ width: 200, height: 200 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value" strokeWidth={0}>
-                              {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                            </Pie>
-                            <RechartsTooltip content={<ChartTooltip fmtValue={(v) => String(v)} />} />
-                          </PieChart>
-                        </ResponsiveContainer>
+                        <PieChart width={200} height={200}>
+                          <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={3} dataKey="value" strokeWidth={0}>
+                            {pieData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                          </Pie>
+                          <RechartsTooltip content={<ChartTooltip fmtValue={(v) => String(v)} />} />
+                        </PieChart>
                         {/* Center label */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                           <span className="text-2xl font-bold">{computed.total}</span>
@@ -280,7 +283,7 @@ export default function DashboardPage() {
               <CardBody className="px-2 pb-4">
                 {stats.length === 0 ? (
                   <div className="flex items-center justify-center h-56 text-default-400">{t('noData')}</div>
-                ) : (
+                ) : chartsReady ? (
                   <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={monthlyData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="currentColor" className="text-default-200 dark:text-default-100" />
@@ -292,6 +295,8 @@ export default function DashboardPage() {
                       <Bar dataKey="overdue" name={tInvoice('status.overdue')} stackId="a" fill={STATUS_COLORS.overdue} radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
+                ) : (
+                  <div style={{ height: 220 }} />
                 )}
                 {/* Bottom legend */}
                 <div className="flex items-center justify-center gap-4 mt-2">

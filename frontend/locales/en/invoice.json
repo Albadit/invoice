@@ -83,6 +83,10 @@
   "search": {
     "placeholder": "Search invoices..."
   },
+  "filter": {
+    "company": "Company",
+    "allCompanies": "All Companies"
+  },
   "preview": {
     "title": "Invoice Preview",
     "billTo": "Bill To:",

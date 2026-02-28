@@ -13,6 +13,8 @@
 
 import type { InvoiceWithItems, Company, Currency } from '@/lib/types';
 import { formatWithCurrency } from '@/lib/utils';
+import { format } from 'date-fns';
+import { siteConfig } from '@/config/site';
 
 /**
  * Context object passed to template rendering
@@ -582,12 +584,7 @@ function createSafeContext(context: TemplateContext) {
   const formatDate = (date: string | null) => {
     if (!date) return '';
     try {
-      const d = new Date(date);
-      return d.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
+      return format(new Date(date), siteConfig.invoiceDateFormat);
     } catch {
       return date;
     }

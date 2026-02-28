@@ -53,7 +53,19 @@
     "upload": "Прикачи Лого",
     "url": "URL на Лого",
     "urlDescription": "URL на лого",
-    "or": "ИЛИ"
+    "or": "ИЛИ",
+    "preview": "Преглед на лого",
+    "remove": "Отстрани",
+    "clickToUpload": "Кликнете за прикачување",
+    "orDragDrop": "или повлечете и пуштете",
+    "fileTypes": "PNG, JPG, SVG до 5MB",
+    "pasteHint": "Можете исто така да залепите слика (Ctrl+V)",
+    "failedToLoad": "Неуспешно вчитување на сликата од URL",
+    "uploadNewOrChange": "Прикачете нова слика или внесете друг URL",
+    "clearUrl": "Исчисти URL",
+    "uploadNew": "Прикачи нова слика",
+    "invalidType": "Ве молиме прикачете датотека со слика",
+    "tooLarge": "Големината на датотеката мора да биде помала од 5MB"
   },
   "invoiceSettings": {
     "title": "Поставки за Фактура",

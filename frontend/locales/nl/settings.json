@@ -53,7 +53,19 @@
     "upload": "Logo uploaden",
     "url": "Logo URL",
     "urlDescription": "Logo-URL",
-    "or": "OF"
+    "or": "OF",
+    "preview": "Logo voorbeeld",
+    "remove": "Verwijderen",
+    "clickToUpload": "Klik om te uploaden",
+    "orDragDrop": "of sleep en laat los",
+    "fileTypes": "PNG, JPG, SVG tot 5MB",
+    "pasteHint": "U kunt ook een afbeelding plakken (Ctrl+V)",
+    "failedToLoad": "Kan afbeelding niet laden van URL",
+    "uploadNewOrChange": "Upload een nieuwe afbeelding of voer een andere URL in",
+    "clearUrl": "URL wissen",
+    "uploadNew": "Nieuwe afbeelding uploaden",
+    "invalidType": "Upload alstublieft een afbeeldingsbestand",
+    "tooLarge": "Bestandsgrootte moet minder dan 5MB zijn"
   },
   "invoiceSettings": {
     "title": "Factuurinstellingen",

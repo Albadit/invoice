@@ -44,7 +44,7 @@ export const sidebarSections: NavSection[] = [
         href: '/',
       },
       {
-        key: 'home',
+        key: 'invoice',
         labelKey: 'navigation.invoices',
         icon: FileText,
         href: '/invoice',

@@ -179,6 +179,7 @@ export const invoicesApi = {
     status?: 'active' | 'cancelled';
     search?: string;
     statusFilter?: string[];
+    companyIds?: string[];
     startDate?: string;
     endDate?: string;
     orderBy?: string;
@@ -190,6 +191,7 @@ export const invoicesApi = {
       status = 'active', 
       search, 
       statusFilter, 
+      companyIds,
       startDate, 
       endDate,
       orderBy,
@@ -216,6 +218,15 @@ export const invoicesApi = {
         url.searchParams.append('status', `eq.${statusFilter[0]}`);
       } else {
         url.searchParams.append('status', `in.(${statusFilter.join(',')})`);
+      }
+    }
+    
+    // Company filter
+    if (companyIds && companyIds.length > 0) {
+      if (companyIds.length === 1) {
+        url.searchParams.append('company_id', `eq.${companyIds[0]}`);
+      } else {
+        url.searchParams.append('company_id', `in.(${companyIds.join(',')})`);
       }
     }
     

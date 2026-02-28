@@ -637,7 +637,7 @@ export default function InvoiceEditPage() {
                         aria-label={t('fields.item')}
                         value={item.name || ''}
                         onChange={(e) => updateItem(index, 'name', e.target.value)}
-                        placeholder="Item description"
+                        placeholder={t('fields.description')}
                         startContent={<span className="text-xs text-default-400 sm:hidden">{t('fields.item')}</span>}
                       />
                     </div>

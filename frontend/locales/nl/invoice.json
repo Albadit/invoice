@@ -83,6 +83,10 @@
   "search": {
     "placeholder": "Zoek facturen..."
   },
+  "filter": {
+    "company": "Bedrijf",
+    "allCompanies": "Alle Bedrijven"
+  },
   "preview": {
     "title": "Factuurvoorbeeld",
     "billTo": "Factureren Aan:",

@@ -1,19 +1,7 @@
--- =============================================
--- Seed Data for Invoice Management System
--- =============================================
+-- Migration: Convert Classic template from JSX to mustache {{ }} syntax
+-- The templateEngine now uses {{ company.name }}, {{#if}}, {{#each}} etc.
 
--- Insert system currencies (is_system = true, no user_id)
-INSERT INTO currencies (code, name, symbol, symbol_position, symbol_space, is_system) VALUES
-    ('USD', 'US Dollar', '$', 'left', false, true),
-    ('EUR', 'Euro', '€', 'right', true, true),
-    ('GBP', 'British Pound', '£', 'left', false, true),
-    ('JPY', 'Japanese Yen', '¥', 'left', false, true),
-    ('CHF', 'Swiss Franc', 'CHF', 'left', true, true)
-ON CONFLICT (code) DO UPDATE SET is_system = true;
-
--- Insert system templates (is_system = true, no user_id)
-INSERT INTO templates (name, styling, is_system)
-SELECT 'Classic', $TEMPLATE$<div class="w-full h-full bg-white flex flex-col gap-8">
+UPDATE templates SET styling = $TPL$<div class="w-full h-full bg-white flex flex-col gap-8">
   <div class="flex flex-col gap-4">
     <div class="flex justify-between">
       {{#if company.logo_url}}
@@ -117,8 +105,5 @@ SELECT 'Classic', $TEMPLATE$<div class="w-full h-full bg-white flex flex-col gap
       </div>
     </div>
   </div>
-</div>$TEMPLATE$, true
-WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Classic');
-
--- Ensure Classic template is flagged as system
-UPDATE templates SET is_system = true WHERE name = 'Classic' AND user_id IS NULL;
+</div>$TPL$
+WHERE name = 'Classic';

@@ -83,6 +83,10 @@
   "search": {
     "placeholder": "Kërko faturat..."
   },
+  "filter": {
+    "company": "Kompania",
+    "allCompanies": "Të Gjitha Kompanitë"
+  },
   "preview": {
     "title": "Pamja e Faturës",
     "billTo": "Faturuar:",

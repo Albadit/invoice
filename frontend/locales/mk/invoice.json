@@ -83,6 +83,10 @@
   "search": {
     "placeholder": "Пребарај фактури..."
   },
+  "filter": {
+    "company": "Компанија",
+    "allCompanies": "Сите Компании"
+  },
   "preview": {
     "title": "Преглед на Фактура",
     "billTo": "Фактурирај На:",

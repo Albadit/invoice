@@ -53,7 +53,19 @@
     "upload": "Ngarko Logo",
     "url": "URL e Logos",
     "urlDescription": "URL e logos",
-    "or": "OSE"
+    "or": "OSE",
+    "preview": "Parashikimi i logos",
+    "remove": "Hiq",
+    "clickToUpload": "Kliko për të ngarkuar",
+    "orDragDrop": "ose tërhiq dhe lësho",
+    "fileTypes": "PNG, JPG, SVG deri në 5MB",
+    "pasteHint": "Mund të ngjisni gjithashtu një imazh (Ctrl+V)",
+    "failedToLoad": "Dështoi ngarkimi i imazhit nga URL",
+    "uploadNewOrChange": "Ngarkoni një imazh të ri ose vendosni një URL tjetër",
+    "clearUrl": "Pastro URL",
+    "uploadNew": "Ngarko imazh të ri",
+    "invalidType": "Ju lutem ngarkoni një skedar imazhi",
+    "tooLarge": "Madhësia e skedarit duhet të jetë më pak se 5MB"
   },
   "invoiceSettings": {
     "title": "Cilësimet e Faturës",

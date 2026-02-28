@@ -53,7 +53,19 @@
     "upload": "Upload Logo",
     "url": "Logo URL",
     "urlDescription": "Logo URL",
-    "or": "OR"
+    "or": "OR",
+    "preview": "Logo preview",
+    "remove": "Remove",
+    "clickToUpload": "Click to upload",
+    "orDragDrop": "or drag and drop",
+    "fileTypes": "PNG, JPG, SVG up to 5MB",
+    "pasteHint": "You can also paste an image (Ctrl+V)",
+    "failedToLoad": "Failed to load image from URL",
+    "uploadNewOrChange": "Upload a new image or enter a different URL",
+    "clearUrl": "Clear URL",
+    "uploadNew": "Upload New Image",
+    "invalidType": "Please upload an image file",
+    "tooLarge": "File size must be less than 5MB"
   },
   "invoiceSettings": {
     "title": "Invoice Settings",

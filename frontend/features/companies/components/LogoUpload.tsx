@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from "@heroui/button";
+import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface LogoUploadProps {
   logoUrl: string;
@@ -14,6 +15,7 @@ interface LogoUploadProps {
 }
 
 export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imageError, onImageError }: LogoUploadProps) {
+  const { t } = useTranslation('settings');
   const [isDragging, setIsDragging] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,13 +53,13 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
   const handleFileUpload = async (file: File) => {
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
+      alert(t('logo.invalidType'));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB');
+      alert(t('logo.tooLarge'));
       return;
     }
 
@@ -134,11 +136,12 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
           <div className="flex items-center justify-center gap-4" onClick={(e) => e.stopPropagation()}>
             <Image
               src={logoUrl}
-              alt="Logo preview"
+              alt={t('logo.preview')}
               width={160}
               height={80}
               unoptimized
               className="h-20 w-auto object-contain max-w-xs"
+              style={{ width: 'auto', height: 'auto' }}
               onLoad={() => onImageError(false)}
               onError={() => {
                 console.error('Failed to load image:', logoUrl);
@@ -152,7 +155,7 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
               startContent={<X className="size-4" />}
               onClick={handleClearLogo}
             >
-              Remove
+              {t('logo.remove')}
             </Button>
           </div>
         ) : (
@@ -171,23 +174,23 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
             
             {imageError && (
               <div className="flex flex-col gap-1 p-3 bg-danger/10 border border-danger/20 rounded-lg">
-                <p className="text-sm text-danger">⚠️ Failed to load image from URL</p>
-                <p className="text-xs text-danger/80">Upload a new image or enter a different URL</p>
+                <p className="text-sm text-danger">⚠️ {t('logo.failedToLoad')}</p>
+                <p className="text-xs text-danger/80">{t('logo.uploadNewOrChange')}</p>
               </div>
             )}
 
             <div className="flex flex-col gap-1">
               <p className="text-sm text-foreground">
                 <span className="text-primary font-semibold">
-                  Click to upload
+                  {t('logo.clickToUpload')}
                 </span>
-                {' '}or drag and drop
+                {' '}{t('logo.orDragDrop')}
               </p>
               <p className="text-xs text-default-500">
-                PNG, JPG, SVG up to 5MB
+                {t('logo.fileTypes')}
               </p>
               <p className="text-xs text-default-400">
-                You can also paste an image (Ctrl+V)
+                {t('logo.pasteHint')}
               </p>
             </div>
           </div>
@@ -203,7 +206,7 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
             startContent={<X className="size-4" />}
             onClick={handleClearLogo}
           >
-            Clear URL
+            {t('logo.clearUrl')}
           </Button>
           <Button
             size="sm"
@@ -212,7 +215,7 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
             startContent={<Upload className="size-4" />}
             onClick={() => fileInputRef.current?.click()}
           >
-            Upload New Image
+            {t('logo.uploadNew')}
           </Button>
         </div>
       )}

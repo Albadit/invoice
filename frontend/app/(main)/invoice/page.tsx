@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi } from '@/features/currencies/api';
-import type { InvoiceWithItems, Currency } from '@/lib/types';
+import { companiesApi } from '@/features/companies/api';
+import type { InvoiceWithItems, Currency, Company } from '@/lib/types';
 import { formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -32,6 +33,7 @@ import type { DateValue } from "@internationalized/date";
 import { useRouter } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { format } from 'date-fns';
+import { siteConfig } from '@/config/site';
 import { getStatusBadge, getEffectiveStatus, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal } from '@/components/ui';
@@ -66,6 +68,7 @@ export default function InvoicesPage() {
   const { t: tCommon } = useTranslation('common');
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,20 +98,24 @@ export default function InvoicesPage() {
   const [activeFilters, setActiveFilters] = useState<{
     searchQuery: string;
     statusFilter: Set<string>;
+    companyFilter: Set<string>;
     dateRange: { start: DateValue; end: DateValue } | null;
   }>({
     searchQuery: '',
     statusFilter: new Set<string>(),
+    companyFilter: new Set<string>(),
     dateRange: null
   });
   
   const [deletedFilters, setDeletedFilters] = useState<{
     searchQuery: string;
     statusFilter: Set<string>;
+    companyFilter: Set<string>;
     dateRange: { start: DateValue; end: DateValue } | null;
   }>({
     searchQuery: '',
     statusFilter: new Set<string>(),
+    companyFilter: new Set<string>(),
     dateRange: null
   });
   
@@ -125,9 +132,9 @@ export default function InvoicesPage() {
   // Keep filtersRef in sync with latest state
   filtersRef.current = { currentFilters, debouncedSearch, sortDescriptors, activeTab, rowsPerPage };
 
-  // Load currencies only once on mount
+  // Load currencies and companies only once on mount
   useEffect(() => {
-    loadCurrencies();
+    loadLookups();
   }, []);
 
   // Debounce search input
@@ -146,6 +153,7 @@ export default function InvoicesPage() {
       rowsPerPage,
       debouncedSearch,
       statusFilter: Array.from(currentFilters.statusFilter).sort(),
+      companyFilter: Array.from(currentFilters.companyFilter).sort(),
       dateRange: currentFilters.dateRange,
       sortDescriptors: sortDescriptors.map(s => `${s.column}:${s.direction}`)
     });
@@ -157,14 +165,18 @@ export default function InvoicesPage() {
       setPageInput('1');
       loadInvoices(1);
     }
-  }, [activeTab, rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.dateRange, sortDescriptors]);
+  }, [activeTab, rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.dateRange, sortDescriptors]);
 
-  async function loadCurrencies() {
+  async function loadLookups() {
     try {
-      const data = await currenciesApi.getAll();
-      setCurrencies(data);
+      const [currencyData, companyData] = await Promise.all([
+        currenciesApi.getAll(),
+        companiesApi.getAll()
+      ]);
+      setCurrencies(currencyData);
+      setCompanies(companyData);
     } catch (error) {
-      console.error('Failed to load currencies:', error);
+      console.error('Failed to load lookups:', error);
     }
   }
 
@@ -238,6 +250,7 @@ export default function InvoicesPage() {
         status: tab === 'deleted' ? 'cancelled' : 'active',
         search: search || undefined,
         statusFilter: statusArr.length > 0 ? statusArr : undefined,
+        companyIds: filters?.companyFilter.size ? Array.from(filters.companyFilter) : undefined,
         startDate,
         endDate,
         orderBy: orderParts.join(','),
@@ -407,7 +420,7 @@ export default function InvoicesPage() {
       <Card>
         <CardBody className='flex flex-col lg:grid grid-cols-2 gap-4'>
           <Input
-            className='col-span-2 row-span-1'
+            className='col-span-1 row-span-1'
             isClearable
             startContent={<Search className="size-4" />}
             placeholder={t('search.placeholder')}
@@ -415,6 +428,39 @@ export default function InvoicesPage() {
             onChange={(e) => setCurrentFilters({ ...currentFilters, searchQuery: e.target.value })}
             onClear={() => setCurrentFilters({ ...currentFilters, searchQuery: '' })}
           />
+          <Select
+            aria-label={t('filter.company')}
+            selectionMode="multiple"
+            classNames={{
+              base: 'col-span-1 row-span-1',
+            }}
+            placeholder={t('filter.allCompanies')}
+            selectedKeys={currentFilters.companyFilter}
+            onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, companyFilter: new Set(Array.from(keys) as string[]) })}
+            endContent={currentFilters.companyFilter.size > 0 ? (
+              <span
+                role="button"
+                tabIndex={0}
+                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
+                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); } }}
+                aria-label="Clear company filter"
+              >
+                <X className="size-3.5 text-default-400" />
+              </span>
+            ) : null}
+            renderValue={(items) => (
+              <div className="flex gap-1 overflow-hidden">
+                {items.map((item) => (
+                  <Chip key={item.key} variant="flat" size="sm">{item.textValue}</Chip>
+                ))}
+              </div>
+            )}
+          >
+            {companies.map((company) => (
+              <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
+            ))}
+          </Select>
           <Select
             aria-label={t('table.status')}
             selectionMode="multiple"
@@ -516,11 +562,11 @@ export default function InvoicesPage() {
               <TableCell className="font-medium">{invoice.invoice_code}</TableCell>
               <TableCell>{invoice.customer_name}</TableCell>
               <TableCell>
-                {format(new Date(invoice.issue_date || invoice.created_at || ''), 'MMM dd, yyyy')}
+                {format(new Date(invoice.issue_date || invoice.created_at || ''), siteConfig.dateFormat)}
               </TableCell>
               <TableCell>
                 {invoice.due_date
-                  ? format(new Date(invoice.due_date), 'MMM dd, yyyy')
+                  ? format(new Date(invoice.due_date), siteConfig.dateFormat)
                   : '-'}
               </TableCell>
               <TableCell>{getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {

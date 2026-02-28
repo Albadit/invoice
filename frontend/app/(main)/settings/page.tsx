@@ -104,9 +104,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     loadSettings();
-    loadCurrencies();
-    loadTemplates();
-    loadCompanies();
     loadClients();
   }, []);
 
@@ -715,7 +712,17 @@ export default function SettingsPage() {
 
   async function loadSettings() {
     try {
-      const companiesData = await companiesApi.getAll();
+      const [companiesData, templatesData, currenciesData] = await Promise.all([
+        companiesApi.getAll(),
+        templatesApi.getAll(),
+        currenciesApi.getAll(),
+      ]);
+
+      // Populate collections first so selectedKeys are always valid
+      setCompanies(companiesData);
+      setTemplates(templatesData);
+      setCurrencies(currenciesData);
+
       if (companiesData.length > 0) {
         const firstCompany = companiesData[0];
         setCompanyId(firstCompany.id);

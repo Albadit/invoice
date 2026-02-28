@@ -35,5 +35,9 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-- add fields info copmpany
-- login sytem
+- improve setting page for users
+- change the test page to template editor
+- template editor pick base to the seleted invoice
+- template editor can save only custom tempalte not system
+- fix sidebare logout button give better postition
+- show in editor with themplate you editing

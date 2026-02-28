@@ -117,11 +117,13 @@ function SidebarSectionComponent({
   isCollapsed,
   pathname,
   searchParams,
+  activeKey,
 }: {
   section: SidebarSection;
   isCollapsed: boolean;
   pathname: string;
   searchParams: URLSearchParams;
+  activeKey: string | null;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -130,31 +132,14 @@ function SidebarSectionComponent({
           {section.title}
         </p>
       )}
-      {section.items.map((item) => {
-        let isActive: boolean;
-        if (item.href === '/') {
-          isActive = pathname === '/';
-        } else if (item.href.includes('?')) {
-          const [basePath, query] = item.href.split('?');
-          const itemParams = new URLSearchParams(query);
-          isActive =
-            pathname.startsWith(basePath) &&
-            Array.from(itemParams.entries()).every(
-              ([key, value]) => searchParams.get(key) === value
-            );
-        } else {
-          isActive = pathname.startsWith(item.href);
-        }
-
-        return (
-          <SidebarItemComponent
-            key={item.key}
-            item={item}
-            isActive={isActive}
-            isCollapsed={isCollapsed}
-          />
-        );
-      })}
+      {section.items.map((item) => (
+        <SidebarItemComponent
+          key={item.key}
+          item={item}
+          isActive={item.key === activeKey}
+          isCollapsed={isCollapsed}
+        />
+      ))}
     </div>
   );
 }
@@ -166,6 +151,39 @@ export function Sidebar() {
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const sidebarSections = useSidebarSections();
   const { t } = useTranslation('auth');
+
+  // Determine which single nav item is active (longest prefix match wins)
+  const activeKey = (() => {
+    let bestKey: string | null = null;
+    let bestLength = -1;
+
+    for (const section of sidebarSections) {
+      for (const item of section.items) {
+        let matches = false;
+
+        if (item.href === '/') {
+          matches = pathname === '/';
+        } else if (item.href.includes('?')) {
+          const [basePath, query] = item.href.split('?');
+          const itemParams = new URLSearchParams(query);
+          matches =
+            pathname.startsWith(basePath) &&
+            Array.from(itemParams.entries()).every(
+              ([key, value]) => searchParams.get(key) === value
+            );
+        } else {
+          matches = pathname === item.href || pathname.startsWith(item.href + '/');
+        }
+
+        if (matches && item.href.length > bestLength) {
+          bestKey = item.key;
+          bestLength = item.href.length;
+        }
+      }
+    }
+
+    return bestKey;
+  })();
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
 
@@ -258,6 +276,7 @@ export function Sidebar() {
                 isCollapsed={isCollapsed}
                 pathname={pathname}
                 searchParams={searchParams}
+                activeKey={activeKey}
               />
             ))}
           </nav>
