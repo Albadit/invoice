@@ -35,8 +35,4 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-- improve setting page for users
-- change the inovoice test page to template editor
-- template editor can select template
-- template editor can save only custom tempalte not system
-- make a pop up with the logout button remove from current place
+- add currencies rate 

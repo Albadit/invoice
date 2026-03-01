@@ -1,4 +1,4 @@
-import type { Database } from '@/lib/database.types';
+import type { Database, StatusType, AmountType as AmountTypes } from '@/lib/database.types';
 
 // Base types from Supabase
 export type Invoice = Database['public']['Tables']['invoices']['Row'];
@@ -17,10 +17,10 @@ export interface InvoiceWithItems extends Invoice {
 }
 
 // Status type
-export type InvoiceStatus = 'pending' | 'paid' | 'overdue' | 'cancelled';
+export type InvoiceStatus = StatusType;
 
 // Amount type for discount, tax, shipping
-export type AmountType = 'percent' | 'fixed';
+export type AmountType = AmountTypes;
 
 // ── Shared pagination types ────────────────────────────────────────
 
