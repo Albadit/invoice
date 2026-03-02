@@ -1,5 +1,9 @@
 'use client';
 
+import { useCallback, useState } from 'react';
+import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
+import { useTheme } from 'next-themes';
+import { registerTemplateProviders } from '../utils/monacoSetup';
 import type { TemplateEditorState } from '../hooks/useTemplateEditor';
 
 interface TemplateEditorPanelProps {
@@ -13,11 +17,27 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
     wordWrap,
     showPreview,
     editorWidth,
-    textareaRef,
-    gutterRef,
     handleStylingChange,
-    handleEditorScroll,
   } = editor;
+
+  const { theme } = useTheme();
+  const [cursorLine, setCursorLine] = useState(1);
+  const [cursorColumn, setCursorColumn] = useState(1);
+
+  const handleBeforeMount: BeforeMount = useCallback((monaco) => {
+    registerTemplateProviders(monaco);
+  }, []);
+
+  const handleEditorMount: OnMount = useCallback((editorInstance) => {
+    // Track cursor position
+    editorInstance.onDidChangeCursorPosition((e) => {
+      setCursorLine(e.position.lineNumber);
+      setCursorColumn(e.position.column);
+    });
+
+    // Focus the editor on mount
+    editorInstance.focus();
+  }, []);
 
   return (
     <div
@@ -34,40 +54,50 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
         )}
       </div>
 
-      {/* Line numbers + textarea */}
-      <div className="group/editor flex flex-1 min-h-0 overflow-hidden">
-        {/* Line numbers gutter */}
-        <div
-          ref={gutterRef}
-          className="bg-content2 text-default-400 text-[11px] font-mono leading-4.5 pt-3 pl-2 pr-2 select-none overflow-hidden text-right shrink-0 pointer-events-none"
-        >
-          {styling.split('\n').map((_, i) => (
-            <div key={i}>{i + 1}</div>
-          ))}
-        </div>
-
-        {/* Textarea */}
-        <textarea
-          ref={textareaRef}
-          className="flex-1 font-mono text-[13px] leading-4.5 p-3 bg-content2 text-foreground resize-none focus:outline-none caret-primary selection:bg-default-200 editor-scrollbar"
-          style={{
-            whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
-            overflowWrap: wordWrap ? 'break-word' : 'normal',
-            tabSize: 2,
-            border: 'none',
-          }}
+      {/* Monaco Editor */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <Editor
+          height="100%"
+          language="html"
+          theme={theme === 'dark' ? 'vs-dark' : 'light'}
           value={styling}
-          onChange={(e) => handleStylingChange(e.target.value)}
-          onScroll={handleEditorScroll}
-          spellCheck={false}
-          wrap={wordWrap ? 'soft' : 'off'}
+          onChange={(value) => handleStylingChange(value ?? '')}
+          beforeMount={handleBeforeMount}
+          onMount={handleEditorMount}
+          options={{
+            fontSize: 13,
+            fontFamily: "'Fira Code', 'Cascadia Code', 'JetBrains Mono', 'Menlo', monospace",
+            lineHeight: 18,
+            tabSize: 2,
+            wordWrap: wordWrap ? 'on' : 'off',
+            minimap: { enabled: true },
+            scrollBeyondLastLine: false,
+            smoothScrolling: true,
+            cursorBlinking: 'smooth',
+            cursorSmoothCaretAnimation: 'on',
+            renderLineHighlight: 'all',
+            bracketPairColorization: { enabled: true },
+            autoClosingBrackets: 'always',
+            autoClosingQuotes: 'always',
+            formatOnPaste: true,
+            suggest: { showWords: true },
+            padding: { top: 8, bottom: 8 },
+          }}
+          loading={
+            <div className="flex items-center justify-center h-full bg-content2">
+              <span className="text-sm text-default-400">Loading editor...</span>
+            </div>
+          }
         />
       </div>
 
       {/* Editor footer / status bar */}
       <div className="flex items-center gap-4 px-3 py-1 bg-content1 border-t border-divider text-[11px] text-default-400">
+        <span>Ln {cursorLine}, Col {cursorColumn}</span>
         <span>Lines: {styling.split('\n').length}</span>
         <span>Characters: {styling.length}</span>
+        <div className="flex-1" />
+        <span>HTML</span>
       </div>
     </div>
   );

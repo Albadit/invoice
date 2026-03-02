@@ -4,6 +4,7 @@
  */
 
 import { createClient } from '@/lib/supabase/client';
+import { ROUTES } from '@/config/routes';
 
 export interface LoginCredentials {
   email: string;
@@ -108,7 +109,7 @@ export const authApi = {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         await supabase.auth.signOut();
-        window.location.href = '/auth/login';
+        window.location.href = ROUTES.logout;
       }
     }
   },

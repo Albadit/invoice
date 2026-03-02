@@ -3,6 +3,7 @@ import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { invoicesApi } from '@/features/invoice/api';
 import { getSubtotal, getDiscountTotal, getTaxTotal } from '@/features/invoice/utils/calculations';
+import { INVOICE_ROUTES } from '@/config/routes';
 
 /**
  * Get status badge component for invoice status
@@ -99,5 +100,5 @@ export async function handleDuplicate(invoiceId: string | number, router: AppRou
     }))
   );
   
-  router.push(`/invoice/${newInvoice.id}/edit`);
+  router.push(INVOICE_ROUTES.edit(newInvoice.id));
 }

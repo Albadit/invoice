@@ -19,6 +19,7 @@ import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
+import { ROUTES } from '@/config/routes';
 import { createClient } from '@/lib/supabase/client';
 
 // Page-title context – lets StickyHeader push its title up to the mobile header
@@ -172,8 +173,8 @@ export function Sidebar() {
       for (const item of section.items) {
         let matches = false;
 
-        if (item.href === '/') {
-          matches = pathname === '/';
+        if (item.href === ROUTES.home) {
+          matches = pathname === ROUTES.home;
         } else if (item.href.includes('?')) {
           const [basePath, query] = item.href.split('?');
           const itemParams = new URLSearchParams(query);
@@ -350,7 +351,7 @@ export function Sidebar() {
                   onPress={async () => {
                     const supabase = createClient();
                     await supabase.auth.signOut();
-                    window.location.href = '/auth/login';
+                    window.location.href = ROUTES.logout;
                   }}
                 >
                   {t('logout')}

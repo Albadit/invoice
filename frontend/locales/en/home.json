@@ -1,0 +1,57 @@
+{
+  "signIn": "Sign In",
+  "badge": "Fast, modern invoice management",
+  "hero": {
+    "title": "Manage Your Invoices with Ease",
+    "subtitle": "Create, track, and manage professional invoices in seconds. Built for freelancers and small businesses.",
+    "cta": "Get Started",
+    "secondary": "Go to Dashboard"
+  },
+  "features": {
+    "heading": "Everything You Need",
+    "subheading": "Powerful tools to streamline your invoicing workflow from start to finish.",
+    "invoicing": {
+      "title": "Smart Invoicing",
+      "description": "Create and send professional invoices with automatic calculations, tax support, and PDF export."
+    },
+    "dashboard": {
+      "title": "Real-time Dashboard",
+      "description": "Track revenue, outstanding payments, and invoice status at a glance with interactive charts."
+    },
+    "templates": {
+      "title": "Custom Templates",
+      "description": "Design your own invoice templates with a live editor and apply them to any invoice."
+    },
+    "multilingual": {
+      "title": "Multi-language",
+      "description": "Full support for English, Albanian, Macedonian, and Dutch with easy locale switching."
+    },
+    "fast": {
+      "title": "Lightning Fast",
+      "description": "Built on Next.js with server-side rendering for instant page loads and smooth navigation."
+    },
+    "secure": {
+      "title": "Secure by Default",
+      "description": "Enterprise-grade authentication and row-level security powered by Supabase."
+    }
+  },
+  "highlights": {
+    "heading": "Why Choose Invoice Manager?",
+    "items": [
+      "Create invoices in under a minute",
+      "Export to PDF with one click",
+      "Track paid, pending, and overdue invoices",
+      "Manage multiple companies and currencies",
+      "Fully customizable invoice templates",
+      "Works on desktop and mobile"
+    ]
+  },
+  "cta": {
+    "title": "Ready to Get Started?",
+    "subtitle": "Start managing your invoices professionally today — it only takes a minute.",
+    "button": "Sign In Now"
+  },
+  "footer": {
+    "rights": "All rights reserved."
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "signIn": "Inloggen",
+  "badge": "Snel, modern factuurbeheer",
+  "hero": {
+    "title": "Beheer Uw Facturen met Gemak",
+    "subtitle": "Maak, volg en beheer professionele facturen in seconden. Gebouwd voor freelancers en kleine bedrijven.",
+    "cta": "Aan de Slag",
+    "secondary": "Naar Dashboard"
+  },
+  "features": {
+    "heading": "Alles Wat U Nodig Heeft",
+    "subheading": "Krachtige tools om uw factureringsworkflow van begin tot eind te stroomlijnen.",
+    "invoicing": {
+      "title": "Slim Factureren",
+      "description": "Maak en verstuur professionele facturen met automatische berekeningen, belastingondersteuning en PDF-export."
+    },
+    "dashboard": {
+      "title": "Realtime Dashboard",
+      "description": "Volg inkomsten, openstaande betalingen en factuurstatus in één oogopslag met interactieve grafieken."
+    },
+    "templates": {
+      "title": "Aangepaste Sjablonen",
+      "description": "Ontwerp uw eigen factuursjablonen met een live-editor en pas ze toe op elke factuur."
+    },
+    "multilingual": {
+      "title": "Meertalig",
+      "description": "Volledige ondersteuning voor Engels, Albanees, Macedonisch en Nederlands met eenvoudig wisselen van taal."
+    },
+    "fast": {
+      "title": "Razendsnell",
+      "description": "Gebouwd op Next.js met server-side rendering voor directe paginabelading en vloeiende navigatie."
+    },
+    "secure": {
+      "title": "Standaard Beveiligd",
+      "description": "Authenticatie op bedrijfsniveau en rijbeveiliging aangedreven door Supabase."
+    }
+  },
+  "highlights": {
+    "heading": "Waarom Kiezen voor Factuur Manager?",
+    "items": [
+      "Maak facturen in minder dan een minuut",
+      "Exporteer naar PDF met één klik",
+      "Volg betaalde, openstaande en achterstallige facturen",
+      "Beheer meerdere bedrijven en valuta's",
+      "Volledig aanpasbare factuursjablonen",
+      "Werkt op desktop en mobiel"
+    ]
+  },
+  "cta": {
+    "title": "Klaar om te Beginnen?",
+    "subtitle": "Begin vandaag nog met professioneel factuurbeheer — het duurt maar een minuut.",
+    "button": "Nu Inloggen"
+  },
+  "footer": {
+    "rights": "Alle rechten voorbehouden."
+  }
+}

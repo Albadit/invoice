@@ -8,6 +8,7 @@ import {
   FileCog ,
   type LucideIcon,
 } from 'lucide-react';
+import { PROTECTED_ROUTES, INVOICE_ROUTES, EDITOR_ROUTES, SETTINGS_ROUTES } from '@/config/routes';
 
 export interface NavItem {
   /** Unique key, also used to resolve i18n label via `navigation.{key}` in common.json */
@@ -41,25 +42,25 @@ export const sidebarSections: NavSection[] = [
         key: 'dashboard',
         labelKey: 'navigation.dashboard',
         icon: LayoutDashboard,
-        href: '/',
+        href: PROTECTED_ROUTES.dashboard,
       },
       {
         key: 'invoice',
         labelKey: 'navigation.invoices',
         icon: FileText,
-        href: '/invoice',
+        href: PROTECTED_ROUTES.invoice,
       },
       {
         key: 'new-invoice',
         labelKey: 'navigation.newInvoice',
         icon: Plus,
-        href: '/invoice/new/edit',
+        href: INVOICE_ROUTES.new,
       },
       {
         key: 'editor',
         labelKey: 'navigation.templateEditor',
         icon: FileCog ,
-        href: '/editor',
+        href: EDITOR_ROUTES.page,
       },
     ],
   },
@@ -71,19 +72,19 @@ export const sidebarSections: NavSection[] = [
         key: 'settings',
         labelKey: 'navigation.settings',
         icon: Settings,
-        href: '/settings',
+        href: SETTINGS_ROUTES.page,
       },
       {
         key: 'templates',
         labelKey: 'navigation.templates',
         icon: Palette,
-        href: '/settings?tab=templates',
+        href: SETTINGS_ROUTES.templates,
       },
       {
         key: 'currencies',
         labelKey: 'navigation.currencies',
         icon: Coins,
-        href: '/settings?tab=currencies',
+        href: SETTINGS_ROUTES.currencies,
       },
     ],
   },

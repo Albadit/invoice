@@ -8,6 +8,7 @@ import { Checkbox } from '@heroui/checkbox';
 import { addToast } from '@heroui/toast';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { authApi } from '@/features/auth/api';
+import { ROUTES } from '@/config/routes';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
 export function LoginForm() {
@@ -34,7 +35,7 @@ export function LoginForm() {
 
     try {
       await authApi.login({ email, password, rememberMe });
-      router.push('/');
+      router.push(ROUTES.afterLogin);
       router.refresh();
     } catch (err: unknown) {
       const error = err as { message?: string };

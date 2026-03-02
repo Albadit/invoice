@@ -30,35 +30,6 @@ export default function TemplateEditorPage() {
 
   return (
     <div className="flex flex-col h-screen bg-background text-foreground">
-      {/* VS Code-style scrollbar */}
-      <style>{`
-        .editor-scrollbar {
-          scrollbar-width: thin;
-          scrollbar-color: transparent transparent;
-        }
-        .editor-scrollbar:hover {
-          scrollbar-color: hsl(var(--heroui-default-300)) transparent;
-        }
-        .editor-scrollbar::-webkit-scrollbar {
-          width: 8px;
-          height: 8px;
-        }
-        .editor-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .editor-scrollbar::-webkit-scrollbar-thumb {
-          background: transparent;
-          border-radius: 4px;
-          transition: background 0.2s;
-        }
-        .editor-scrollbar:hover::-webkit-scrollbar-thumb {
-          background: hsl(var(--heroui-default-300));
-        }
-        .editor-scrollbar:hover::-webkit-scrollbar-thumb:hover {
-          background: hsl(var(--heroui-default-400));
-        }
-      `}</style>
-
       <TemplateEditorToolbar editor={editor} />
 
       <div className="flex flex-1 min-h-0">

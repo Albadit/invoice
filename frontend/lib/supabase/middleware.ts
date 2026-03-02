@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { AUTH_ROUTES, ROUTES, AUTH_ROUTE_PREFIXES, PROTECTED_ROUTE_PREFIXES } from '@/config/routes'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -38,14 +39,29 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
-  if (
-    !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
-  ) {
-    // no user, potentially respond by redirecting the user to the login page
+  const pathname = request.nextUrl.pathname
+
+  // ── (auth) routes: /login, /auth/* – always accessible ──────────
+  const isAuthRoute = AUTH_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+  )
+
+  // ── (protected) routes – derived from folder names via config/routes.ts
+  const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+  )
+
+  // Redirect unauthenticated users away from protected routes
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
-    url.pathname = '/auth/login'
+    url.pathname = AUTH_ROUTES.login
+    return NextResponse.redirect(url)
+  }
+
+  // Redirect authenticated users away from login page to dashboard
+  if (user && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = ROUTES.afterLogin
     return NextResponse.redirect(url)
   }
 

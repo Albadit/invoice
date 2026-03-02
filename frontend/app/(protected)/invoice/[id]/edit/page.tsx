@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { INVOICE_ROUTES } from '@/config/routes';
 import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi } from '@/features/currencies/api';
 import { companiesApi } from '@/features/companies/api';
@@ -333,7 +334,7 @@ export default function InvoiceEditPage() {
           description: t('messages.createdDescription'),
           color: "success"
         });
-        router.push('/invoice');
+        router.push(INVOICE_ROUTES.list);
       } else {
         await invoicesApi.update(params.id as string, invoiceData, itemsData);
         addToast({
@@ -341,7 +342,7 @@ export default function InvoiceEditPage() {
           description: t('messages.updatedDescription'),
           color: "success"
         });
-        router.push('/invoice');
+        router.push(INVOICE_ROUTES.list);
       }
     } catch (error) {
       console.error('Failed to save invoice:', error);

@@ -1,0 +1,57 @@
+{
+  "signIn": "Hyr",
+  "badge": "Menaxhim i shpejtë dhe modern i faturave",
+  "hero": {
+    "title": "Menaxhoni Faturat Tuaja me Lehtësi",
+    "subtitle": "Krijoni, ndiqni dhe menaxhoni fatura profesionale në sekonda. Ndërtuar për punëtorë të pavarur dhe biznese të vogla.",
+    "cta": "Fillo Tani",
+    "secondary": "Shko te Paneli"
+  },
+  "features": {
+    "heading": "Gjithçka që Ju Nevojitet",
+    "subheading": "Mjete të fuqishme për të thjeshtuar rrjedhën tuaj të punës me faturat.",
+    "invoicing": {
+      "title": "Faturim i Zgjuar",
+      "description": "Krijoni dhe dërgoni fatura profesionale me llogaritje automatike, mbështetje tatimore dhe eksport PDF."
+    },
+    "dashboard": {
+      "title": "Panel në Kohë Reale",
+      "description": "Ndiqni të ardhurat, pagesat e papaguara dhe statusin e faturave me një shikim me grafiqe interaktive."
+    },
+    "templates": {
+      "title": "Shabllone të Personalizuara",
+      "description": "Dizajnoni shabllonet tuaja të faturave me një redaktor të drejtpërdrejtë dhe aplikojini në çdo faturë."
+    },
+    "multilingual": {
+      "title": "Shumëgjuhësh",
+      "description": "Mbështetje e plotë për anglisht, shqip, maqedonisht dhe holandisht me ndërrim të lehtë të gjuhës."
+    },
+    "fast": {
+      "title": "Shpejtësi Rrufeje",
+      "description": "Ndërtuar mbi Next.js me renderim në server për ngarkim të menjëhershëm të faqeve."
+    },
+    "secure": {
+      "title": "I Sigurt nga Parazgjedhja",
+      "description": "Autentikim i nivelit të ndërmarrjes dhe siguri e nivelit të rreshtit mundësuar nga Supabase."
+    }
+  },
+  "highlights": {
+    "heading": "Pse të Zgjidhni Menaxherin e Faturave?",
+    "items": [
+      "Krijoni fatura në më pak se një minutë",
+      "Eksportoni në PDF me një klikim",
+      "Ndiqni faturat e paguara, në pritje dhe të vonuara",
+      "Menaxhoni kompani dhe monedha të shumta",
+      "Shabllone faturash plotësisht të personalizueshme",
+      "Punon në desktop dhe celular"
+    ]
+  },
+  "cta": {
+    "title": "Gati për të Filluar?",
+    "subtitle": "Filloni menaxhimin profesional të faturave sot — duhet vetëm një minutë.",
+    "button": "Hyni Tani"
+  },
+  "footer": {
+    "rights": "Të gjitha të drejtat e rezervuara."
+  }
+}

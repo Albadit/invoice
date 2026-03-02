@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import type { NextRequest } from 'next/server'
+import { AUTH_ROUTES, ROUTES } from '@/config/routes'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/'
+  const next = searchParams.get('next') ?? ROUTES.home
 
   if (code) {
     const redirectUrl = new URL(next, request.url)
@@ -40,5 +41,5 @@ export async function GET(request: NextRequest) {
   }
 
   // If no code or exchange failed, redirect to login with error
-  return NextResponse.redirect(new URL('/auth/login?error=auth', request.url))
+  return NextResponse.redirect(new URL(`${AUTH_ROUTES.login}?error=auth`, request.url))
 }

@@ -9,6 +9,7 @@ import { templatesApi } from '@/features/templates/api';
 // eslint-disable-next-line boundaries/element-types
 import { DEFAULT_TEMPLATE_STYLING } from '@/features/invoice/utils/templateEngine';
 import { DUMMY_INVOICE } from '@/features/templates/data/dummyInvoice';
+import { EDITOR_ROUTES } from '@/config/routes';
 import { useLocale } from '@/contexts/LocaleProvider';
 import type { Template, Company, Currency, InvoiceWithItems } from '@/lib/types';
 
@@ -43,8 +44,6 @@ export function useTemplateEditor() {
   const previewContainerRef = useRef<HTMLDivElement>(null);
   const previewPanelRef = useRef<HTMLDivElement>(null);
   const draggingRef = useRef(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const gutterRef = useRef<HTMLDivElement>(null);
 
   // ── Save state ───────────────────────────────────────────────────
   const [saveModalOpen, setSaveModalOpen] = useState(false);
@@ -104,7 +103,7 @@ export function useTemplateEditor() {
   const renderPreview = useCallback(async (invoice: InvoiceWithItems, tplStyling: string) => {
     if (!showPreview) return;
     try {
-      const res = await fetch('/editor/render', {
+      const res = await fetch(EDITOR_ROUTES.render, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoice, styling: tplStyling || undefined }),
@@ -209,14 +208,6 @@ export function useTemplateEditor() {
     document.addEventListener('mouseup', onMouseUp);
   }, [editorWidth]);
 
-  // ── Editor scroll sync ──────────────────────────────────────────
-
-  const handleEditorScroll = useCallback(() => {
-    if (textareaRef.current && gutterRef.current) {
-      gutterRef.current.scrollTop = textareaRef.current.scrollTop;
-    }
-  }, []);
-
   // ── Handlers ─────────────────────────────────────────────────────
 
   function handleSelectCompany(companyId: string) {
@@ -248,7 +239,7 @@ export function useTemplateEditor() {
 
   async function handleDownload() {
     try {
-      const res = await fetch('/editor/render', {
+      const res = await fetch(EDITOR_ROUTES.render, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoice: previewInvoice, styling, pdf: true }),
@@ -333,8 +324,6 @@ export function useTemplateEditor() {
     iframeRef,
     previewContainerRef,
     previewPanelRef,
-    textareaRef,
-    gutterRef,
 
     // Save state
     saveModalOpen,
@@ -356,7 +345,6 @@ export function useTemplateEditor() {
     handleSaveTemplate,
     handleSaveAsNewTemplate,
     handleMouseDown,
-    handleEditorScroll,
     handleToggleFullscreen,
   };
 }

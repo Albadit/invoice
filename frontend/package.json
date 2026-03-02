@@ -21,6 +21,7 @@
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
     "@iconify/react": "^6.0.2",
+    "@monaco-editor/react": "^4.7.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.39.3",
     "accept-language": "^3.0.20",

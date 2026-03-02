@@ -39,6 +39,7 @@ import { getEffectiveStatus } from '@/lib/types';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
+import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
 
 // Format large numbers compactly (e.g., 300100 -> "300.1K")
@@ -194,7 +195,7 @@ export default function InvoicesPage() {
 
   function handleDownloadPDF(invoiceId: string) {
     const link = document.createElement('a');
-    link.href = `/invoice/${invoiceId}/download`;
+    link.href = INVOICE_ROUTES.download(invoiceId);
     link.download = `invoice-${invoiceId}.pdf`;
     link.style.display = 'none';
     document.body.appendChild(link);
@@ -405,7 +406,7 @@ export default function InvoicesPage() {
           </div>
           <div className="sm:ml-auto shrink-0">
             <Button color="primary" variant="solid" className='w-full lg:w-fit'
-              onClick={() => router.push('/invoice/new/edit')}
+              onClick={() => router.push(INVOICE_ROUTES.new)}
               startContent={<Plus className="size-4" />}
             >
               {t('createNew')}
@@ -592,7 +593,7 @@ export default function InvoicesPage() {
                         {t('actions.downloadPdf')}
                       </DropdownItem>
                       <DropdownItem key="edit"
-                        onClick={() => router.push(`/invoice/${invoice.id}/edit`)}
+                        onClick={() => router.push(INVOICE_ROUTES.edit(invoice.id))}
                         startContent={<Edit className="size-4" />}
                       >
                         {tCommon('actions.edit')}
