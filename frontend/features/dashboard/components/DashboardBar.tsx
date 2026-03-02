@@ -83,7 +83,7 @@ export default function DashboardBar({
   }));
 
   return (
-    <Card className={cn("dark:border-default-100 h-full border border-transparent")}>
+    <Card as="dl" className={cn("dark:border-default-100 h-full border border-transparent")}>
       {/* Header + legend */}
       <div className="flex flex-col gap-y-4 p-4 pb-0">
         <h3 className="text-small text-default-500 font-medium">{title ?? t("amountByStatus")}</h3>

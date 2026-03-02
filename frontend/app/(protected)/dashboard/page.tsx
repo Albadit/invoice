@@ -15,6 +15,7 @@ import { currenciesApi } from '@/features/currencies/api';
 import { useDashboardComputed } from '@/features/dashboard/hooks/useDashboardStats';
 import DashboardGraph from '@/features/dashboard/components/DashboardGraph';
 import DashboardKpi from '@/features/dashboard/components/DashboardKpi';
+import type { KpiItem } from '@/features/dashboard/components/DashboardKpi';
 import DashboardCircleChart from '@/features/dashboard/components/DashboardCircleChart';
 import DashboardBar from '@/features/dashboard/components/DashboardBar';
 import { StickyHeader } from '@/components/ui';
@@ -107,61 +108,68 @@ export default function DashboardPage() {
         <div className="flex items-center justify-center py-20"><Spinner size="lg" /></div>
       ) : (
         <>
-          {/* ---- KPI Row (3 cards) --------------------------------------- */}
-          <DashboardKpi
-            items={(() => {
-              // Build query string based on selected company/year
-              const params = new URLSearchParams();
-              if (selectedCompany !== 'all') params.set('company', selectedCompany);
-              if (selectedYear !== 'all') params.set('year', selectedYear);
-              const qs = (status?: string) => {
-                const p = new URLSearchParams(params);
-                if (status) p.set('status', status);
-                const s = p.toString();
-                return s ? `${INVOICE_ROUTES.list}?${s}` : INVOICE_ROUTES.list;
-              };
-              return [
-                {
-                  title: t('totalInvoices'),
-                  value: computed.total.toLocaleString(),
-                  changeType: 'info' as const,
-                  iconName: 'solar:document-text-linear',
-                  onViewAll: () => router.push(qs()),
-                  viewAllLabel: t('viewAll'),
-                },
-                {
-                  title: t('totalRevenue'),
-                  value: fmt(computed.paid.amount),
-                  subtitle: `${computed.paid.count} ${tInvoice('status.paid').toLowerCase()}`,
-                  change: pctOfTotal(computed.paid.count, computed.total),
-                  changeType: 'positive' as const,
-                  iconName: 'solar:wallet-money-outline',
-                  onViewAll: () => router.push(qs('paid')),
-                  viewAllLabel: t('viewAll'),
-                },
-                {
-                  title: t('outstanding'),
-                  value: fmt(computed.pending.amount + computed.overdue.amount),
-                  subtitle: `${computed.pending.count + computed.overdue.count} ${tInvoice('status.pending').toLowerCase()} / ${tInvoice('status.overdue').toLowerCase()}`,
-                  change: pctOfTotal(computed.pending.count + computed.overdue.count, computed.total),
-                  changeType: overduePct > 20 ? 'negative' : overduePct > 0 ? 'neutral' : 'negative',
-                  iconName: 'solar:hand-money-linear',
-                  onViewAll: () => router.push(qs('pending,overdue')),
-                  viewAllLabel: t('viewAll'),
-                },
-                {
-                  title: tInvoice('status.cancelled'),
-                  value: fmt(computed.cancelled.amount),
-                  subtitle: `${computed.cancelled.count} ${tInvoice('status.cancelled').toLowerCase()}`,
-                  change: computed.total ? pctOfTotal(computed.cancelled.count, computed.total) : undefined,
-                  changeType: 'default' as const,
-                  iconName: 'solar:close-circle-linear',
-                  onViewAll: () => router.push(qs('cancelled')),
-                  viewAllLabel: t('viewAll'),
-                },
-              ];
-            })()}
-          />
+          {/* ---- KPI Row (4 cards) --------------------------------------- */}
+          {(() => {
+            // Build query string based on selected company/year
+            const params = new URLSearchParams();
+            if (selectedCompany !== 'all') params.set('company', selectedCompany);
+            if (selectedYear !== 'all') params.set('year', selectedYear);
+            const qs = (status?: string) => {
+              const p = new URLSearchParams(params);
+              if (status) p.set('status', status);
+              const s = p.toString();
+              return s ? `${INVOICE_ROUTES.list}?${s}` : INVOICE_ROUTES.list;
+            };
+
+            const kpiItems: KpiItem[] = [
+              {
+                title: t('totalInvoices'),
+                value: computed.total.toLocaleString(),
+                changeType: 'info',
+                iconName: 'solar:document-text-linear',
+                onViewAll: () => router.push(qs()),
+                viewAllLabel: t('viewAll'),
+              },
+              {
+                title: t('totalRevenue'),
+                value: fmt(computed.paid.amount),
+                subtitle: `${computed.paid.count} ${tInvoice('status.paid').toLowerCase()}`,
+                change: pctOfTotal(computed.paid.count, computed.total),
+                changeType: 'positive',
+                iconName: 'solar:wallet-money-outline',
+                onViewAll: () => router.push(qs('paid')),
+                viewAllLabel: t('viewAll'),
+              },
+              {
+                title: t('outstanding'),
+                value: fmt(computed.pending.amount + computed.overdue.amount),
+                subtitle: `${computed.pending.count + computed.overdue.count} ${tInvoice('status.pending').toLowerCase()} / ${tInvoice('status.overdue').toLowerCase()}`,
+                change: pctOfTotal(computed.pending.count + computed.overdue.count, computed.total),
+                changeType: overduePct > 20 ? 'negative' : overduePct > 0 ? 'neutral' : 'negative',
+                iconName: 'solar:hand-money-linear',
+                onViewAll: () => router.push(qs('pending,overdue')),
+                viewAllLabel: t('viewAll'),
+              },
+              {
+                title: tInvoice('status.cancelled'),
+                value: fmt(computed.cancelled.amount),
+                subtitle: `${computed.cancelled.count} ${tInvoice('status.cancelled').toLowerCase()}`,
+                change: computed.total ? pctOfTotal(computed.cancelled.count, computed.total) : undefined,
+                changeType: 'default',
+                iconName: 'solar:close-circle-linear',
+                onViewAll: () => router.push(qs('cancelled')),
+                viewAllLabel: t('viewAll'),
+              },
+            ];
+
+            return (
+              <dl className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+                {kpiItems.map((item, index) => (
+                  <DashboardKpi key={index} {...item} />
+                ))}
+              </dl>
+            );
+          })()}
 
           {/* ---- Analytics Card (DashboardGraph) ----------------------- */}
           <DashboardGraph

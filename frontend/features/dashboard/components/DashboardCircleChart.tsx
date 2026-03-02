@@ -39,6 +39,7 @@ const CircleChartCard = React.forwardRef<
 >(({className, title, total, unit, categories, chartData, ...props}, ref) => {
   return (
     <Card
+      as="dl"
       ref={ref}
       className={cn("w-full dark:border-default-100 border border-transparent", className)}
       {...props}
