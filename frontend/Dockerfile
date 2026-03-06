@@ -17,8 +17,6 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Set working directory inside container
 WORKDIR /app
 
-EXPOSE ${PORT}
-
 # Copy the project files
 COPY . .
 
@@ -40,6 +38,9 @@ RUN sh -c '\
 
 # Build the Next.js app for production
 RUN npm run build
+
+# Expose the app port
+EXPOSE $PORT
 
 # Start the Next.js production server
 CMD ["npm", "start"]
