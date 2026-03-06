@@ -39,6 +39,7 @@ import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 import { usePermissions } from '@/features/auth/components';
 
+
 export default function SettingsPage() {
   const { t } = useTranslation('settings');
   const { languageConfig } = useLocale();
@@ -1083,6 +1084,7 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
       )}
+
         </div>
 
         {/* Right column: company & client selectors (sticky) */}

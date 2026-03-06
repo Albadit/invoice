@@ -20,7 +20,8 @@
     "templateEditor": "Уредувач на Шаблони",
     "admin": "Админ",
     "users": "Корисници",
-    "roles": "Улоги"
+    "roles": "Улоги",
+    "profile": "Профил"
   },
   "actions": {
     "save": "Зачувај",
@@ -45,5 +46,14 @@
     "filter": "Филтрирај",
     "sort": "Сортирај",
     "language": "Јазик"
+  },
+  "pagination": {
+    "previous": "Претходна",
+    "next": "Следна",
+    "pageLabel": "Страница",
+    "ofPages": "од {{total}}",
+    "rowsPerPage": "Редови по страница:",
+    "rows": "редови",
+    "records": "записи"
   }
 }

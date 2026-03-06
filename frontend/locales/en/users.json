@@ -40,7 +40,7 @@
     "emailPlaceholder": "user@example.com",
     "password": "Password",
     "passwordPlaceholder": "Enter initial password",
-    "role": "Role (optional)",
+    "role": "Role",
     "rolePlaceholder": "Select a role"
   }
 }

@@ -11,7 +11,7 @@ import type { Role } from '@/lib/types';
 interface AddUserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: { email: string; password: string; roleId?: string }) => Promise<void>;
+  onSave: (data: { email: string; password: string; roleId: string }) => Promise<void>;
   roles: Role[];
   isSystemUser: boolean;
 }
@@ -40,7 +40,7 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
       await onSave({
         email: email.trim(),
         password: password.trim(),
-        roleId: roleId || undefined,
+        roleId,
       });
       handleClose();
     } catch {
@@ -77,6 +77,7 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
               placeholder={t('fields.rolePlaceholder')}
               selectedKeys={roleId ? [roleId] : []}
               onSelectionChange={(keys) => setRoleId(Array.from(keys)[0] as string || '')}
+              isRequired
             >
               {roles.map((role) => (
                 <SelectItem key={role.id} textValue={role.name}>
@@ -94,7 +95,7 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
             color="primary"
             onClick={handleSave}
             isLoading={saving}
-            disabled={!email.trim() || !password.trim()}
+            disabled={!email.trim() || !password.trim() || !roleId}
           >
             {tCommon('actions.create')}
           </Button>

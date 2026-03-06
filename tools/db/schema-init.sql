@@ -919,7 +919,7 @@ BEGIN
 
     RETURN true;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- Admin: Replace all permissions for a role
 CREATE OR REPLACE FUNCTION admin_set_role_permissions(p_role_id uuid, p_permission_ids uuid[])
@@ -1010,7 +1010,7 @@ BEGIN
 
     RETURN v_user_id;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- Grant execute to anon for public reset functions
 GRANT EXECUTE ON FUNCTION validate_reset_token(uuid) TO anon, authenticated;

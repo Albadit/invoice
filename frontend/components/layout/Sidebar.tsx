@@ -13,13 +13,14 @@ import {
   FileText,
   LogOut,
   Menu,
+  User,
   X,
 } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
-import { ROUTES } from '@/config/routes';
+import { ROUTES, PROTECTED_ROUTES } from '@/config/routes';
 import { createClient } from '@/lib/supabase/client';
 import { usePermissions } from '@/features/auth/components';
 
@@ -173,9 +174,11 @@ function SidebarSectionComponent({
 export function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { isCollapsed, setIsCollapsed, isMobileOpen, setIsMobileOpen } = useSidebar();
   const sidebarSections = useSidebarSections();
   const { t } = useTranslation('auth');
+  const { t: tCommon } = useTranslation('common');
 
   // Determine which single nav item is active (longest prefix match wins)
   const activeKey = (() => {
@@ -211,6 +214,7 @@ export function Sidebar() {
   })();
   const [userName, setUserName] = useState<string>('');
   const [userEmail, setUserEmail] = useState<string>('');
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -320,7 +324,7 @@ export function Sidebar() {
           </div>
 
           {/* User Section with Popover */}
-          <Popover placement={isCollapsed ? 'right-end' : 'top-start'}>
+          <Popover placement={isCollapsed ? 'right-end' : 'top-start'} isOpen={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger>
               <div
                 className={cn(
@@ -356,6 +360,15 @@ export function Sidebar() {
                   </div>
                 </div>
                 <div className="border-t border-divider" />
+                <Button
+                  variant="flat"
+                  size="sm"
+                  className="w-full justify-start"
+                  startContent={<User className="size-4" />}
+                  onPress={() => { setIsPopoverOpen(false); router.push(PROTECTED_ROUTES.profile); }}
+                >
+                  {tCommon('navigation.profile')}
+                </Button>
                 <Button
                   variant="flat"
                   color="danger"

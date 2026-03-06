@@ -20,7 +20,8 @@
     "templateEditor": "Sjabloon Editor",
     "admin": "Admin",
     "users": "Gebruikers",
-    "roles": "Rollen"
+    "roles": "Rollen",
+    "profile": "Profiel"
   },
   "actions": {
     "save": "Opslaan",
@@ -45,5 +46,14 @@
     "filter": "Filteren",
     "sort": "Sorteren",
     "language": "Taal"
+  },
+  "pagination": {
+    "previous": "Vorige",
+    "next": "Volgende",
+    "pageLabel": "Pagina",
+    "ofPages": "van {{total}}",
+    "rowsPerPage": "Rijen per pagina:",
+    "rows": "rijen",
+    "records": "records"
   }
 }

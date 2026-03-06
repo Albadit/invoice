@@ -20,7 +20,8 @@
     "templateEditor": "Template Editor",
     "admin": "Admin",
     "users": "Users",
-    "roles": "Roles"
+    "roles": "Roles",
+    "profile": "Profile"
   },
   "actions": {
     "save": "Save",
@@ -45,5 +46,14 @@
     "filter": "Filter",
     "sort": "Sort",
     "language": "Language"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageLabel": "Page",
+    "ofPages": "of {{total}}",
+    "rowsPerPage": "Rows per page:",
+    "rows": "rows",
+    "records": "records"
   }
 }

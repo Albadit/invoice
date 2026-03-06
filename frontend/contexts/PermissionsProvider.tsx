@@ -9,6 +9,7 @@ interface PermissionsContextType {
   roles: string[];
   loading: boolean;
   isSystemUser: boolean;
+  userId: string | null;
   hasPermission: (key: string) => boolean;
 }
 
@@ -17,6 +18,7 @@ const PermissionsContext = createContext<PermissionsContextType>({
   roles: [],
   loading: true,
   isSystemUser: false,
+  userId: null,
   hasPermission: () => false,
 });
 
@@ -28,6 +30,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
   const [isSystemUser, setIsSystemUser] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const pathname = usePathname();
 
@@ -44,6 +47,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
           setPermissions([]);
           setRoles([]);
           setIsSystemUser(false);
+          setUserId(null);
           setLoading(false);
         }
         return;
@@ -59,6 +63,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
           setPermissions([]);
           setRoles([]);
           setIsSystemUser(false);
+          setUserId(user.id);
           setLoading(false);
         }
         return;
@@ -84,6 +89,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
         setPermissions(Array.from(permissionKeys));
         setRoles(Array.from(roleNames));
         setIsSystemUser(systemFlag);
+        setUserId(user.id);
         setLoading(false);
       }
     }
@@ -95,7 +101,7 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
   const hasPermission = (key: string) => permissions.includes(key);
 
   return (
-    <PermissionsContext.Provider value={{ permissions, roles, loading, isSystemUser, hasPermission }}>
+    <PermissionsContext.Provider value={{ permissions, roles, loading, isSystemUser, userId, hasPermission }}>
       {children}
     </PermissionsContext.Provider>
   );

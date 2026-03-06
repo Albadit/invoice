@@ -40,7 +40,7 @@
     "emailPlaceholder": "gebruiker@voorbeeld.com",
     "password": "Wachtwoord",
     "passwordPlaceholder": "Voer het initiële wachtwoord in",
-    "role": "Rol (optioneel)",
+    "role": "Rol",
     "rolePlaceholder": "Selecteer een rol"
   }
 }

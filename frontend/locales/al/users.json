@@ -40,7 +40,7 @@
     "emailPlaceholder": "perdorues@shembull.com",
     "password": "Fjalëkalimi",
     "passwordPlaceholder": "Shkruani fjalëkalimin fillestar",
-    "role": "Roli (opsional)",
+    "role": "Roli",
     "rolePlaceholder": "Zgjidhni një rol"
   }
 }

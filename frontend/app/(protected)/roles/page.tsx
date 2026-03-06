@@ -19,7 +19,7 @@ import {
   EditRoleModal,
   EditRolePermissionsModal,
 } from '@/features/roles/components';
-import { ConfirmModal, StickyHeader } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
@@ -44,6 +44,8 @@ export default function RolesPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     loadRoles();
@@ -65,6 +67,17 @@ export default function RolesPage() {
       setLoading(false);
     }
   }
+
+  // Pagination
+  const totalCount = roles.length;
+  const paginatedRoles = roles.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [rowsPerPage]);
 
   async function handleAddRole(data: { name: string; description: string }) {
     try {
@@ -158,7 +171,7 @@ export default function RolesPage() {
             <TableColumn>{t('columns.actions')}</TableColumn>
           </TableHeader>
           <TableBody emptyContent={t('noData')}>
-            {roles.map((role) => (
+            {paginatedRoles.map((role) => (
               <TableRow key={role.id}>
                 <TableCell>
                   <span className="font-medium">{role.name}</span>
@@ -236,6 +249,14 @@ export default function RolesPage() {
             ))}
           </TableBody>
         </Table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalCount={totalCount}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setCurrentPage}
+        onRowsPerPageChange={setRowsPerPage}
+      />
 
       {/* Add Role Modal */}
       <AddRoleModal

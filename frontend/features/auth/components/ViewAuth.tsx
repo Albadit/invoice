@@ -1,6 +1,6 @@
 'use client';
 
-import { usePermissions } from './PermissionsProvider';
+import { usePermissions } from '../../../contexts/PermissionsProvider';
 import type { ReactNode } from 'react';
 
 interface ViewAuthProps {

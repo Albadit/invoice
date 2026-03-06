@@ -8,7 +8,6 @@ import type { InvoiceWithItems, Currency, Company } from '@/lib/types';
 import { formatCurrencyAmount } from '@/lib/utils';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
-import { Form } from "@heroui/form";
 import {
   Table,
   TableHeader,
@@ -31,29 +30,19 @@ import { DateRangePicker } from "@heroui/date-picker";
 import type { DateValue } from "@internationalized/date";
 import { CalendarDate } from "@internationalized/date";
 import { useRouter, useSearchParams } from 'next/navigation';
-import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { siteConfig } from '@/config/site';
 import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { getEffectiveStatus } from '@/lib/types';
 import { InvoicePreviewModal } from '@/features/invoice/components';
-import { ConfirmModal, StickyHeader } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
 import { usePermissions } from '@/features/auth/components';
 
 // Format large numbers compactly (e.g., 300100 -> "300.1K")
-function formatRecordCount(count: number): string {
-  if (count >= 1000000) {
-    return (count / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
-  }
-  if (count >= 1000) {
-    return (count / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
-  }
-  return count.toString();
-}
-
 // Map UI column keys to DB column names (constant, never changes)
 const COLUMN_TO_DB_FIELD: Record<string, string> = {
   invoice_code: 'invoice_code',
@@ -87,7 +76,6 @@ export default function InvoicesPage() {
   }>({ isOpen: false, title: '', message: '', confirmColor: 'primary', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageInput, setPageInput] = useState('1');
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
   const [sortDescriptors, setSortDescriptors] = useState<SortDescriptor[]>([
@@ -165,7 +153,6 @@ export default function InvoicesPage() {
     if (filterKey !== prevFiltersRef.current) {
       prevFiltersRef.current = filterKey;
       setCurrentPage(1);
-      setPageInput('1');
       loadInvoices(1);
     }
   }, [rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.dateRange, sortDescriptors]);
@@ -276,36 +263,13 @@ export default function InvoicesPage() {
   }
   
   // Navigation functions
-  function goToNextPage() {
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
-    setPageInput(String(nextPage));
-    loadInvoices(nextPage);
-  }
-  
-  function goToPrevPage() {
-    const prevPage = currentPage - 1;
-    setCurrentPage(prevPage);
-    setPageInput(String(prevPage));
-    loadInvoices(prevPage);
-  }
-  
-  function handlePageInputSubmit() {
-    const page = parseInt(pageInput);
-    
-    if (isNaN(page) || page === currentPage || page < 1 || page > totalPages) {
-      setPageInput(String(currentPage));
-      return;
-    }
-    
+  function handlePageChange(page: number) {
     setCurrentPage(page);
     loadInvoices(page);
   }
 
   // Total pages
   const totalPages = Math.ceil(totalCount / rowsPerPage);
-  const hasNextPage = currentPage < totalPages;
-  const hasPrevPage = currentPage > 1;
   const loadingState = loading && filteredInvoices.length === 0 ? 'loading' : 'idle';
 
   async function handleDelete(invoiceId: string) {
@@ -719,68 +683,13 @@ export default function InvoicesPage() {
       </Table>
 
 
-      {/* Pagination Controls */}
-      <div className="flex flex-col sm:flex-row items-center sm:justify-end gap-3 sm:gap-4 text-sm">
-        {/* Page Navigation */}
-        <div className="flex items-center gap-2">
-          <Button
-            isIconOnly
-            isDisabled={!hasPrevPage}
-            onClick={goToPrevPage}
-            aria-label={t('pagination.previous')}
-            startContent={<ChevronLeft className="size-6" />}
-          />
-          <span className="text-default-500">{t('pagination.pageLabel')}</span>
-          <Form onSubmit={(e) => { e.preventDefault(); handlePageInputSubmit(); }} className="inline">
-            <Input
-              type="number"
-              className="w-18"
-              classNames={{ input: "text-center" }}
-              value={pageInput}
-              onChange={(e) => setPageInput(e.target.value)}
-              min={1}
-              max={totalPages || 1}
-              aria-label={t('pagination.pageLabel')}
-            />
-          </Form>
-          {/* Show total pages */}
-          <span className="text-default-500">
-            {totalPages > 0 
-              ? t('pagination.ofPages', { total: totalPages.toLocaleString() })
-              : ''}
-          </span>
-          <Button
-            isIconOnly
-            isDisabled={!hasNextPage}
-            onClick={goToNextPage}
-            aria-label={t('pagination.next')}
-            startContent={<ChevronRight className="size-6" />}
-          />
-        </div>
-
-        <div className="w-full sm:w-fit flex items-center justify-center gap-3">
-          {/* Rows per page */}
-          <Select
-            aria-label={t('pagination.rowsPerPage')}
-            className="w-42"
-            selectedKeys={[String(rowsPerPage)]}
-            onSelectionChange={(keys) => {
-              const value = Number(Array.from(keys)[0]);
-              setRowsPerPage(value);
-            }}
-          >
-            <SelectItem key="10" textValue="10 rows">10 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="25" textValue="25 rows">25 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="50" textValue="50 rows">50 {t('pagination.rows')}</SelectItem>
-            <SelectItem key="100" textValue="100 rows">100 {t('pagination.rows')}</SelectItem>
-          </Select>
-
-          {/* Total records */}
-          <span className="text-default-400 whitespace-nowrap">
-            {formatRecordCount(totalCount)} {t('pagination.records')}
-          </span>
-        </div>
-      </div>
+      <Pagination
+        currentPage={currentPage}
+        totalCount={totalCount}
+        rowsPerPage={rowsPerPage}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={setRowsPerPage}
+      />
 
       <InvoicePreviewModal
         isOpen={isModalOpen}

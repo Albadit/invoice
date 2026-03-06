@@ -1,0 +1,31 @@
+{
+  "title": "Profili",
+  "subtitle": "Menaxho llogarinë tënde",
+  "success": "Sukses",
+  "info": {
+    "title": "Informacionet e Llogarisë",
+    "email": "Email",
+    "save": "Ruaj",
+    "emailRequired": "Email është i detyrueshëm",
+    "emailTaken": "Ky email është tashmë në përdorim nga një llogari tjetër",
+    "saveFailed": "Dështoi ruajtja e profilit. Provo përsëri.",
+    "saveSuccess": "Profili u përditësua me sukses"
+  },
+  "password": {
+    "title": "Ndrysho Fjalëkalimin",
+    "subtitle": "Përditëso fjalëkalimin e llogarisë tënde",
+    "currentPassword": "Fjalëkalimi Aktual",
+    "currentPasswordPlaceholder": "Shkruaj fjalëkalimin aktual",
+    "newPassword": "Fjalëkalimi i Ri",
+    "newPasswordPlaceholder": "Shkruaj fjalëkalimin e ri",
+    "confirmPassword": "Konfirmo Fjalëkalimin e Ri",
+    "confirmPasswordPlaceholder": "Konfirmo fjalëkalimin e ri",
+    "submit": "Ndrysho Fjalëkalimin",
+    "fieldsRequired": "Të gjitha fushat e fjalëkalimit janë të detyrueshme",
+    "minLength": "Fjalëkalimi duhet të ketë të paktën 6 karaktere",
+    "mismatch": "Fjalëkalimet nuk përputhen",
+    "wrongCurrent": "Fjalëkalimi aktual është i pasaktë",
+    "failed": "Dështoi ndryshimi i fjalëkalimit. Provo përsëri.",
+    "success": "Fjalëkalimi u ndryshua me sukses"
+  }
+}

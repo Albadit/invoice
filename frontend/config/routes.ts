@@ -30,6 +30,7 @@ export const PROTECTED_ROUTES = {
   invoice: '/invoice',
   editor: '/editor',
   settings: '/settings',
+  profile: '/profile',
   users: '/users',
   roles: '/roles',
 } as const;
@@ -59,6 +60,10 @@ export const USERS_ROUTES = {
 
 export const ROLES_ROUTES = {
   page: PROTECTED_ROUTES.roles,
+} as const;
+
+export const PROFILE_ROUTES = {
+  page: PROTECTED_ROUTES.profile,
 } as const;
 
 // ─── Special ────────────────────────────────────────────────────

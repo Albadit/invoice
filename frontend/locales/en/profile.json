@@ -1,0 +1,31 @@
+{
+  "title": "Profile",
+  "subtitle": "Manage your account",
+  "success": "Success",
+  "info": {
+    "title": "Account Information",
+    "email": "Email",
+    "save": "Save",
+    "emailRequired": "Email is required",
+    "emailTaken": "This email is already in use by another account",
+    "saveFailed": "Failed to save profile. Please try again.",
+    "saveSuccess": "Profile updated successfully"
+  },
+  "password": {
+    "title": "Change Password",
+    "subtitle": "Update your account password",
+    "currentPassword": "Current Password",
+    "currentPasswordPlaceholder": "Enter your current password",
+    "newPassword": "New Password",
+    "newPasswordPlaceholder": "Enter your new password",
+    "confirmPassword": "Confirm New Password",
+    "confirmPasswordPlaceholder": "Confirm your new password",
+    "submit": "Change Password",
+    "fieldsRequired": "All password fields are required",
+    "minLength": "Password must be at least 6 characters",
+    "mismatch": "Passwords do not match",
+    "wrongCurrent": "Current password is incorrect",
+    "failed": "Failed to change password. Please try again.",
+    "success": "Password changed successfully"
+  }
+}

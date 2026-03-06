@@ -1,0 +1,31 @@
+{
+  "title": "Profiel",
+  "subtitle": "Beheer je account",
+  "success": "Succes",
+  "info": {
+    "title": "Accountinformatie",
+    "email": "E-mail",
+    "save": "Opslaan",
+    "emailRequired": "E-mail is verplicht",
+    "emailTaken": "Dit e-mailadres is al in gebruik door een ander account",
+    "saveFailed": "Kon profiel niet opslaan. Probeer het opnieuw.",
+    "saveSuccess": "Profiel succesvol bijgewerkt"
+  },
+  "password": {
+    "title": "Wachtwoord Wijzigen",
+    "subtitle": "Werk het wachtwoord van je account bij",
+    "currentPassword": "Huidig Wachtwoord",
+    "currentPasswordPlaceholder": "Voer je huidige wachtwoord in",
+    "newPassword": "Nieuw Wachtwoord",
+    "newPasswordPlaceholder": "Voer je nieuwe wachtwoord in",
+    "confirmPassword": "Bevestig Nieuw Wachtwoord",
+    "confirmPasswordPlaceholder": "Bevestig je nieuwe wachtwoord",
+    "submit": "Wachtwoord Wijzigen",
+    "fieldsRequired": "Alle wachtwoordvelden zijn verplicht",
+    "minLength": "Wachtwoord moet minimaal 6 tekens bevatten",
+    "mismatch": "Wachtwoorden komen niet overeen",
+    "wrongCurrent": "Huidig wachtwoord is onjuist",
+    "failed": "Kon wachtwoord niet wijzigen. Probeer het opnieuw.",
+    "success": "Wachtwoord succesvol gewijzigd"
+  }
+}

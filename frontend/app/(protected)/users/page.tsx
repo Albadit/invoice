@@ -17,7 +17,7 @@ import { Shield, KeyRound, Search, Plus, Lock } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { usersApi } from '@/features/users/api';
 import { AddUserModal, EditUserRoleModal, ResetLinkModal } from '@/features/users/components';
-import { ConfirmModal, StickyHeader } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { AdminUser, Role } from '@/lib/types';
@@ -25,7 +25,7 @@ import type { AdminUser, Role } from '@/lib/types';
 export default function UsersPage() {
   const { t } = useTranslation('users');
   const { t: tCommon } = useTranslation('common');
-  const { hasPermission, isSystemUser } = usePermissions();
+  const { hasPermission, isSystemUser, userId } = usePermissions();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
@@ -47,6 +47,8 @@ export default function UsersPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   useEffect(() => {
     loadData();
@@ -77,6 +79,18 @@ export default function UsersPage() {
     u.email.toLowerCase().includes(search.toLowerCase()) ||
     (u.role_name || '').toLowerCase().includes(search.toLowerCase())
   );
+
+  // Pagination
+  const totalCount = filteredUsers.length;
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, rowsPerPage]);
 
   async function handleCreateUser(data: { email: string; password: string; roleId?: string }) {
     try {
@@ -111,26 +125,6 @@ export default function UsersPage() {
       addToast({
         title: tCommon('common.error'),
         description: t('messages.roleUpdateError'),
-        color: 'danger',
-      });
-      throw new Error();
-    }
-  }
-
-  async function handleRemoveRole() {
-    if (!editUser) return;
-    try {
-      await usersApi.removeRole(editUser.id);
-      await loadData();
-      addToast({
-        title: t('messages.success'),
-        description: t('messages.roleRemoved'),
-        color: 'success',
-      });
-    } catch {
-      addToast({
-        title: tCommon('common.error'),
-        description: t('messages.roleRemoveError'),
         color: 'danger',
       });
       throw new Error();
@@ -207,7 +201,7 @@ export default function UsersPage() {
             <TableColumn>{t('columns.actions')}</TableColumn>
           </TableHeader>
           <TableBody emptyContent={t('noData')}>
-            {filteredUsers.map((user) => (
+            {paginatedUsers.map((user) => (
               <TableRow key={user.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
@@ -240,7 +234,7 @@ export default function UsersPage() {
                         variant="flat"
                         color="primary"
                         startContent={<Shield className="size-4" />}
-                        isDisabled={user.is_system && !isSystemUser}
+                        isDisabled={user.is_system || user.id === userId}
                         onClick={() => {
                           setEditUser(user);
                           setIsEditRoleOpen(true);
@@ -256,7 +250,7 @@ export default function UsersPage() {
                         color="warning"
                         startContent={<KeyRound className="size-4" />}
                         isLoading={generatingToken === user.id}
-                        isDisabled={user.is_system && !isSystemUser}
+                        isDisabled={(user.is_system && !isSystemUser) || user.id === userId}
                         onClick={() => handleGenerateResetLink(user)}
                       >
                         {t('resetPassword')}
@@ -268,6 +262,14 @@ export default function UsersPage() {
             ))}
           </TableBody>
         </Table>
+
+      <Pagination
+        currentPage={currentPage}
+        totalCount={totalCount}
+        rowsPerPage={rowsPerPage}
+        onPageChange={setCurrentPage}
+        onRowsPerPageChange={setRowsPerPage}
+      />
 
       {/* Add User Modal */}
       <AddUserModal
@@ -286,7 +288,6 @@ export default function UsersPage() {
           setEditUser(null);
         }}
         onSave={handleUpdateRole}
-        onRemove={handleRemoveRole}
         user={editUser}
         roles={roles}
         isSystemUser={isSystemUser}

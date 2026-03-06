@@ -11,7 +11,6 @@ interface EditUserRoleModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (roleId: string) => Promise<void>;
-  onRemove: () => Promise<void>;
   user: AdminUser | null;
   roles: Role[];
   isSystemUser: boolean;
@@ -21,7 +20,6 @@ export function EditUserRoleModal({
   isOpen,
   onClose,
   onSave,
-  onRemove,
   user,
   roles,
   isSystemUser,
@@ -50,18 +48,6 @@ export function EditUserRoleModal({
     }
   };
 
-  const handleRemove = async () => {
-    setSaving(true);
-    try {
-      await onRemove();
-      onClose();
-    } catch {
-      // error handled by caller
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const availableRoles = isSystemUser ? roles : roles.filter(r => r.name !== 'Super Admin');
 
   return (
@@ -76,9 +62,12 @@ export function EditUserRoleModal({
             label={t('role')}
             selectedKeys={selectedRoleId ? [selectedRoleId] : []}
             onSelectionChange={(keys) => {
-              const value = Array.from(keys)[0] as string;
-              setSelectedRoleId(value || '');
+              const selected = Array.from(keys)[0];
+              if (selected) {
+                setSelectedRoleId(String(selected));
+              }
             }}
+            isRequired
           >
             {availableRoles.map((role) => (
               <SelectItem key={role.id}>{role.name}</SelectItem>
@@ -89,16 +78,6 @@ export function EditUserRoleModal({
           <Button variant="flat" onClick={onClose} disabled={saving}>
             {tCommon('actions.cancel')}
           </Button>
-          {user?.role_id && (
-            <Button
-              color="danger"
-              variant="flat"
-              onClick={handleRemove}
-              isLoading={saving}
-            >
-              {t('removeRole')}
-            </Button>
-          )}
           <Button
             color="primary"
             onClick={handleSave}

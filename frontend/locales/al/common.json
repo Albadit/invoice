@@ -20,7 +20,8 @@
     "templateEditor": "Redaktori i Shablloneve",
     "admin": "Admin",
     "users": "Përdoruesit",
-    "roles": "Rolet"
+    "roles": "Rolet",
+    "profile": "Profili"
   },
   "actions": {
     "save": "Ruaj",
@@ -45,5 +46,14 @@
     "filter": "Filtro",
     "sort": "Rendit",
     "language": "Gjuha"
+  },
+  "pagination": {
+    "previous": "E mëparshme",
+    "next": "Tjetra",
+    "pageLabel": "Faqja",
+    "ofPages": "nga {{total}}",
+    "rowsPerPage": "Rreshta për faqe:",
+    "rows": "rreshta",
+    "records": "regjistrime"
   }
 }

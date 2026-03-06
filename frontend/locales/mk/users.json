@@ -40,7 +40,7 @@
     "emailPlaceholder": "корисник@пример.com",
     "password": "Лозинка",
     "passwordPlaceholder": "Внесете почетна лозинка",
-    "role": "Улога (опционално)",
+    "role": "Улога",
     "rolePlaceholder": "Изберете улога"
   }
 }
