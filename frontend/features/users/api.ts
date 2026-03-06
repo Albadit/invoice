@@ -94,6 +94,22 @@ export const usersApi = {
   },
 
   /**
+   * Delete a user account
+   */
+  async deleteUser(userId: string): Promise<void> {
+    const response = await fetch(`${API_URL}/rpc/admin_delete_user`, {
+      method: 'POST',
+      headers: await getHeaders(),
+      body: JSON.stringify({ p_user_id: userId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to delete user');
+    }
+  },
+
+  /**
    * Get all available roles (for the role dropdown)
    */
   async getRoles(): Promise<Role[]> {

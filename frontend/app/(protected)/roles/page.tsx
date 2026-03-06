@@ -19,7 +19,7 @@ import {
   EditRoleModal,
   EditRolePermissionsModal,
 } from '@/features/roles/components';
-import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination, ActionDropdown } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
@@ -69,8 +69,13 @@ export default function RolesPage() {
   }
 
   // Pagination
-  const totalCount = roles.length;
-  const paginatedRoles = roles.slice(
+  const sortedRoles = [...roles].sort((a, b) => {
+    const dateCompare = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return a.level - b.level;
+  });
+  const totalCount = sortedRoles.length;
+  const paginatedRoles = sortedRoles.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
@@ -198,52 +203,40 @@ export default function RolesPage() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <ViewAuth permission="roles:update">
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="primary"
-                        startContent={<ShieldCheck className="size-4" />}
-                        onClick={() => {
-                          setSelectedRole(role);
-                          setIsPermissionsOpen(true);
-                        }}
-                        isDisabled={role.is_system}
-                      >
-                        {t('permissions')}
-                      </Button>
-                    </ViewAuth>
-                    {!role.is_system && (
-                      <>
-                        <ViewAuth permission="roles:update">
-                          <Button
-                            size="sm"
-                            variant="flat"
-                            color="primary"
-                            startContent={<Edit className="size-4" />}
-                            onClick={() => {
-                              setSelectedRole(role);
-                              setIsEditOpen(true);
-                            }}
-                          >
-                            {tCommon('actions.edit')}
-                          </Button>
-                        </ViewAuth>
-                        <ViewAuth permission="roles:delete">
-                          <Button
-                            size="sm"
-                            variant="flat"
-                            color="danger"
-                            startContent={<Trash className="size-4" />}
-                            onClick={() => handleDeleteRole(role)}
-                          >
-                            {tCommon('actions.delete')}
-                          </Button>
-                        </ViewAuth>
-                      </>
-                    )}
-                  </div>
+                  <ActionDropdown items={[
+                    {
+                      key: 'permissions',
+                      label: t('permissions'),
+                      icon: <ShieldCheck className="size-4" />,
+                      color: 'primary',
+                      isHidden: !hasPermission('roles:update'),
+                      isDisabled: role.is_system,
+                      onClick: () => {
+                        setSelectedRole(role);
+                        setIsPermissionsOpen(true);
+                      },
+                    },
+                    {
+                      key: 'edit',
+                      label: tCommon('actions.edit'),
+                      icon: <Edit className="size-4" />,
+                      color: 'primary',
+                      isHidden: !hasPermission('roles:update') || role.is_system,
+                      onClick: () => {
+                        setSelectedRole(role);
+                        setIsEditOpen(true);
+                      },
+                    },
+                    {
+                      key: 'delete',
+                      label: tCommon('actions.delete'),
+                      icon: <Trash className="size-4" />,
+                      color: 'danger',
+                      className: 'text-danger',
+                      isHidden: !hasPermission('roles:delete') || role.is_system,
+                      onClick: () => handleDeleteRole(role),
+                    },
+                  ]} />
                 </TableCell>
               </TableRow>
             ))}

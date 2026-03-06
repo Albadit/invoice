@@ -10,6 +10,7 @@
   "changeRole": "Rol Wijzigen",
   "editRole": "Gebruikersrol Bewerken",
   "editRoleFor": "Rol wijzigen voor",
+  "deleteUser": "Gebruiker Verwijderen",
   "removeRole": "Rol Verwijderen",
   "resetPassword": "Wachtwoord Resetten",
   "columns": {
@@ -33,7 +34,10 @@
     "roleRemoveError": "Kan de rol niet verwijderen. Probeer het opnieuw.",
     "resetTokenError": "Kan de resetlink niet genereren. Probeer het opnieuw.",
     "userCreated": "Gebruiker succesvol aangemaakt",
-    "userCreateError": "Kan de gebruiker niet aanmaken. Probeer het opnieuw."
+    "userCreateError": "Kan de gebruiker niet aanmaken. Probeer het opnieuw.",
+    "deleteConfirm": "Weet u zeker dat u {{email}} wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "userDeleted": "Gebruiker succesvol verwijderd",
+    "userDeleteError": "Kan de gebruiker niet verwijderen. Probeer het opnieuw."
   },
   "fields": {
     "email": "E-mail",

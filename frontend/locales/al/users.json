@@ -10,6 +10,7 @@
   "changeRole": "Ndrysho Rolin",
   "editRole": "Ndrysho Rolin e Përdoruesit",
   "editRoleFor": "Ndryshim i rolit për",
+  "deleteUser": "Fshi Përdoruesin",
   "removeRole": "Hiq Rolin",
   "resetPassword": "Rivendos Fjalëkalimin",
   "columns": {
@@ -33,7 +34,10 @@
     "roleRemoveError": "Dështoi heqja e rolit. Provoni përsëri.",
     "resetTokenError": "Dështoi gjenerimi i lidhjes. Provoni përsëri.",
     "userCreated": "Përdoruesi u krijua me sukses",
-    "userCreateError": "Dështoi krijimi i përdoruesit. Provoni përsëri."
+    "userCreateError": "Dështoi krijimi i përdoruesit. Provoni përsëri.",
+    "deleteConfirm": "Jeni i sigurt që dëshironi të fshini {{email}}? Ky veprim nuk mund të kthehet.",
+    "userDeleted": "Përdoruesi u fshi me sukses",
+    "userDeleteError": "Dështoi fshirja e përdoruesit. Provoni përsëri."
   },
   "fields": {
     "email": "Email",

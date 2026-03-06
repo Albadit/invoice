@@ -129,6 +129,7 @@ export interface Roles {
   id: string
   name: string
   description: string | null
+  level: number
   is_system: boolean
   created_at: string | null
   updated_at: string | null
@@ -174,6 +175,7 @@ export interface AdminUser {
   last_sign_in_at: string | null
   role_id: string | null
   role_name: string | null
+  role_level: number
   is_system: boolean
 }
 
@@ -215,7 +217,7 @@ export type TemplatesPatch = Partial<TemplatesPost>
 export type TemplatesDelete = Pick<Templates, 'id'>
 
 export type RolesGet = Roles
-export type RolesPost = Omit<Roles, 'id' | 'created_at' | 'updated_at' | 'is_system'>
+export type RolesPost = Omit<Roles, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'level'>
 export type RolesPut = Omit<Roles, 'created_at' | 'updated_at'>
 export type RolesPatch = Partial<RolesPost>
 export type RolesDelete = Pick<Roles, 'id'>

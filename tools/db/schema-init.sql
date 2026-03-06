@@ -219,6 +219,7 @@ CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name TEXT NOT NULL,
     description TEXT,
+    level INTEGER NOT NULL DEFAULT 0,
     is_system BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -729,6 +730,7 @@ RETURNS TABLE (
     last_sign_in_at timestamptz,
     role_id uuid,
     role_name text,
+    role_level integer,
     is_system boolean
 ) AS $$
 BEGIN
@@ -749,6 +751,7 @@ BEGIN
         u.last_sign_in_at,
         r.id   AS role_id,
         r.name AS role_name,
+        COALESCE(r.level, 0) AS role_level,
         COALESCE(ur.is_system, false) AS is_system
     FROM auth.users u
     LEFT JOIN user_roles ur ON u.id = ur.user_id
@@ -871,7 +874,7 @@ BEGIN
 
     RETURN v_token;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
 
 -- Public: Validate a reset token (no auth required)
 CREATE OR REPLACE FUNCTION validate_reset_token(p_token uuid)
@@ -1011,6 +1014,41 @@ BEGIN
     RETURN v_user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions;
+
+CREATE OR REPLACE FUNCTION admin_delete_user(p_user_id uuid)
+RETURNS void AS $$
+DECLARE
+    v_target_is_system boolean;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN role_permissions rp ON ur.role_id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = auth.uid() AND p.key = 'users:delete'
+    ) THEN
+        RAISE EXCEPTION 'Permission denied';
+    END IF;
+
+    IF p_user_id = auth.uid() THEN
+        RAISE EXCEPTION 'Cannot delete your own account';
+    END IF;
+
+    SELECT COALESCE(ur.is_system, false) INTO v_target_is_system
+    FROM user_roles ur WHERE ur.user_id = p_user_id LIMIT 1;
+
+    IF v_target_is_system THEN
+        RAISE EXCEPTION 'Cannot delete a system user';
+    END IF;
+
+    DELETE FROM password_reset_tokens WHERE user_id = p_user_id;
+    DELETE FROM user_roles WHERE user_id = p_user_id;
+    DELETE FROM auth.identities WHERE user_id = p_user_id;
+    DELETE FROM auth.sessions WHERE user_id = p_user_id;
+    DELETE FROM auth.refresh_tokens WHERE instance_id = '00000000-0000-0000-0000-000000000000' AND user_id = p_user_id::text;
+    DELETE FROM auth.mfa_factors WHERE user_id = p_user_id;
+    DELETE FROM auth.users WHERE id = p_user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Grant execute to anon for public reset functions
 GRANT EXECUTE ON FUNCTION validate_reset_token(uuid) TO anon, authenticated;

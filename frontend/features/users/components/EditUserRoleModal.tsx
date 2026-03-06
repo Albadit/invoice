@@ -48,7 +48,8 @@ export function EditUserRoleModal({
     }
   };
 
-  const availableRoles = isSystemUser ? roles : roles.filter(r => r.name !== 'Super Admin');
+  const availableRoles = (isSystemUser ? roles : roles.filter(r => r.name !== 'Super Admin'))
+    .sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg">

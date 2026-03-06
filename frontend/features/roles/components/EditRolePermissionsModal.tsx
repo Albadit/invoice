@@ -62,13 +62,46 @@ export function EditRolePermissionsModal({
     return groups;
   }, [allPermissions]);
 
+  function findPermId(category: string, action: string): string | undefined {
+    return allPermissions.find((p) => p.key === `${category}:${action}`)?.id;
+  }
+
   function togglePermission(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
+      const perm = allPermissions.find((p) => p.id === id);
+      if (!perm) return next;
+
+      const [category, action] = perm.key.split(':');
+      const isEnabling = !next.has(id);
+
+      if (isEnabling) {
         next.add(id);
+        // create/update/delete → auto-enable read
+        if (['create', 'update', 'delete'].includes(action)) {
+          const readId = findPermId(category, 'read');
+          if (readId) next.add(readId);
+        }
+        // read → auto-enable access
+        if (action === 'read' || ['create', 'update', 'delete'].includes(action)) {
+          const accessId = findPermId(category, 'access');
+          if (accessId) next.add(accessId);
+        }
+      } else {
+        next.delete(id);
+        // disabling access → disable all in category
+        if (action === 'access') {
+          for (const p of grouped[category] || []) {
+            next.delete(p.id);
+          }
+        }
+        // disabling read → disable create/update/delete
+        if (action === 'read') {
+          for (const a of ['create', 'update', 'delete']) {
+            const depId = findPermId(category, a);
+            if (depId) next.delete(depId);
+          }
+        }
       }
       return next;
     });

@@ -13,11 +13,11 @@ import {
   TableRow,
   TableCell,
 } from "@heroui/table";
-import { Shield, KeyRound, Search, Plus, Lock } from 'lucide-react';
+import { Shield, KeyRound, Search, Plus, Lock, Trash2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { usersApi } from '@/features/users/api';
 import { AddUserModal, EditUserRoleModal, ResetLinkModal } from '@/features/users/components';
-import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination, ActionDropdown } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { AdminUser, Role } from '@/lib/types';
@@ -78,7 +78,11 @@ export default function UsersPage() {
   const filteredUsers = users.filter((u) =>
     u.email.toLowerCase().includes(search.toLowerCase()) ||
     (u.role_name || '').toLowerCase().includes(search.toLowerCase())
-  );
+  ).sort((a, b) => {
+    const dateCompare = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (dateCompare !== 0) return dateCompare;
+    return (a.role_level || 0) - (b.role_level || 0);
+  });
 
   // Pagination
   const totalCount = filteredUsers.length;
@@ -152,11 +156,18 @@ export default function UsersPage() {
 
   function formatDate(dateStr: string | null) {
     if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString(undefined, {
+    const date = new Date(dateStr);
+    const base = date.toLocaleString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
     });
+    const ms = date.getMilliseconds().toString().padStart(3, '0');
+    const micro = dateStr.match(/\.(\d{6})/)?.[1]?.slice(3) || '000';
+    return `${base}.${ms}${micro}`;
   }
 
   return (
@@ -227,36 +238,55 @@ export default function UsersPage() {
                 <TableCell>{formatDate(user.created_at)}</TableCell>
                 <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <ViewAuth permission="users:update">
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="primary"
-                        startContent={<Shield className="size-4" />}
-                        isDisabled={user.is_system || user.id === userId}
-                        onClick={() => {
-                          setEditUser(user);
-                          setIsEditRoleOpen(true);
-                        }}
-                      >
-                        {t('changeRole')}
-                      </Button>
-                    </ViewAuth>
-                    <ViewAuth permission="users:update">
-                      <Button
-                        size="sm"
-                        variant="flat"
-                        color="warning"
-                        startContent={<KeyRound className="size-4" />}
-                        isLoading={generatingToken === user.id}
-                        isDisabled={(user.is_system && !isSystemUser) || user.id === userId}
-                        onClick={() => handleGenerateResetLink(user)}
-                      >
-                        {t('resetPassword')}
-                      </Button>
-                    </ViewAuth>
-                  </div>
+                  <ActionDropdown items={[
+                    {
+                      key: 'changeRole',
+                      label: t('changeRole'),
+                      icon: <Shield className="size-4" />,
+                      color: 'primary',
+                      isHidden: !hasPermission('users:update'),
+                      isDisabled: user.is_system || user.id === userId,
+                      onClick: () => {
+                        setEditUser(user);
+                        setIsEditRoleOpen(true);
+                      },
+                    },
+                    {
+                      key: 'resetPassword',
+                      label: t('resetPassword'),
+                      icon: <KeyRound className="size-4" />,
+                      color: 'warning',
+                      isHidden: !hasPermission('users:update'),
+                      isDisabled: (user.is_system && !isSystemUser) || user.id === userId,
+                      isLoading: generatingToken === user.id,
+                      onClick: () => handleGenerateResetLink(user),
+                    },
+                    {
+                      key: 'delete',
+                      label: tCommon('actions.delete'),
+                      icon: <Trash2 className="size-4" />,
+                      color: 'danger',
+                      className: 'text-danger',
+                      isHidden: !hasPermission('users:delete'),
+                      isDisabled: user.is_system || user.id === userId,
+                      onClick: () => {
+                        setConfirmModal({
+                          isOpen: true,
+                          title: t('deleteUser'),
+                          message: t('messages.deleteConfirm', { email: user.email }),
+                          action: async () => {
+                            await usersApi.deleteUser(user.id);
+                            await loadData();
+                            addToast({
+                              title: t('messages.success'),
+                              description: t('messages.userDeleted'),
+                              color: 'success',
+                            });
+                          },
+                        });
+                      },
+                    },
+                  ]} />
                 </TableCell>
               </TableRow>
             ))}

@@ -10,6 +10,7 @@
   "changeRole": "Change Role",
   "editRole": "Edit User Role",
   "editRoleFor": "Changing role for",
+  "deleteUser": "Delete User",
   "removeRole": "Remove Role",
   "resetPassword": "Reset Password",
   "columns": {
@@ -33,7 +34,10 @@
     "roleRemoveError": "Failed to remove user role. Please try again.",
     "resetTokenError": "Failed to generate reset link. Please try again.",
     "userCreated": "User created successfully",
-    "userCreateError": "Failed to create user. Please try again."
+    "userCreateError": "Failed to create user. Please try again.",
+    "deleteConfirm": "Are you sure you want to delete {{email}}? This action cannot be undone.",
+    "userDeleted": "User deleted successfully",
+    "userDeleteError": "Failed to delete user. Please try again."
   },
   "fields": {
     "email": "Email",

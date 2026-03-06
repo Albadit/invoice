@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "compile:frontend": "docker compose -f frontend/docker-compose.yml up -d --build",
-    "compile:backend": "docker compose -f supabase/docker-compose.yml up -d --build",
+    "compile:frontend": "docker compose --env-file frontend/.env -f frontend/docker-compose.yml up -d --build",
+    "compile:backend": "docker compose --env-file supabase/.env -f supabase/docker-compose.yml up -d --build",
     "predev:frontend": "npm --prefix frontend install",
     "dev:frontend": "npm --prefix frontend run dev",
     "db:gen": "tsx ./tools/supabase/generate-types.ts",

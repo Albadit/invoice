@@ -43,10 +43,10 @@ WHERE u.email = 'admin@admin.com'
 -- Seed System Roles
 -- =============================================
 
-INSERT INTO roles (name, description, is_system) VALUES
-    ('Super Admin',  'Full access to all resources. Cannot be removed.',  true),
-    ('Admin',        'Administrative access. Can manage users and settings.', true),
-    ('Member',       'Can manage companies, clients, and invoices.',  true)
+INSERT INTO roles (name, description, level, is_system) VALUES
+    ('Super Admin',  'Full access to all resources. Cannot be removed.',  1, true),
+    ('Admin',        'Administrative access. Can manage users and settings.', 2, true),
+    ('Member',       'Can manage companies, clients, and invoices.',  3, true)
 ON CONFLICT DO NOTHING;
 
 -- =============================================

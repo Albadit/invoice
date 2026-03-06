@@ -1,15 +1,16 @@
 services:
-  frontend:
+  invoice-frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: invoice-frontend
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     environment:
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
       - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-      - SUPABASE_INTERNAL_URL=http://supabase-kong:8000
       - PORT=${PORT:-3000}
     restart: unless-stopped
     networks:
