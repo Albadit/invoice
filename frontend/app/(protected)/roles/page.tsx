@@ -3,15 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@heroui/table";
-import { Plus, Edit, Trash, Lock, ShieldCheck } from 'lucide-react';
+import { Plus, Edit, Trash, Lock, ShieldCheck, GripVertical } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { rolesApi } from '@/features/roles/api';
 import {
@@ -23,6 +15,66 @@ import { ConfirmModal, StickyHeader, Pagination, ActionDropdown } from '@/compon
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
+
+function SortableRow({
+  role,
+  children,
+  canDrag,
+}: {
+  role: Role;
+  children: React.ReactNode;
+  canDrag: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: role.id, disabled: !canDrag });
+
+  const style = {
+    transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: isDragging ? 'relative' as const : undefined,
+    zIndex: isDragging ? 999 : undefined,
+  };
+
+  return (
+    <tr ref={setNodeRef} style={style} className="border-b border-divider last:border-0">
+      <td className="py-3 px-3 w-10">
+        {canDrag ? (
+          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-default-400 hover:text-default-600 touch-none">
+            <GripVertical className="size-4" />
+          </button>
+        ) : (
+          <Lock className="size-4 text-default-300" />
+        )}
+      </td>
+      {children}
+    </tr>
+  );
+}
 
 export default function RolesPage() {
   const { t } = useTranslation('roles');
@@ -47,6 +99,11 @@ export default function RolesPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   useEffect(() => {
     loadRoles();
   }, []);
@@ -69,16 +126,47 @@ export default function RolesPage() {
   }
 
   // Pagination
-  const sortedRoles = [...roles].sort((a, b) => {
-    const dateCompare = new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-    if (dateCompare !== 0) return dateCompare;
-    return a.level - b.level;
-  });
+  const sortedRoles = [...roles].sort((a, b) => a.level - b.level);
   const totalCount = sortedRoles.length;
   const paginatedRoles = sortedRoles.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortedRoles.findIndex((r) => r.id === active.id);
+    const newIndex = sortedRoles.findIndex((r) => r.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Prevent dropping above system roles
+    const systemCount = sortedRoles.filter((r) => r.is_system).length;
+    if (newIndex < systemCount) return;
+
+    const reordered = arrayMove(sortedRoles, oldIndex, newIndex);
+    const updates = reordered.map((role, i) => ({ id: role.id, level: i + 1 }));
+
+    // Optimistic update
+    setRoles(reordered.map((role, i) => ({ ...role, level: i + 1 })));
+
+    try {
+      await rolesApi.updateLevels(updates);
+      addToast({
+        title: t('messages.success'),
+        description: t('messages.levelUpdated'),
+        color: 'success',
+      });
+    } catch {
+      await loadRoles();
+      addToast({
+        title: tCommon('common.error'),
+        description: t('messages.levelUpdateError'),
+        color: 'danger',
+      });
+    }
+  }
 
   useEffect(() => {
     setCurrentPage(1);
@@ -168,80 +256,90 @@ export default function RolesPage() {
         </ViewAuth>
       </StickyHeader>
 
-      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }}>
-        <TableHeader>
-            <TableColumn>{t('columns.name')}</TableColumn>
-            <TableColumn>{t('columns.description')}</TableColumn>
-            <TableColumn>{t('columns.type')}</TableColumn>
-            <TableColumn>{t('columns.actions')}</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent={t('noData')}>
-            {paginatedRoles.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell>
-                  <span className="font-medium">{role.name}</span>
-                </TableCell>
-                <TableCell>
-                  <span className="text-sm text-default-500">
-                    {role.description || '—'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  {role.is_system ? (
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color="secondary"
-                      startContent={<Lock className="size-3" />}
-                    >
-                      {t('system')}
-                    </Chip>
-                  ) : (
-                    <Chip size="sm" variant="flat" color="default">
-                      {t('custom')}
-                    </Chip>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <ActionDropdown items={[
-                    {
-                      key: 'permissions',
-                      label: t('permissions'),
-                      icon: <ShieldCheck className="size-4" />,
-                      color: 'primary',
-                      isHidden: !hasPermission('roles:update'),
-                      isDisabled: role.is_system,
-                      onClick: () => {
-                        setSelectedRole(role);
-                        setIsPermissionsOpen(true);
-                      },
-                    },
-                    {
-                      key: 'edit',
-                      label: tCommon('actions.edit'),
-                      icon: <Edit className="size-4" />,
-                      color: 'primary',
-                      isHidden: !hasPermission('roles:update') || role.is_system,
-                      onClick: () => {
-                        setSelectedRole(role);
-                        setIsEditOpen(true);
-                      },
-                    },
-                    {
-                      key: 'delete',
-                      label: tCommon('actions.delete'),
-                      icon: <Trash className="size-4" />,
-                      color: 'danger',
-                      className: 'text-danger',
-                      isHidden: !hasPermission('roles:delete') || role.is_system,
-                      onClick: () => handleDeleteRole(role),
-                    },
-                  ]} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="w-full overflow-x-auto">
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis, restrictToParentElement]}>
+          <table className={`w-full text-sm ${loading ? 'opacity-60' : 'opacity-100'} transition-opacity`}>
+            <thead>
+              <tr className="border-b border-divider">
+                <th className="py-3 px-3 w-10" />
+                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.name')}</th>
+                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.description')}</th>
+                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.type')}</th>
+                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.actions')}</th>
+              </tr>
+            </thead>
+            <SortableContext items={paginatedRoles.map((r) => r.id)} strategy={verticalListSortingStrategy}>
+              <tbody>
+                {paginatedRoles.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-default-400">{t('noData')}</td>
+                  </tr>
+                ) : (
+                  paginatedRoles.map((role) => (
+                    <SortableRow key={role.id} role={role} canDrag={!role.is_system && hasPermission('roles:update')}>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="font-medium">{role.name}</span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="text-sm text-default-500">
+                          {role.description || '—'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {role.is_system ? (
+                          <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="size-3" />}>
+                            {t('system')}
+                          </Chip>
+                        ) : (
+                          <Chip size="sm" variant="flat" color="default">
+                            {t('custom')}
+                          </Chip>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <ActionDropdown items={[
+                          {
+                            key: 'permissions',
+                            label: t('permissions'),
+                            icon: <ShieldCheck className="size-4" />,
+                            color: 'primary',
+                            isHidden: !hasPermission('roles:update'),
+                            isDisabled: role.is_system,
+                            onClick: () => {
+                              setSelectedRole(role);
+                              setIsPermissionsOpen(true);
+                            },
+                          },
+                          {
+                            key: 'edit',
+                            label: tCommon('actions.edit'),
+                            icon: <Edit className="size-4" />,
+                            color: 'primary',
+                            isHidden: !hasPermission('roles:update') || role.is_system,
+                            onClick: () => {
+                              setSelectedRole(role);
+                              setIsEditOpen(true);
+                            },
+                          },
+                          {
+                            key: 'delete',
+                            label: tCommon('actions.delete'),
+                            icon: <Trash className="size-4" />,
+                            color: 'danger',
+                            className: 'text-danger',
+                            isHidden: !hasPermission('roles:delete') || role.is_system,
+                            onClick: () => handleDeleteRole(role),
+                          },
+                        ]} />
+                      </td>
+                    </SortableRow>
+                  ))
+                )}
+              </tbody>
+            </SortableContext>
+          </table>
+        </DndContext>
+      </div>
 
       <Pagination
         currentPage={currentPage}

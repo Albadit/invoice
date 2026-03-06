@@ -30,6 +30,8 @@
     "updateError": "Kan de rol niet bijwerken. Probeer het opnieuw.",
     "deleted": "Rol succesvol verwijderd",
     "deleteError": "Kan de rol niet verwijderen. Deze is mogelijk toegewezen aan gebruikers.",
-    "confirmDelete": "Weet u zeker dat u de rol \"{{name}}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+    "confirmDelete": "Weet u zeker dat u de rol \"{{name}}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "levelUpdated": "Rolvolgorde bijgewerkt",
+    "levelUpdateError": "Kan de rolvolgorde niet bijwerken. Probeer het opnieuw."
   }
 }

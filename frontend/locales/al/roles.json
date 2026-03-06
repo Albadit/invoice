@@ -30,6 +30,8 @@
     "updateError": "Dështoi përditësimi i rolit. Provoni përsëri.",
     "deleted": "Roli u fshi me sukses",
     "deleteError": "Dështoi fshirja e rolit. Mund të jetë i caktuar tek përdorues.",
-    "confirmDelete": "A jeni i sigurt që doni të fshini rolin \"{{name}}\"? Ky veprim nuk mund të zhbëhet."
+    "confirmDelete": "A jeni i sigurt që doni të fshini rolin \"{{name}}\"? Ky veprim nuk mund të zhbëhet.",
+    "levelUpdated": "Renditja e roleve u përditësua",
+    "levelUpdateError": "Dështoi përditësimi i renditjes. Provoni përsëri."
   }
 }

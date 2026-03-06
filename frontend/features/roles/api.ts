@@ -58,6 +58,22 @@ export const rolesApi = {
   },
 
   /**
+   * Update levels for multiple roles
+   */
+  async updateLevels(updates: { id: string; level: number }[]): Promise<void> {
+    const headers = await getHeaders('return=minimal');
+    await Promise.all(
+      updates.map(({ id, level }) =>
+        fetch(`${API_URL}/roles?id=eq.${id}`, {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ level }),
+        }).then((r) => { if (!r.ok) throw new Error('Failed to update level'); })
+      )
+    );
+  },
+
+  /**
    * Delete a role
    */
   async delete(id: string): Promise<void> {

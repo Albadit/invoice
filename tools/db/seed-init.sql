@@ -46,7 +46,7 @@ WHERE u.email = 'admin@admin.com'
 INSERT INTO roles (name, description, level, is_system) VALUES
     ('Super Admin',  'Full access to all resources. Cannot be removed.',  1, true),
     ('Admin',        'Administrative access. Can manage users and settings.', 2, true),
-    ('Member',       'Can manage companies, clients, and invoices.',  3, true)
+    ('Member',       'Can manage companies, clients, and invoices.',  3, false)
 ON CONFLICT DO NOTHING;
 
 -- =============================================

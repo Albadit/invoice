@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
+import { Switch } from "@heroui/switch";
 import { Spinner } from "@heroui/spinner";
 import { rolesApi } from '@/features/roles/api';
 import type { Role, Permission } from '@/lib/types';
@@ -137,8 +138,11 @@ export function EditRolePermissionsModal({
     }
   };
 
+  // Ordered actions for column headers
+  const actions = ['access', 'read', 'create', 'update', 'delete'];
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+    <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
         <ModalHeader>
           {t('managePermissions')}: {role?.name}
@@ -149,39 +153,50 @@ export function EditRolePermissionsModal({
               <Spinner size="lg" />
             </div>
           ) : (
-            <div className="flex flex-col gap-6">
-              {Object.entries(grouped).map(([category, perms]) => {
-                const allSelected = perms.every((p) => selectedIds.has(p.id));
-                const someSelected = perms.some((p) => selectedIds.has(p.id));
-                return (
-                  <div key={category} className="border border-divider rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Checkbox
-                        isSelected={allSelected}
-                        isIndeterminate={someSelected && !allSelected}
-                        onValueChange={() => toggleGroup(category)}
-                      >
-                        <span className="font-semibold capitalize text-sm">
-                          {category}
-                        </span>
-                      </Checkbox>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 ml-6">
-                      {perms.map((perm) => (
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-divider">
+                  <th className="text-left text-xs font-semibold text-default-500 py-2 pr-4"></th>
+                  {actions.map((a) => (
+                    <th key={a} className="text-center text-xs font-semibold text-default-500 py-2 px-1 capitalize">{a}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(grouped).map(([category, perms]) => {
+                  const allSelected = perms.every((p) => selectedIds.has(p.id));
+                  const someSelected = perms.some((p) => selectedIds.has(p.id));
+                  return (
+                    <tr key={category} className="border-b border-divider last:border-0">
+                      <td className="py-3 pr-4">
                         <Checkbox
-                          key={perm.id}
-                          isSelected={selectedIds.has(perm.id)}
-                          onValueChange={() => togglePermission(perm.id)}
+                          isSelected={allSelected}
+                          isIndeterminate={someSelected && !allSelected}
+                          onValueChange={() => toggleGroup(category)}
                           size="sm"
                         >
-                          <span className="text-xs">{perm.key}</span>
+                          <span className="font-medium capitalize text-sm">{category}</span>
                         </Checkbox>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                      </td>
+                      {actions.map((action) => {
+                        const perm = perms.find((p) => p.key === `${category}:${action}`);
+                        if (!perm) return <td key={action} className="text-center py-3 px-1" />;
+                        return (
+                          <td key={action} className="text-center py-3 px-1">
+                            <Switch
+                              size="sm"
+                              isSelected={selectedIds.has(perm.id)}
+                              onValueChange={() => togglePermission(perm.id)}
+                              aria-label={perm.key}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">

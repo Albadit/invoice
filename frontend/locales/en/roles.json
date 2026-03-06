@@ -30,6 +30,8 @@
     "updateError": "Failed to update role. Please try again.",
     "deleted": "Role deleted successfully",
     "deleteError": "Failed to delete role. It may be assigned to users.",
-    "confirmDelete": "Are you sure you want to delete the role \"{{name}}\"? This action cannot be undone."
+    "confirmDelete": "Are you sure you want to delete the role \"{{name}}\"? This action cannot be undone.",
+    "levelUpdated": "Role order updated",
+    "levelUpdateError": "Failed to update role order. Please try again."
   }
 }
