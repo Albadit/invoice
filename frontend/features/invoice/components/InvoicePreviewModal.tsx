@@ -6,11 +6,11 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Download, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { siteConfig } from '@/config/site';
+import { dateFormats } from '@/config/constants';
 import type { InvoiceWithItems } from '@/lib/types';
-import { formatWithCurrency } from '@/lib/utils';
+import { formatWithCurrency } from '@/lib/currency';
 import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
-import { getEffectiveStatus } from '@/lib/types';
+import { getEffectiveStatus } from '@/lib/status';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
@@ -110,12 +110,12 @@ export function InvoicePreviewModal({
                   <div className="text-default-600 space-y-1 text-sm">
                     <div>
                       <span className="font-semibold">{tl(labels, 'preview.date') || 'Date:'} </span>
-                      {format(new Date(invoice.issue_date || invoice.created_at || ''), siteConfig.previewDateFormat)}
+                      {format(new Date(invoice.issue_date || invoice.created_at || ''), dateFormats.preview)}
                     </div>
                     {invoice.due_date && (
                       <div>
                         <span className="font-semibold">{tl(labels, 'preview.dueDate') || 'Due Date:'} </span>
-                        {format(new Date(invoice.due_date), siteConfig.previewDateFormat)}
+                        {format(new Date(invoice.due_date), dateFormats.preview)}
                       </div>
                     )}
                     <div>

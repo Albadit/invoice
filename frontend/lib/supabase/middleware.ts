@@ -2,6 +2,13 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { AUTH_ROUTES, ROUTES, AUTH_ROUTE_PREFIXES, PROTECTED_ROUTE_PREFIXES } from '@/config/routes'
 
+// In-memory cache for route permissions (static data, rarely changes).
+// Persists within the Edge worker instance across requests.
+type RoutePerm = { key: string; route: string }
+let _routePermsCache: RoutePerm[] | null = null
+let _routePermsCachedAt = 0
+const ROUTE_PERMS_TTL_MS = 5 * 60 * 1000 // 5 minutes
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -67,11 +74,21 @@ export async function updateSession(request: NextRequest) {
 
   // ── Permission-based route protection ──────────────────────────
   if (user && isProtectedRoute) {
-    // Query all permissions that have a route (i.e. :access permissions)
-    const { data: routePerms } = await supabase
-      .from('permissions')
-      .select('key, route')
-      .not('route', 'is', null)
+    // Use cached route permissions (refreshed every 5 minutes)
+    const now = Date.now()
+    if (!_routePermsCache || now - _routePermsCachedAt >= ROUTE_PERMS_TTL_MS) {
+      const { data } = await supabase
+        .from('permissions')
+        .select('key, route')
+        .not('route', 'is', null)
+
+      if (data) {
+        _routePermsCache = data
+        _routePermsCachedAt = now
+      }
+    }
+
+    const routePerms = _routePermsCache ?? []
 
     // Find the permission whose route matches the current path
     const requiredPermission = routePerms?.find(

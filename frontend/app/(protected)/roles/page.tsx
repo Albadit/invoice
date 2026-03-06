@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@heroui/button";
 import { Chip } from "@heroui/chip";
 import { Plus, Edit, Trash, Lock, ShieldCheck, GripVertical } from 'lucide-react';
@@ -104,11 +104,7 @@ export default function RolesPage() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  useEffect(() => {
-    loadRoles();
-  }, []);
-
-  async function loadRoles() {
+  const loadRoles = useCallback(async () => {
     setLoading(true);
     try {
       const data = await rolesApi.getAll();
@@ -123,7 +119,11 @@ export default function RolesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [t, tCommon]);
+
+  useEffect(() => {
+    loadRoles();
+  }, [loadRoles]);
 
   // Pagination
   const sortedRoles = [...roles].sort((a, b) => a.level - b.level);
@@ -244,8 +244,9 @@ export default function RolesPage() {
           <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
         </div>
         <ViewAuth permission="roles:create">
-          <div className="sm:ml-auto shrink-0">
+          <div className="w-full sm:w-auto sm:ml-auto shrink-0">
             <Button
+              className="w-full sm:w-auto"
               color="primary"
               startContent={<Plus className="size-4" />}
               onClick={() => setIsAddOpen(true)}

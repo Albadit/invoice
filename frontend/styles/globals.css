@@ -36,14 +36,14 @@
     visibility: hidden;
   }
   
-  /* Only show the invoice section */
-  section,
-  section * {
+  /* Only show the printable invoice section */
+  .print-invoice,
+  .print-invoice * {
     visibility: visible;
   }
   
   /* Position invoice at top of page */
-  section {
+  .print-invoice {
     position: absolute;
     left: 0;
     top: 0;

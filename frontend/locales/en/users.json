@@ -46,5 +46,10 @@
     "passwordPlaceholder": "Enter initial password",
     "role": "Role",
     "rolePlaceholder": "Select a role"
+  },
+  "validation": {
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "roleRequired": "Role is required"
   }
 }

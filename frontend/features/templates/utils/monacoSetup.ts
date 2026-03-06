@@ -132,16 +132,8 @@ export function registerTemplateProviders(monaco: Monaco): void {
       const classMatch = textUntilPosition.match(/class\s*=\s*["'][^"']*$/);
       if (!classMatch) return { suggestions: [] };
 
-      // Determine the word range for proper replacement
-      const wordInfo = model.getWordUntilPosition(position);
-      const range = {
-        startLineNumber: position.lineNumber,
-        startColumn: wordInfo.startColumn,
-        endLineNumber: position.lineNumber,
-        endColumn: wordInfo.endColumn,
-      };
-
       // Also include the hyphenated prefix (Monaco word boundary stops at `-`)
+      const wordInfo = model.getWordUntilPosition(position);
       const lineContent = model.getLineContent(position.lineNumber);
       let startCol = wordInfo.startColumn;
       while (startCol > 1 && /[\w-]/.test(lineContent[startCol - 2])) {

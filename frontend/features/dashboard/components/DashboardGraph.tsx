@@ -13,9 +13,9 @@ import {Icon} from "@iconify/react";
 import {Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis} from "recharts";
 import type {MonthlyBucket} from "@/features/dashboard/hooks/useDashboardStats";
 import type {InvoiceStat, InvoiceStatus} from "@/lib/types";
-import {getEffectiveStatus} from "@/lib/types";
+import {getEffectiveStatus} from "@/lib/status";
 import {useTranslation, useLocale} from "@/contexts/LocaleProvider";
-import {getIntlLocale} from "@/lib/utils";
+import {getIntlLocale} from "@/lib/i18n/settings";
 import {formatValue, STATUS_THEME_MAP, pctOfTotal} from "@/features/dashboard/utils";
 
 type ChartData = {

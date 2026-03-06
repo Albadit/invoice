@@ -9,6 +9,10 @@
   "deleteRole": "Rol Verwijderen",
   "permissions": "Machtigingen",
   "managePermissions": "Machtigingen Beheren",
+  "sections": {
+    "invoice": "Factuur",
+    "admin": "Admin"
+  },
   "fields": {
     "name": "Rolnaam",
     "namePlaceholder": "bijv. Redacteur",

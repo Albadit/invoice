@@ -9,6 +9,10 @@
   "deleteRole": "Delete Role",
   "permissions": "Permissions",
   "managePermissions": "Manage Permissions",
+  "sections": {
+    "invoice": "Invoice",
+    "admin": "Admin"
+  },
   "fields": {
     "name": "Role Name",
     "namePlaceholder": "e.g. Editor",

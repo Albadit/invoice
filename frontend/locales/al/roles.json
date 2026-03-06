@@ -9,6 +9,10 @@
   "deleteRole": "Fshi Rolin",
   "permissions": "Lejet",
   "managePermissions": "Menaxho Lejet",
+  "sections": {
+    "invoice": "Faturë",
+    "admin": "Admin"
+  },
   "fields": {
     "name": "Emri i Rolit",
     "namePlaceholder": "p.sh. Redaktor",

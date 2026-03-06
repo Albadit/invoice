@@ -204,7 +204,7 @@ describe('renderTemplate — {{ lang.* }}', () => {
 describe('renderTemplate — {{ date.* }}', () => {
   it('formats issue_date', () => {
     const out = renderTemplate('Issued: {{ date.issue_date }}', mockInvoice, mockLabels);
-    // siteConfig.invoiceDateFormat = 'dd-MM-yyyy'
+    // dateFormats.pdf = 'dd-MM-yyyy'
     expect(out).toBe('Issued: 15-01-2025');
   });
 

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useCallback, useMemo } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Checkbox } from "@heroui/checkbox";
 import { Switch } from "@heroui/switch";
 import { Spinner } from "@heroui/spinner";
 import { rolesApi } from '@/features/roles/api';
+import { permissionSections } from '@/features/roles/constants';
 import type { Role, Permission } from '@/lib/types';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
@@ -30,13 +31,7 @@ export function EditRolePermissionsModal({
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && role) {
-      loadPermissions();
-    }
-  }, [isOpen, role]);
-
-  async function loadPermissions() {
+  const loadPermissions = useCallback(async () => {
     setLoading(true);
     try {
       const [perms, assignedIds] = await Promise.all([
@@ -50,7 +45,13 @@ export function EditRolePermissionsModal({
     } finally {
       setLoading(false);
     }
-  }
+  }, [role]);
+
+  useEffect(() => {
+    if (isOpen && role) {
+      loadPermissions();
+    }
+  }, [isOpen, role, loadPermissions]);
 
   // Group permissions by category (prefix before ':')
   const grouped = useMemo(() => {
@@ -163,36 +164,52 @@ export function EditRolePermissionsModal({
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(grouped).map(([category, perms]) => {
-                  const allSelected = perms.every((p) => selectedIds.has(p.id));
-                  const someSelected = perms.some((p) => selectedIds.has(p.id));
+                {permissionSections.map((section) => {
+                  const sectionCategories = section.categories.filter((c) => grouped[c]);
+                  if (sectionCategories.length === 0) return null;
                   return (
-                    <tr key={category} className="border-b border-divider last:border-0">
-                      <td className="py-3 pr-4">
-                        <Checkbox
-                          isSelected={allSelected}
-                          isIndeterminate={someSelected && !allSelected}
-                          onValueChange={() => toggleGroup(category)}
-                          size="sm"
-                        >
-                          <span className="font-medium capitalize text-sm">{category}</span>
-                        </Checkbox>
-                      </td>
-                      {actions.map((action) => {
-                        const perm = perms.find((p) => p.key === `${category}:${action}`);
-                        if (!perm) return <td key={action} className="text-center py-3 px-1" />;
+                    <Fragment key={section.key}>
+                      <tr>
+                        <td colSpan={actions.length + 1} className="pt-5 pb-2 px-0">
+                          <span className="text-xs font-bold uppercase tracking-wider text-default-400">
+                            {t(`sections.${section.key}`)}
+                          </span>
+                        </td>
+                      </tr>
+                      {sectionCategories.map((category) => {
+                        const perms = grouped[category];
+                        const allSelected = perms.every((p) => selectedIds.has(p.id));
+                        const someSelected = perms.some((p) => selectedIds.has(p.id));
                         return (
-                          <td key={action} className="text-center py-3 px-1">
-                            <Switch
-                              size="sm"
-                              isSelected={selectedIds.has(perm.id)}
-                              onValueChange={() => togglePermission(perm.id)}
-                              aria-label={perm.key}
-                            />
-                          </td>
+                          <tr key={category} className="border-b border-divider last:border-0">
+                            <td className="py-3 pr-4">
+                              <Checkbox
+                                isSelected={allSelected}
+                                isIndeterminate={someSelected && !allSelected}
+                                onValueChange={() => toggleGroup(category)}
+                                size="sm"
+                              >
+                                <span className="font-medium capitalize text-sm">{category}</span>
+                              </Checkbox>
+                            </td>
+                            {actions.map((action) => {
+                              const perm = perms.find((p) => p.key === `${category}:${action}`);
+                              if (!perm) return <td key={action} className="text-center py-3 px-1" />;
+                              return (
+                                <td key={action} className="text-center py-3 px-1">
+                                  <Switch
+                                    size="sm"
+                                    isSelected={selectedIds.has(perm.id)}
+                                    onValueChange={() => togglePermission(perm.id)}
+                                    aria-label={perm.key}
+                                  />
+                                </td>
+                              );
+                            })}
+                          </tr>
                         );
                       })}
-                    </tr>
+                    </Fragment>
                   );
                 })}
               </tbody>

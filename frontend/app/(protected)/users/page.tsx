@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
@@ -50,11 +50,7 @@ export default function UsersPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const [usersData, rolesData] = await Promise.all([
@@ -73,7 +69,11 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [t, tCommon]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredUsers = users.filter((u) =>
     u.email.toLowerCase().includes(search.toLowerCase()) ||
@@ -178,8 +178,9 @@ export default function UsersPage() {
           <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
         </div>
         <ViewAuth permission="users:create">
-          <div className="sm:ml-auto shrink-0">
+          <div className="w-full sm:w-auto sm:ml-auto shrink-0">
             <Button
+              className="w-full sm:w-auto"
               color="primary"
               startContent={<Plus className="size-4" />}
               onClick={() => setIsAddUserOpen(true)}

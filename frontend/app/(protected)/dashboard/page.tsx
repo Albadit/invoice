@@ -13,11 +13,13 @@ import { invoicesApi } from '@/features/invoice/api';
 import { companiesApi } from '@/features/companies/api';
 import { currenciesApi } from '@/features/currencies/api';
 import { useDashboardComputed } from '@/features/dashboard/hooks/useDashboardStats';
-import DashboardGraph from '@/features/dashboard/components/DashboardGraph';
-import DashboardKpi from '@/features/dashboard/components/DashboardKpi';
-import type { KpiItem } from '@/features/dashboard/components/DashboardKpi';
-import DashboardCircleChart from '@/features/dashboard/components/DashboardCircleChart';
-import DashboardBar from '@/features/dashboard/components/DashboardBar';
+import {
+  DashboardGraph,
+  DashboardKpi,
+  DashboardCircleChart,
+  DashboardBar,
+  type KpiItem,
+} from '@/features/dashboard/components';
 import { StickyHeader } from '@/components/ui';
 import { INVOICE_ROUTES } from '@/config/routes';
 

@@ -108,7 +108,7 @@ export const storageApi = {
     
     // Generate unique filename
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${crypto.randomUUID()}.${fileExt}`;
     const filePath = fileName;
     
     // Upload file using Supabase client

@@ -22,8 +22,8 @@
  */
 
 import { format } from 'date-fns';
-import { siteConfig } from '@/config/site';
-import { formatWithCurrency } from '@/lib/utils';
+import { dateFormats } from '@/config/constants';
+import { formatWithCurrency } from '@/lib/currency';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
 import type { InvoiceWithItems, InvoiceItem } from '@/lib/types';
@@ -53,7 +53,7 @@ export function renderTemplate(
   labels: Translations,
 ): string {
   const fd = (date: string | null) => {
-    try { return date ? format(new Date(date), siteConfig.invoiceDateFormat) : ''; }
+    try { return date ? format(new Date(date), dateFormats.pdf) : ''; }
     catch { return date || ''; }
   };
   const fc = (amount: string | number) => formatWithCurrency(invoice.currency, amount);

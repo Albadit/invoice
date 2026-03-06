@@ -115,13 +115,13 @@ export const invoicesApi = {
     }
     
     // KEYSET PAGINATION: Apply cursor condition
-    // This is the key to fast pagination on 10M+ rows
     // For DESC order: get rows where (created_at, id) < cursor
+    // Uses OR to handle timestamp ties correctly
     if (cursor) {
-      // Simple approach: filter by created_at being strictly less than cursor
-      // This works because created_at has high precision and is ordered DESC
-      // If there are ties, we also filter by id
-      url.searchParams.append('created_at', `lt.${cursor.createdAt}`);
+      url.searchParams.append(
+        'or',
+        `(created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id}))`
+      );
     }
     
     // Only fetch count on first page (no cursor) - cursor pagination would return remaining count

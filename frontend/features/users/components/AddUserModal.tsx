@@ -23,6 +23,7 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
   const [password, setPassword] = useState('');
   const [roleId, setRoleId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const availableRoles = isSystemUser ? roles : roles.filter(r => r.name !== 'Super Admin');
 
@@ -30,11 +31,13 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
     setEmail('');
     setPassword('');
     setRoleId('');
+    setSubmitted(false);
     onClose();
   };
 
   const handleSave = async () => {
-    if (!email.trim() || !password.trim()) return;
+    setSubmitted(true);
+    if (!email.trim() || !password.trim() || !roleId) return;
     setSaving(true);
     try {
       await onSave({
@@ -62,6 +65,8 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               isRequired
+              isInvalid={submitted && !email.trim()}
+              errorMessage={submitted && !email.trim() ? t('validation.emailRequired') : undefined}
               placeholder={t('fields.emailPlaceholder')}
             />
             <Input
@@ -70,6 +75,8 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               isRequired
+              isInvalid={submitted && !password.trim()}
+              errorMessage={submitted && !password.trim() ? t('validation.passwordRequired') : undefined}
               placeholder={t('fields.passwordPlaceholder')}
             />
             <Select
@@ -78,8 +85,10 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
               selectedKeys={roleId ? [roleId] : []}
               onSelectionChange={(keys) => setRoleId(Array.from(keys)[0] as string || '')}
               isRequired
+              isInvalid={submitted && !roleId}
+              errorMessage={submitted && !roleId ? t('validation.roleRequired') : undefined}
             >
-              {roles.map((role) => (
+              {availableRoles.map((role) => (
                 <SelectItem key={role.id} textValue={role.name}>
                   {role.name}
                 </SelectItem>
@@ -95,7 +104,6 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
             color="primary"
             onClick={handleSave}
             isLoading={saving}
-            disabled={!email.trim() || !password.trim() || !roleId}
           >
             {tCommon('actions.create')}
           </Button>

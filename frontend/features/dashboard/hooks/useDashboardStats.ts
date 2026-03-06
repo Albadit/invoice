@@ -2,8 +2,8 @@
 
 import { useMemo } from 'react';
 import type { Currency, InvoiceStatus, InvoiceStat } from '@/lib/types';
-import { formatCurrencyAmount } from '@/lib/utils';
-import { getEffectiveStatus } from '@/lib/types';
+import { formatCurrencyAmount } from '@/lib/currency';
+import { getEffectiveStatus } from '@/lib/status';
 
 // ── Computed KPI shape ───────────────────────────────────────────
 

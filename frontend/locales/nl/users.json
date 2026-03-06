@@ -46,5 +46,10 @@
     "passwordPlaceholder": "Voer het initiële wachtwoord in",
     "role": "Rol",
     "rolePlaceholder": "Selecteer een rol"
+  },
+  "validation": {
+    "emailRequired": "E-mail is verplicht",
+    "passwordRequired": "Wachtwoord is verplicht",
+    "roleRequired": "Rol is verplicht"
   }
 }

@@ -1,7 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 interface PermissionsContextType {
@@ -32,13 +31,11 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
   const [isSystemUser, setIsSystemUser] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchPermissions() {
-      setLoading(true);
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -96,9 +93,12 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
 
     fetchPermissions();
     return () => { cancelled = true; };
-  }, [pathname]);
+  }, []);
 
-  const hasPermission = (key: string) => permissions.includes(key);
+  const hasPermission = useCallback(
+    (key: string) => permissions.includes(key),
+    [permissions]
+  );
 
   return (
     <PermissionsContext.Provider value={{ permissions, roles, loading, isSystemUser, userId, hasPermission }}>

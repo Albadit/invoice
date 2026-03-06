@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -26,15 +26,7 @@ function ResetPasswordContent() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (!token) {
-      setValidating(false);
-      return;
-    }
-    validateToken();
-  }, [token]);
-
-  async function validateToken() {
+  const validateToken = useCallback(async () => {
     setValidating(true);
     try {
       const result = await resetPasswordApi.validate(token);
@@ -45,7 +37,15 @@ function ResetPasswordContent() {
     } finally {
       setValidating(false);
     }
-  }
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) {
+      setValidating(false);
+      return;
+    }
+    validateToken();
+  }, [token, validateToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

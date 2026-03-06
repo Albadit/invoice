@@ -9,6 +9,10 @@
   "deleteRole": "Избриши Улога",
   "permissions": "Дозволи",
   "managePermissions": "Управувај со Дозволи",
+  "sections": {
+    "invoice": "Фактура",
+    "admin": "Админ"
+  },
   "fields": {
     "name": "Име на Улога",
     "namePlaceholder": "пр. Уредник",

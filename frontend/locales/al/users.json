@@ -46,5 +46,10 @@
     "passwordPlaceholder": "Shkruani fjalëkalimin fillestar",
     "role": "Roli",
     "rolePlaceholder": "Zgjidhni një rol"
+  },
+  "validation": {
+    "emailRequired": "Email-i është i detyrueshëm",
+    "passwordRequired": "Fjalëkalimi është i detyrueshëm",
+    "roleRequired": "Roli është i detyrueshëm"
   }
 }

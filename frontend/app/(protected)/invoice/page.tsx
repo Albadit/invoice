@@ -5,7 +5,7 @@ import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi } from '@/features/currencies/api';
 import { companiesApi } from '@/features/companies/api';
 import type { InvoiceWithItems, Currency, Company } from '@/lib/types';
-import { formatCurrencyAmount } from '@/lib/utils';
+import { formatCurrencyAmount } from '@/lib/currency';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import {
@@ -32,9 +32,9 @@ import { CalendarDate } from "@internationalized/date";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { siteConfig } from '@/config/site';
+import { dateFormats } from '@/config/constants';
 import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
-import { getEffectiveStatus } from '@/lib/types';
+import { getEffectiveStatus } from '@/lib/status';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
@@ -268,8 +268,6 @@ export default function InvoicesPage() {
     loadInvoices(page);
   }
 
-  // Total pages
-  const totalPages = Math.ceil(totalCount / rowsPerPage);
   const loadingState = loading && filteredInvoices.length === 0 ? 'loading' : 'idle';
 
   async function handleDelete(invoiceId: string) {
@@ -524,11 +522,11 @@ export default function InvoicesPage() {
               <TableCell className="font-medium">{invoice.invoice_code}</TableCell>
               <TableCell>{invoice.customer_name}</TableCell>
               <TableCell>
-                {format(new Date(invoice.issue_date || invoice.created_at || ''), siteConfig.dateFormat)}
+                {format(new Date(invoice.issue_date || invoice.created_at || ''), dateFormats.table)}
               </TableCell>
               <TableCell>
                 {invoice.due_date
-                  ? format(new Date(invoice.due_date), siteConfig.dateFormat)
+                  ? format(new Date(invoice.due_date), dateFormats.table)
                   : '-'}
               </TableCell>
               <TableCell>{getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {

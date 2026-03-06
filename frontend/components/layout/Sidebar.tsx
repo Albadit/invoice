@@ -22,7 +22,7 @@ import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
 import { ROUTES, PROTECTED_ROUTES } from '@/config/routes';
 import { createClient } from '@/lib/supabase/client';
-import { usePermissions } from '@/features/auth/components';
+import { usePermissions } from '@/contexts/PermissionsProvider';
 
 // Page-title context – lets StickyHeader push its title up to the mobile header
 interface PageTitleContextType {
