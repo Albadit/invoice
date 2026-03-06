@@ -17,9 +17,7 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 # Set working directory inside container
 WORKDIR /app
 
-# Build arguments for Supabase (required at build time for Next.js NEXT_PUBLIC_* variables)
-ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+EXPOSE ${PORT}
 
 # Copy the project files
 COPY . .

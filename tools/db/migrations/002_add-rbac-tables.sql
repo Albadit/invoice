@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS permissions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     key TEXT NOT NULL UNIQUE,
     description TEXT,
+    route TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

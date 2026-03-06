@@ -138,6 +138,7 @@ export interface Permissions {
   id: string
   key: string
   description: string | null
+  route: string | null
   created_at: string | null
 }
 

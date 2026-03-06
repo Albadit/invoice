@@ -65,6 +65,47 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // ── Permission-based route protection ──────────────────────────
+  if (user && isProtectedRoute) {
+    // Query all permissions that have a route (i.e. :access permissions)
+    const { data: routePerms } = await supabase
+      .from('permissions')
+      .select('key, route')
+      .not('route', 'is', null)
+
+    // Find the permission whose route matches the current path
+    const requiredPermission = routePerms?.find(
+      (p: { key: string; route: string }) =>
+        pathname === p.route || pathname.startsWith(p.route + '/')
+    )
+
+    if (requiredPermission) {
+      // Check if the user has this permission
+      const { data: userRoles } = await supabase
+        .from('user_roles')
+        .select('role:roles!inner(role_permissions:role_permissions!inner(permission:permissions!inner(key)))')
+        .eq('user_id', user.sub as string)
+
+      const permissions = new Set<string>()
+      if (userRoles) {
+        for (const ur of userRoles) {
+          const role = ur.role as unknown as {
+            role_permissions: { permission: { key: string } }[]
+          }
+          for (const rp of role.role_permissions) {
+            permissions.add(rp.permission.key)
+          }
+        }
+      }
+
+      if (!permissions.has(requiredPermission.key)) {
+        const url = request.nextUrl.clone()
+        url.pathname = ROUTES.afterLogin
+        return NextResponse.redirect(url)
+      }
+    }
+  }
+
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
   // If you're creating a new response object with NextResponse.next() make sure to:
   // 1. Pass the request in it, like so:
