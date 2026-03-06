@@ -90,8 +90,10 @@
     "system": "Sistemi",
     "fields": {
       "name": "Emri i Shablonit",
+      "nameRequired": "Emri i shablonit është i detyrueshëm",
       "content": "Përmbajtja e Shablonit",
-      "styling": "Stili i Shablonit (HTML)"
+      "styling": "Stili i Shablonit (HTML)",
+      "stylingRequired": "Stili i shablonit është i detyrueshëm"
     },
     "messages": {
       "created": "Shablloni u krijua me sukses",
@@ -112,8 +114,11 @@
     "manageCurrencies": "Menaxho Valutat",
     "fields": {
       "code": "Kodi i Valutës",
+      "codeRequired": "Kodi i valutës është i detyrueshëm",
       "name": "Emri i Valutës",
+      "nameRequired": "Emri i valutës është i detyrueshëm",
       "symbol": "Simboli",
+      "symbolRequired": "Simboli i valutës është i detyrueshëm",
       "symbolPosition": "Pozicioni i Simbolit",
       "positionLeft": "Majtas (p.sh. $100)",
       "positionRight": "Djathtas (p.sh. 100$)",

@@ -3,7 +3,7 @@
  * Handles CRUD operations for client records (record linking)
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL } from '@/lib/api/api';
 import type { Client, PaginatedResponse } from '@/lib/types';
 import type {
   ClientsPost,
@@ -54,14 +54,7 @@ export const clientsApi = {
       url.searchParams.append('company_id', `eq.${companyId}`);
     }
 
-    const response = await fetch(url.toString(), {
-      headers: await getHeaders('count=exact'),
-      signal
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch clients');
-    }
+    const response = await api.getRaw(url.toString(), { prefer: 'count=exact', signal });
 
     const contentRange = response.headers.get('Content-Range');
     const totalCount = contentRange ? parseInt(contentRange.split('/')[1]) : 0;
@@ -74,36 +67,17 @@ export const clientsApi = {
    * Get all clients as a simple list (for dropdowns)
    */
   async list(): Promise<Client[]> {
-    const response = await fetch(
-      `${API_URL}/clients?select=*&order=name.asc`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch clients');
-    }
-
-    return response.json();
+    return api.get<Client[]>(`${API_URL}/clients?select=*&order=name.asc`);
   },
 
   /**
    * Get a client by ID
    */
   async getById(id: string): Promise<Client> {
-    const response = await fetch(
-      `${API_URL}/clients?id=eq.${id}&select=*`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch client');
-    }
-
-    const data = await response.json();
+    const data = await api.get<Client[]>(`${API_URL}/clients?id=eq.${id}&select=*`);
     if (!data || data.length === 0) {
       throw new Error('Client not found');
     }
-
     return data[0];
   },
 
@@ -111,33 +85,14 @@ export const clientsApi = {
    * Get clients by company ID
    */
   async getByCompany(companyId: string): Promise<Client[]> {
-    const response = await fetch(
-      `${API_URL}/clients?company_id=eq.${companyId}&select=*&order=name.asc`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch clients for company');
-    }
-
-    return response.json();
+    return api.get<Client[]>(`${API_URL}/clients?company_id=eq.${companyId}&select=*&order=name.asc`);
   },
 
   /**
    * Create a new client
    */
   async create(clientData: ClientsPost): Promise<Client> {
-    const response = await fetch(`${API_URL}/clients`, {
-      method: 'POST',
-      headers: await getHeaders('return=representation'),
-      body: JSON.stringify(clientData)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create client');
-    }
-
-    const [newClient] = await response.json();
+    const [newClient] = await api.post<Client[]>(`${API_URL}/clients`, clientData, { prefer: 'return=representation' });
     return newClient;
   },
 
@@ -145,28 +100,13 @@ export const clientsApi = {
    * Update a client
    */
   async update(id: string, clientData: ClientsPatch): Promise<void> {
-    const response = await fetch(`${API_URL}/clients?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify(clientData)
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update client');
-    }
+    await api.patch<void>(`${API_URL}/clients?id=eq.${id}`, clientData, { prefer: 'return=minimal' });
   },
 
   /**
    * Delete a client
    */
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/clients?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders()
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete client');
-    }
+    await api.delete<void>(`${API_URL}/clients?id=eq.${id}`);
   }
 };

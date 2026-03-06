@@ -21,15 +21,18 @@ export function AddTemplateModal({ isOpen, onClose, onSave }: AddTemplateModalPr
   const [name, setName] = useState('');
   const [styling, setStyling] = useState('');
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const handleClose = () => {
     setName('');
     setStyling('');
+    setAttempted(false);
     onClose();
   };
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    setAttempted(true);
+    if (!name.trim() || !styling.trim()) {
       return;
     }
 
@@ -58,12 +61,17 @@ export function AddTemplateModal({ isOpen, onClose, onSave }: AddTemplateModalPr
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
+              isInvalid={attempted && !name.trim()}
+              errorMessage={attempted && !name.trim() ? t('templates.fields.nameRequired') : undefined}
               placeholder="Classic"
             />
             <Textarea
               label={t('templates.fields.styling')}
               value={styling}
               onChange={(e) => setStyling(e.target.value)}
+              isRequired
+              isInvalid={attempted && !styling.trim()}
+              errorMessage={attempted && !styling.trim() ? t('templates.fields.stylingRequired') : undefined}
               placeholder="Enter HTML template..."
               minRows={15}
               className="font-mono text-sm"
@@ -74,7 +82,7 @@ export function AddTemplateModal({ isOpen, onClose, onSave }: AddTemplateModalPr
           <Button variant="flat" onClick={handleClose}>
             {tCommon('actions.cancel')}
           </Button>
-          <Button color="primary" onClick={handleSave} disabled={saving || !name.trim()}>
+          <Button color="primary" onClick={handleSave} isDisabled={saving} isLoading={saving}>
             {saving ? t('actions.creating') : t('templates.addTemplate')}
           </Button>
         </ModalFooter>

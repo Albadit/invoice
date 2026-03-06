@@ -23,16 +23,19 @@ export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTem
   const [name, setName] = useState('');
   const [styling, setStyling] = useState('');
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
     if (isOpen && template) {
       setName(template.name);
       setStyling(template.styling || '');
+      setAttempted(false);
     }
   }, [isOpen, template]);
 
   const handleSave = async () => {
-    if (!name.trim()) {
+    setAttempted(true);
+    if (!name.trim() || !styling.trim()) {
       return;
     }
 
@@ -61,12 +64,17 @@ export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTem
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
+              isInvalid={attempted && !name.trim()}
+              errorMessage={attempted && !name.trim() ? t('templates.fields.nameRequired') : undefined}
               placeholder="Classic"
             />
             <Textarea
               label={t('templates.fields.styling')}
               value={styling}
               onChange={(e) => setStyling(e.target.value)}
+              isRequired
+              isInvalid={attempted && !styling.trim()}
+              errorMessage={attempted && !styling.trim() ? t('templates.fields.stylingRequired') : undefined}
               placeholder="Enter HTML template..."
               minRows={15}
               className="font-mono text-sm"
@@ -77,7 +85,7 @@ export function EditTemplateModal({ isOpen, onClose, onSave, template }: EditTem
           <Button variant="flat" onClick={onClose}>
             {tCommon('actions.cancel')}
           </Button>
-          <Button color="primary" onClick={handleSave} disabled={saving || !name.trim()}>
+          <Button color="primary" onClick={handleSave} isDisabled={saving} isLoading={saving}>
             {saving ? t('actions.saving') : t('actions.save')}
           </Button>
         </ModalFooter>

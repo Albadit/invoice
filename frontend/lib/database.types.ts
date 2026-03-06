@@ -119,7 +119,7 @@ export interface Templates {
   id: string
   user_id: string | null
   name: string
-  styling: string | null
+  styling: string
   is_system: boolean
   created_at: string | null
   updated_at: string | null

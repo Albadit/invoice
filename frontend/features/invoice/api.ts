@@ -7,7 +7,7 @@
  * - Estimated counts instead of COUNT(*)
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL } from '@/lib/api/api';
 import type { 
   Invoice, 
   InvoiceItem, 
@@ -29,6 +29,20 @@ export type { PaginatedResponse, CursorPaginatedResponse, PageCursor };
 const LIST_COLUMNS = 'id,invoice_code,customer_name,status,issue_date,due_date,total_amount,currency_id,created_at,currencies(symbol,code,symbol_position,symbol_space)';
 
 /**
+ * Map raw invoice row (with embedded currencies) to InvoiceWithItems shape
+ */
+function mapInvoiceRow(invoice: Record<string, unknown>) {
+  const { currencies, ...rest } = invoice;
+  const curr = currencies as { symbol?: string; code?: string; symbol_position?: string; symbol_space?: boolean } | null;
+  return {
+    ...rest,
+    items: [],
+    currency: curr ? { symbol: curr.symbol, code: curr.code, symbol_position: curr.symbol_position, symbol_space: curr.symbol_space } : null,
+    company: null,
+  } as unknown as InvoiceWithItems;
+}
+
+/**
  * Invoice API functions
  */
 export const invoicesApi = {
@@ -39,13 +53,6 @@ export const invoicesApi = {
    * - O(1) pagination instead of O(n) offset
    * - Uses FTS for word search, trigram for substring search
    * - Returns estimated total instead of expensive COUNT(*)
-   * 
-   * @example
-   * // First page
-   * const { data, nextCursor } = await invoicesApi.getAllWithCursor({ limit: 50 });
-   * 
-   * // Next page (pass cursor from previous response)
-   * const page2 = await invoicesApi.getAllWithCursor({ limit: 50, cursor: nextCursor });
    */
   async getAllWithCursor(options?: {
     limit?: number;
@@ -68,71 +75,38 @@ export const invoicesApi = {
       signal 
     } = options || {};
     
-    // Build URL with query params
     const url = new URL(`${API_URL}/invoices`);
     url.searchParams.set('select', LIST_COLUMNS);
     url.searchParams.set('order', 'created_at.desc,id.desc');
-    url.searchParams.set('limit', String(limit + 1)); // Fetch one extra to detect hasNext
+    url.searchParams.set('limit', String(limit + 1));
     
-    // Status filter (active vs cancelled tab)
     if (status === 'cancelled') {
       url.searchParams.append('status', 'eq.cancelled');
     } else {
       url.searchParams.append('status', 'neq.cancelled');
     }
     
-    // Additional status filter (pending, paid, etc.)
     if (statusFilter && statusFilter.length > 0) {
-      if (statusFilter.length === 1) {
-        url.searchParams.append('status', `eq.${statusFilter[0]}`);
-      } else {
-        url.searchParams.append('status', `in.(${statusFilter.join(',')})`);
-      }
+      url.searchParams.append('status', statusFilter.length === 1
+        ? `eq.${statusFilter[0]}`
+        : `in.(${statusFilter.join(',')})`);
     }
     
-    // Search filter - use FTS for word search, trigram for substring
-    // PostgREST uses fts for full-text search operators
     if (search) {
-      // Try FTS first (for word-based search like "payment failed")
-      // Also include trigram fallback for partial matches (like "00123")
-      // Using OR to combine: FTS match OR trigram match
-      const searchTerm = search.trim();
-      
-      // FTS: search_tsv column with websearch syntax
-      // Trigram: search_text column with ILIKE
-      url.searchParams.append(
-        'or', 
-        `(search_tsv.wfts.${encodeURIComponent(searchTerm)},search_text.ilike.*${encodeURIComponent(searchTerm)}*)`
-      );
+      const t = search.trim();
+      url.searchParams.append('or', `(search_tsv.wfts.${encodeURIComponent(t)},search_text.ilike.*${encodeURIComponent(t)}*)`);
     }
     
-    // Date range filter
-    if (startDate) {
-      url.searchParams.append('issue_date', `gte.${startDate}`);
-    }
-    if (endDate) {
-      url.searchParams.append('issue_date', `lte.${endDate}`);
-    }
+    if (startDate) url.searchParams.append('issue_date', `gte.${startDate}`);
+    if (endDate) url.searchParams.append('issue_date', `lte.${endDate}`);
     
-    // KEYSET PAGINATION: Apply cursor condition
-    // For DESC order: get rows where (created_at, id) < cursor
-    // Uses OR to handle timestamp ties correctly
     if (cursor) {
-      url.searchParams.append(
-        'or',
-        `(created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id}))`
-      );
+      url.searchParams.append('or', `(created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id}))`);
     }
     
-    // Only fetch count on first page (no cursor) - cursor pagination would return remaining count
-    const countHeader = cursor ? undefined : 'count=exact';
-    const response = await fetch(url.toString(), { headers: await getHeaders(countHeader), signal });
+    const prefer = cursor ? undefined : 'count=exact';
+    const response = await api.getRaw(url.toString(), { prefer, signal });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch invoices');
-    }
-    
-    // Get exact count from Content-Range header (only valid on first page)
     let estimatedTotal = 0;
     if (!cursor) {
       const contentRange = response.headers.get('Content-Range');
@@ -140,33 +114,19 @@ export const invoicesApi = {
     }
     
     const data = await response.json();
-    
-    // Check if there's a next page (we fetched limit + 1)
     const hasNext = data.length > limit;
     const pageData = hasNext ? data.slice(0, limit) : data;
     
-    // Build next cursor from last row
     const lastRow = pageData[pageData.length - 1];
     const nextCursor: PageCursor | null = hasNext && lastRow
       ? { createdAt: lastRow.created_at, id: lastRow.id }
       : null;
     
-    const invoices = pageData.map((invoice: Record<string, unknown>) => {
-      const { currencies, ...rest } = invoice;
-      const curr = currencies as { symbol?: string; code?: string; symbol_position?: string; symbol_space?: boolean } | null;
-      return {
-        ...rest,
-        items: [],
-        currency: curr ? { symbol: curr.symbol, code: curr.code, symbol_position: curr.symbol_position, symbol_space: curr.symbol_space } : null,
-        company: null
-      };
-    });
-    
     return { 
-      data: invoices, 
+      data: pageData.map(mapInvoiceRow), 
       nextCursor, 
       hasNext,
-      estimatedTotal 
+      estimatedTotal,
     };
   },
 
@@ -196,89 +156,50 @@ export const invoicesApi = {
       signal 
     } = options || {};
     
-    // Build URL with query params
     const url = new URL(`${API_URL}/invoices`);
     url.searchParams.set('select', LIST_COLUMNS);
     url.searchParams.set('order', orderBy || 'created_at.desc,id.desc');
     url.searchParams.set('limit', String(limit));
     url.searchParams.set('offset', String(offset));
     
-    // Status filter (unified – no tab split)
     if (statusFilter && statusFilter.length > 0) {
-      if (statusFilter.length === 1) {
-        url.searchParams.append('status', `eq.${statusFilter[0]}`);
-      } else {
-        url.searchParams.append('status', `in.(${statusFilter.join(',')})`);
-      }
+      url.searchParams.append('status', statusFilter.length === 1
+        ? `eq.${statusFilter[0]}`
+        : `in.(${statusFilter.join(',')})`);
     }
     
-    // Company filter
     if (companyIds && companyIds.length > 0) {
-      if (companyIds.length === 1) {
-        url.searchParams.append('company_id', `eq.${companyIds[0]}`);
-      } else {
-        url.searchParams.append('company_id', `in.(${companyIds.join(',')})`);
-      }
+      url.searchParams.append('company_id', companyIds.length === 1
+        ? `eq.${companyIds[0]}`
+        : `in.(${companyIds.join(',')})`);
     }
     
-    // Search filter - use FTS + trigram for fast search
     if (search) {
-      const searchTerm = search.trim();
-      url.searchParams.append(
-        'or', 
-        `(search_tsv.wfts.${encodeURIComponent(searchTerm)},search_text.ilike.*${encodeURIComponent(searchTerm)}*)`
-      );
+      const t = search.trim();
+      url.searchParams.append('or', `(search_tsv.wfts.${encodeURIComponent(t)},search_text.ilike.*${encodeURIComponent(t)}*)`);
     }
     
-    // Date range filter
-    if (startDate) {
-      url.searchParams.append('issue_date', `gte.${startDate}`);
-    }
-    if (endDate) {
-      url.searchParams.append('issue_date', `lte.${endDate}`);
-    }
+    if (startDate) url.searchParams.append('issue_date', `gte.${startDate}`);
+    if (endDate) url.searchParams.append('issue_date', `lte.${endDate}`);
     
-    // Use exact count for accurate totals
-    const response = await fetch(url.toString(), { headers: await getHeaders('count=exact'), signal });
+    const response = await api.getRaw(url.toString(), { prefer: 'count=exact', signal });
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch invoices');
-    }
-    
-    // Get total count from Content-Range header
     const contentRange = response.headers.get('Content-Range');
     const totalCount = contentRange ? parseInt(contentRange.split('/')[1]) : 0;
     
     const data = await response.json();
-    
-    const invoices = data.map((invoice: Record<string, unknown>) => {
-      const { currencies, ...rest } = invoice;
-      const curr = currencies as { symbol?: string; code?: string; symbol_position?: string; symbol_space?: boolean } | null;
-      return {
-        ...rest,
-        items: [],
-        currency: curr ? { symbol: curr.symbol, code: curr.code, symbol_position: curr.symbol_position, symbol_space: curr.symbol_space } : null,
-        company: null
-      };
-    });
-    
-    return { data: invoices, totalCount };
+    return { data: data.map(mapInvoiceRow), totalCount };
   },
 
   /**
    * Get invoice by ID with items
    */
   async getById(id: string, authToken?: string): Promise<InvoiceWithItems> {
-    const response = await fetch(
+    const data = await api.get<Record<string, unknown>[]>(
       `${API_URL}/invoices?id=eq.${id}&select=*,invoice_items(*),currencies(*),companies(*),clients(*)`,
-      { headers: await getHeaders(undefined, authToken) }
+      { authToken }
     );
     
-    if (!response.ok) {
-      throw new Error('Failed to fetch invoice');
-    }
-    
-    const data = await response.json();
     if (!data || data.length === 0) {
       throw new Error('Invoice not found');
     }
@@ -287,11 +208,11 @@ export const invoicesApi = {
     const { invoice_items, currencies, companies, clients, ...rest } = invoice;
     return {
       ...rest,
-      items: invoice_items || [],
+      items: (invoice_items as InvoiceItem[]) || [],
       currency: currencies || null,
       company: companies || null,
-      client: clients || null
-    };
+      client: clients || null,
+    } as InvoiceWithItems;
   },
 
   /**
@@ -301,40 +222,20 @@ export const invoicesApi = {
     invoiceData: InvoicesPost,
     items: Partial<InvoiceItem>[]
   ): Promise<Invoice> {
-    // Create invoice
-    const invoiceResponse = await fetch(`${API_URL}/invoices`, {
-      method: 'POST',
-      headers: await getHeaders('return=representation'),
-      body: JSON.stringify(invoiceData)
-    });
+    const [newInvoice] = await api.post<Invoice[]>(
+      `${API_URL}/invoices`, invoiceData, { prefer: 'return=representation' }
+    );
     
-    if (!invoiceResponse.ok) {
-      throw new Error('Failed to create invoice');
-    }
-    
-    const [newInvoice] = await invoiceResponse.json();
-    
-    // Create invoice items
     if (items && items.length > 0) {
       const itemsData = items.map((item, index) => ({
         invoice_id: newInvoice.id,
         name: item.name || '',
         quantity: item.quantity || 1,
         unit_price: item.unit_price || 0,
-        sort_order: index
+        sort_order: index,
       }));
       
-      const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
-        method: 'POST',
-        headers: await getHeaders(),
-        body: JSON.stringify(itemsData)
-      });
-      
-      if (!itemsResponse.ok) {
-        const errorText = await itemsResponse.text();
-        console.error('Failed to create invoice items:', errorText);
-        throw new Error('Failed to create invoice items');
-      }
+      await api.post<void>(`${API_URL}/invoice_items`, itemsData);
     }
     
     return newInvoice;
@@ -348,50 +249,21 @@ export const invoicesApi = {
     invoiceData: InvoicesPatch,
     items?: Partial<InvoiceItem>[]
   ): Promise<void> {
-    // Update invoice
-    const updateResponse = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify(invoiceData)
-    });
+    await api.patch<void>(`${API_URL}/invoices?id=eq.${id}`, invoiceData, { prefer: 'return=minimal' });
     
-    if (!updateResponse.ok) {
-      throw new Error('Failed to update invoice');
-    }
-    
-    // Update items if provided
     if (items) {
-      // Delete existing items
-      const deleteResponse = await fetch(`${API_URL}/invoice_items?invoice_id=eq.${id}`, {
-        method: 'DELETE',
-        headers: await getHeaders()
-      });
+      await api.delete<void>(`${API_URL}/invoice_items?invoice_id=eq.${id}`);
       
-      if (!deleteResponse.ok) {
-        console.error('Failed to delete existing items');
-      }
-      
-      // Create new items
       if (items.length > 0) {
         const itemsData = items.map((item, index) => ({
           invoice_id: id,
           name: item.name || '',
           quantity: item.quantity || 1,
           unit_price: item.unit_price || 0,
-          sort_order: index
+          sort_order: index,
         }));
         
-        const itemsResponse = await fetch(`${API_URL}/invoice_items`, {
-          method: 'POST',
-          headers: await getHeaders(),
-          body: JSON.stringify(itemsData)
-        });
-        
-        if (!itemsResponse.ok) {
-          const errorText = await itemsResponse.text();
-          console.error('Failed to create invoice items:', errorText);
-          throw new Error('Failed to update invoice items');
-        }
+        await api.post<void>(`${API_URL}/invoice_items`, itemsData);
       }
     }
   },
@@ -400,41 +272,19 @@ export const invoicesApi = {
    * Delete an invoice
    */
   async delete(id: string): Promise<void> {
-    // Delete invoice items first
-    await fetch(`${API_URL}/invoice_items?invoice_id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders()
-    });
-    
-    // Delete invoice
-    const response = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete invoice');
-    }
+    await api.delete<void>(`${API_URL}/invoice_items?invoice_id=eq.${id}`);
+    await api.delete<void>(`${API_URL}/invoices?id=eq.${id}`);
   },
 
   /**
    * Update invoice status
    */
   async updateStatus(id: string, status: string): Promise<void> {
-    const response = await fetch(`${API_URL}/invoices?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify({ status })
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update invoice status');
-    }
+    await api.patch<void>(`${API_URL}/invoices?id=eq.${id}`, { status }, { prefer: 'return=minimal' });
   },
 
   /**
    * Get all invoices with minimal fields for dashboard stats.
-   * Optionally filter by company_id.
    */
   async getStats(companyId?: string): Promise<{
     status: string;
@@ -444,13 +294,7 @@ export const invoicesApi = {
     due_date: string | null;
   }[]> {
     let url = `${API_URL}/invoices?select=status,total_amount,currency_id,issue_date,due_date`;
-    if (companyId) {
-      url += `&company_id=eq.${companyId}`;
-    }
-    const response = await fetch(url, { headers: await getHeaders() });
-    if (!response.ok) {
-      throw new Error('Failed to fetch invoice stats');
-    }
-    return response.json();
-  }
+    if (companyId) url += `&company_id=eq.${companyId}`;
+    return api.get(url);
+  },
 };

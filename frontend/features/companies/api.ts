@@ -2,7 +2,7 @@
  * Companies feature API functions
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL } from '@/lib/api/api';
 import { createClient } from '@/lib/supabase/client';
 import type { Company } from '@/lib/types';
 import type { CompaniesPost, CompaniesPatch } from '@/lib/database.types';
@@ -15,36 +15,17 @@ export const companiesApi = {
    * Get all companies
    */
   async getAll(): Promise<Company[]> {
-    const response = await fetch(
-      `${API_URL}/companies?select=*&order=name.asc`,
-      { headers: await getHeaders() }
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch companies');
-    }
-    
-    return response.json();
+    return api.get<Company[]>(`${API_URL}/companies?select=*&order=name.asc`);
   },
 
   /**
    * Get company by ID
    */
   async getById(id: string): Promise<Company> {
-    const response = await fetch(
-      `${API_URL}/companies?id=eq.${id}&select=*`,
-      { headers: await getHeaders() }
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch company');
-    }
-    
-    const data = await response.json();
+    const data = await api.get<Company[]>(`${API_URL}/companies?id=eq.${id}&select=*`);
     if (!data || data.length === 0) {
       throw new Error('Company not found');
     }
-    
     return data[0];
   },
 
@@ -52,17 +33,7 @@ export const companiesApi = {
    * Create a new company
    */
   async create(companyData: CompaniesPost): Promise<Company> {
-    const response = await fetch(`${API_URL}/companies`, {
-      method: 'POST',
-      headers: await getHeaders('return=representation'),
-      body: JSON.stringify(companyData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create company');
-    }
-    
-    const [newCompany] = await response.json();
+    const [newCompany] = await api.post<Company[]>(`${API_URL}/companies`, companyData, { prefer: 'return=representation' });
     return newCompany;
   },
 
@@ -70,29 +41,14 @@ export const companiesApi = {
    * Delete a company
    */
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/companies?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete company');
-    }
+    await api.delete<void>(`${API_URL}/companies?id=eq.${id}`);
   },
 
   /**
    * Update a company
    */
   async update(id: string, companyData: CompaniesPatch): Promise<void> {
-    const response = await fetch(`${API_URL}/companies?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify(companyData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update company');
-    }
+    await api.patch<void>(`${API_URL}/companies?id=eq.${id}`, companyData, { prefer: 'return=minimal' });
   }
 };
 

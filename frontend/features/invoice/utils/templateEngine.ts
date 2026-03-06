@@ -22,8 +22,8 @@
  */
 
 import { format } from 'date-fns';
-import { dateFormats } from '@/config/constants';
-import { formatWithCurrency } from '@/lib/currency';
+import { dateFormats } from '@/config/formatting';
+import { formatWithCurrency } from '@/config/formatting';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
 import type { InvoiceWithItems, InvoiceItem } from '@/lib/types';

@@ -31,6 +31,7 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
   const [symbolPosition, setSymbolPosition] = useState<'left' | 'right'>('left');
   const [symbolSpace, setSymbolSpace] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   useEffect(() => {
     if (isOpen && currency) {
@@ -39,10 +40,12 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
       setSymbol(currency.symbol);
       setSymbolPosition((currency.symbol_position as 'left' | 'right') || 'left');
       setSymbolSpace(currency.symbol_space || false);
+      setAttempted(false);
     }
   }, [isOpen, currency]);
 
   const handleSave = async () => {
+    setAttempted(true);
     if (!code.trim() || !name.trim() || !symbol.trim()) {
       return;
     }
@@ -75,6 +78,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               isRequired
+              isInvalid={attempted && !code.trim()}
+              errorMessage={attempted && !code.trim() ? t('currencies.fields.codeRequired') : undefined}
               placeholder="USD"
               maxLength={3}
             />
@@ -83,6 +88,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
+              isInvalid={attempted && !name.trim()}
+              errorMessage={attempted && !name.trim() ? t('currencies.fields.nameRequired') : undefined}
               placeholder="US Dollar"
             />
             <Input
@@ -90,6 +97,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               isRequired
+              isInvalid={attempted && !symbol.trim()}
+              errorMessage={attempted && !symbol.trim() ? t('currencies.fields.symbolRequired') : undefined}
               placeholder="$"
             />
             <Select
@@ -123,7 +132,8 @@ export function EditCurrencyModal({ isOpen, onClose, onSave, currency }: EditCur
           <Button
             color="primary"
             onClick={handleSave}
-            disabled={saving || !code.trim() || !name.trim() || !symbol.trim()}
+            isDisabled={saving}
+            isLoading={saving}
           >
             {saving ? t('actions.saving') : t('actions.save')}
           </Button>

@@ -67,16 +67,25 @@ frontend/
 │   └── [component].tsx   # Reusable components
 │
 ├── lib/                  # Shared Libraries & Configuration
-│   ├── api.ts            # API client configuration
+│   ├── api/              # API client layer
+│   │   ├── api.ts        # HTTP helpers (get, post, patch, delete, getRaw)
+│   │   ├── response.ts   # API response envelope types & helpers
+│   │   └── validation.ts # Request body parsing & clamping utilities
 │   ├── utils.ts          # General utility functions
-│   └── types.ts          # Shared TypeScript definitions
+│   ├── types.ts          # Shared TypeScript definitions
+│   └── supabase/         # Supabase client helpers
+│       ├── client.ts     # Browser client factory
+│       ├── server.ts     # Server-side client factory
+│       └── middleware.ts # Auth & permission middleware
 │
 ├── contexts/             # Global React Contexts
 │   ├── AuthContext.tsx   # Authentication state
 │   └── [Context].tsx     # Other global providers
 │
 ├── config/               # Static Configuration
-│   ├── site.ts           # Site metadata
+│   ├── formatting.ts     # Currency & invoice-status formatting helpers
+│   ├── routes.ts         # Centralized route definitions
+│   ├── navigation.ts     # Navigation structure
 │   └── fonts.ts          # Font configuration
 │
 ├── styles/               # Global Styles

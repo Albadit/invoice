@@ -15,6 +15,7 @@
   },
   "fields": {
     "name": "Rolnaam",
+    "nameRequired": "Rolnaam is verplicht",
     "namePlaceholder": "bijv. Redacteur",
     "description": "Beschrijving",
     "descriptionPlaceholder": "Korte beschrijving van deze rol"

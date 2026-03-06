@@ -3,7 +3,7 @@
  * CRUD for roles table + RPC for role_permissions management
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL, getHeaders } from '@/lib/api/api';
 import type { Role, Permission } from '@/lib/types';
 import type { RolesPost, RolesPatch } from '@/lib/database.types';
 
@@ -12,33 +12,14 @@ export const rolesApi = {
    * Get all roles
    */
   async getAll(): Promise<Role[]> {
-    const response = await fetch(
-      `${API_URL}/roles?select=*&order=is_system.desc,name.asc`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch roles');
-    }
-
-    return response.json();
+    return api.get<Role[]>(`${API_URL}/roles?select=*&order=is_system.desc,name.asc`);
   },
 
   /**
    * Create a new role
    */
   async create(data: RolesPost): Promise<Role> {
-    const response = await fetch(`${API_URL}/roles`, {
-      method: 'POST',
-      headers: await getHeaders('return=representation'),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create role');
-    }
-
-    const [role] = await response.json();
+    const [role] = await api.post<Role[]>(`${API_URL}/roles`, data, { prefer: 'return=representation' });
     return role;
   },
 
@@ -46,15 +27,7 @@ export const rolesApi = {
    * Update a role
    */
   async update(id: string, data: RolesPatch): Promise<void> {
-    const response = await fetch(`${API_URL}/roles?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update role');
-    }
+    await api.patch<void>(`${API_URL}/roles?id=eq.${id}`, data, { prefer: 'return=minimal' });
   },
 
   /**
@@ -77,46 +50,23 @@ export const rolesApi = {
    * Delete a role
    */
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/roles?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to delete role');
-    }
+    await api.delete<void>(`${API_URL}/roles?id=eq.${id}`);
   },
 
   /**
    * Get all permissions
    */
   async getAllPermissions(): Promise<Permission[]> {
-    const response = await fetch(
-      `${API_URL}/permissions?select=*&order=key.asc`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch permissions');
-    }
-
-    return response.json();
+    return api.get<Permission[]>(`${API_URL}/permissions?select=*&order=key.asc`);
   },
 
   /**
    * Get permission IDs assigned to a specific role
    */
   async getRolePermissionIds(roleId: string): Promise<string[]> {
-    const response = await fetch(
-      `${API_URL}/role_permissions?select=permission_id&role_id=eq.${roleId}`,
-      { headers: await getHeaders() }
+    const rows = await api.get<{ permission_id: string }[]>(
+      `${API_URL}/role_permissions?select=permission_id&role_id=eq.${roleId}`
     );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch role permissions');
-    }
-
-    const rows: { permission_id: string }[] = await response.json();
     return rows.map((r) => r.permission_id);
   },
 
@@ -124,17 +74,9 @@ export const rolesApi = {
    * Replace all permissions for a role (admin only, via RPC)
    */
   async setRolePermissions(roleId: string, permissionIds: string[]): Promise<void> {
-    const response = await fetch(`${API_URL}/rpc/admin_set_role_permissions`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({
-        p_role_id: roleId,
-        p_permission_ids: permissionIds,
-      }),
+    await api.post<void>(`${API_URL}/rpc/admin_set_role_permissions`, {
+      p_role_id: roleId,
+      p_permission_ids: permissionIds,
     });
-
-    if (!response.ok) {
-      throw new Error('Failed to update role permissions');
-    }
   },
 };

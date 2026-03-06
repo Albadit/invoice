@@ -90,8 +90,10 @@
     "system": "Systeem",
     "fields": {
       "name": "Sjabloonnaam",
+      "nameRequired": "Sjabloonnaam is verplicht",
       "content": "Sjablooninhoud",
-      "styling": "Sjabloon Styling (HTML)"
+      "styling": "Sjabloon Styling (HTML)",
+      "stylingRequired": "Sjabloon styling is verplicht"
     },
     "messages": {
       "created": "Sjabloon succesvol aangemaakt",
@@ -112,8 +114,11 @@
     "manageCurrencies": "Valuta's beheren",
     "fields": {
       "code": "Valutacode",
+      "codeRequired": "Valutacode is verplicht",
       "name": "Valutanaam",
+      "nameRequired": "Valutanaam is verplicht",
       "symbol": "Symbool",
+      "symbolRequired": "Symbool is verplicht",
       "symbolPosition": "Symboolpositie",
       "positionLeft": "Links (bijv. $100)",
       "positionRight": "Rechts (bijv. 100$)",

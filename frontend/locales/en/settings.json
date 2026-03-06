@@ -90,8 +90,10 @@
     "system": "System",
     "fields": {
       "name": "Template Name",
+      "nameRequired": "Template name is required",
       "content": "Template Content",
-      "styling": "Template Styling (HTML)"
+      "styling": "Template Styling (HTML)",
+      "stylingRequired": "Template styling is required"
     },
     "messages": {
       "created": "Template created successfully",
@@ -112,8 +114,11 @@
     "manageCurrencies": "Manage Currencies",
     "fields": {
       "code": "Currency Code",
+      "codeRequired": "Currency code is required",
       "name": "Currency Name",
+      "nameRequired": "Currency name is required",
       "symbol": "Symbol",
+      "symbolRequired": "Currency symbol is required",
       "symbolPosition": "Symbol Position",
       "positionLeft": "Left (e.g. $100)",
       "positionRight": "Right (e.g. 100$)",

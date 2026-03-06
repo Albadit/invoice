@@ -19,14 +19,17 @@ export function AddRoleModal({ isOpen, onClose, onSave }: AddRoleModalProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
   const handleClose = () => {
     setName('');
     setDescription('');
+    setAttempted(false);
     onClose();
   };
 
   const handleSave = async () => {
+    setAttempted(true);
     if (!name.trim()) return;
     setSaving(true);
     try {
@@ -50,6 +53,8 @@ export function AddRoleModal({ isOpen, onClose, onSave }: AddRoleModalProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               isRequired
+              isInvalid={attempted && !name.trim()}
+              errorMessage={attempted && !name.trim() ? t('fields.nameRequired') : undefined}
               placeholder={t('fields.namePlaceholder')}
             />
             <Textarea
@@ -62,14 +67,14 @@ export function AddRoleModal({ isOpen, onClose, onSave }: AddRoleModalProps) {
           </div>
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
-          <Button variant="flat" onClick={handleClose} disabled={saving}>
+          <Button variant="flat" onClick={handleClose} isDisabled={saving}>
             {tCommon('actions.cancel')}
           </Button>
           <Button
             color="primary"
             onClick={handleSave}
             isLoading={saving}
-            disabled={!name.trim()}
+            isDisabled={saving}
           >
             {tCommon('actions.create')}
           </Button>

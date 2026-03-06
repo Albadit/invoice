@@ -3,7 +3,7 @@
  * Uses PostgreSQL RPC functions (SECURITY DEFINER) for admin operations
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL, API_KEY } from '@/lib/api/api';
 import type { AdminUser, Role } from '@/lib/types';
 
 export const usersApi = {
@@ -11,123 +11,58 @@ export const usersApi = {
    * Create a new user with email, password, and optional role
    */
   async createUser(email: string, password: string, roleId?: string): Promise<string> {
-    const response = await fetch(`${API_URL}/rpc/admin_create_user`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({
-        p_email: email,
-        p_password: password,
-        p_role_id: roleId || null,
-      }),
+    return api.post<string>(`${API_URL}/rpc/admin_create_user`, {
+      p_email: email,
+      p_password: password,
+      p_role_id: roleId || null,
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Failed to create user');
-    }
-
-    return response.json();
   },
 
   /**
    * List all users with their role assignments (admin only)
    */
   async list(): Promise<AdminUser[]> {
-    const response = await fetch(`${API_URL}/rpc/admin_list_users`, {
-      method: 'POST',
-      headers: await getHeaders(),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch users');
-    }
-
-    return response.json();
+    return api.post<AdminUser[]>(`${API_URL}/rpc/admin_list_users`);
   },
 
   /**
    * Update a user's role assignment
    */
   async updateRole(userId: string, roleId: string): Promise<void> {
-    const response = await fetch(`${API_URL}/rpc/admin_update_user_role`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({ p_user_id: userId, p_role_id: roleId }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update user role');
-    }
+    await api.post<void>(`${API_URL}/rpc/admin_update_user_role`, { p_user_id: userId, p_role_id: roleId });
   },
 
   /**
    * Remove a user's role assignment
    */
   async removeRole(userId: string): Promise<void> {
-    const response = await fetch(`${API_URL}/rpc/admin_remove_user_role`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({ p_user_id: userId }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to remove user role');
-    }
+    await api.post<void>(`${API_URL}/rpc/admin_remove_user_role`, { p_user_id: userId });
   },
 
   /**
    * Generate a 24-hour password reset token for a user
    */
   async generateResetToken(userId: string): Promise<string> {
-    const response = await fetch(`${API_URL}/rpc/admin_generate_reset_token`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({ p_user_id: userId }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to generate reset token');
-    }
-
-    // RPC returns the token directly as a JSON string
-    return response.json();
+    return api.post<string>(`${API_URL}/rpc/admin_generate_reset_token`, { p_user_id: userId });
   },
 
   /**
    * Delete a user account
    */
   async deleteUser(userId: string): Promise<void> {
-    const response = await fetch(`${API_URL}/rpc/admin_delete_user`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify({ p_user_id: userId }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Failed to delete user');
-    }
+    await api.post<void>(`${API_URL}/rpc/admin_delete_user`, { p_user_id: userId });
   },
 
   /**
    * Get all available roles (for the role dropdown)
    */
   async getRoles(): Promise<Role[]> {
-    const response = await fetch(
-      `${API_URL}/roles?select=*&order=name.asc`,
-      { headers: await getHeaders() }
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch roles');
-    }
-
-    return response.json();
+    return api.get<Role[]>(`${API_URL}/roles?select=*&order=name.asc`);
   },
 };
 
 /**
- * Password reset API — no auth required (uses anon key)
+ * Password reset API — no auth required (uses anon key only)
  */
 export const resetPasswordApi = {
   /**
@@ -138,7 +73,7 @@ export const resetPasswordApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        'apikey': API_KEY,
       },
       body: JSON.stringify({ p_token: token }),
     });
@@ -163,7 +98,7 @@ export const resetPasswordApi = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        'apikey': API_KEY,
       },
       body: JSON.stringify({ p_token: token, p_new_password: newPassword }),
     });

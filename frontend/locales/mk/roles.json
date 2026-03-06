@@ -15,6 +15,7 @@
   },
   "fields": {
     "name": "Име на Улога",
+    "nameRequired": "Името на улогата е задолжително",
     "namePlaceholder": "пр. Уредник",
     "description": "Опис",
     "descriptionPlaceholder": "Краток опис на оваа улога"

@@ -2,8 +2,7 @@
 
 import { useMemo } from 'react';
 import type { Currency, InvoiceStatus, InvoiceStat } from '@/lib/types';
-import { formatCurrencyAmount } from '@/lib/currency';
-import { getEffectiveStatus } from '@/lib/status';
+import { formatCurrencyAmount, getEffectiveStatus } from '@/config/formatting';
 
 // ── Computed KPI shape ───────────────────────────────────────────
 

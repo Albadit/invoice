@@ -15,6 +15,7 @@
   },
   "fields": {
     "name": "Emri i Rolit",
+    "nameRequired": "Emri i rolit është i detyrueshëm",
     "namePlaceholder": "p.sh. Redaktor",
     "description": "Përshkrimi",
     "descriptionPlaceholder": "Përshkrim i shkurtër i këtij roli"

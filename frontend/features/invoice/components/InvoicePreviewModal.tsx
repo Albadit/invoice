@@ -6,11 +6,10 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@herou
 import { Button } from "@heroui/button";
 import { Download, X } from 'lucide-react';
 import { format } from 'date-fns';
-import { dateFormats } from '@/config/constants';
+import { dateFormats } from '@/config/formatting';
 import type { InvoiceWithItems } from '@/lib/types';
-import { formatWithCurrency } from '@/lib/currency';
+import { formatWithCurrency, getEffectiveStatus } from '@/config/formatting';
 import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
-import { getEffectiveStatus } from '@/lib/status';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';

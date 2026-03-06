@@ -15,6 +15,7 @@
   },
   "fields": {
     "name": "Role Name",
+    "nameRequired": "Role name is required",
     "namePlaceholder": "e.g. Editor",
     "description": "Description",
     "descriptionPlaceholder": "Brief description of this role"

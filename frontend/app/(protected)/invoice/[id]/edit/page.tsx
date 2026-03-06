@@ -11,7 +11,7 @@ import { templatesApi } from '@/features/templates/api';
 import { clientsApi } from '@/features/clients/api';
 import type { InvoiceItem, Currency, Company, Template, Client } from '@/lib/types';
 import type { InvoicesPost } from '@/lib/database.types';
-import { getCurrencySymbol, formatCurrencyAmount } from '@/lib/currency';
+import { getCurrencySymbol, formatCurrencyAmount } from '@/config/formatting';
 import {
   getSubtotal as calcSubtotal,
   getDiscountTotal,

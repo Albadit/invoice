@@ -891,31 +891,6 @@ export default function SettingsPage() {
                   onImageError={setImageError}
                 />
               </div>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-divider"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-content1 text-default-500">{t('logo.or')}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <span className="text-base font-semibold">
-                  {t('logo.url')}
-                </span>
-                <Input
-                  label={t('logo.urlDescription')}
-                  labelPlacement="outside"
-                  value={logoUrl}
-                  onChange={(e) => {
-                    setLogoUrl(e.target.value);
-                    setImageError(false);
-                  }}
-                  placeholder="https://example.com/logo.png"
-                />
-              </div>
             </div>
           </section>
 

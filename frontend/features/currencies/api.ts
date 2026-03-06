@@ -2,7 +2,7 @@
  * Currencies feature API functions
  */
 
-import { API_URL, getHeaders } from '@/lib/api';
+import api, { API_URL } from '@/lib/api/api';
 import type { Currency } from '@/lib/types';
 import type { CurrenciesPost, CurrenciesPatch } from '@/lib/database.types';
 
@@ -11,33 +11,14 @@ export const currenciesApi = {
    * Get all currencies
    */
   async getAll(): Promise<Currency[]> {
-    const response = await fetch(
-      `${API_URL}/currencies?select=*&order=code.asc`,
-      { headers: await getHeaders() }
-    );
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch currencies');
-    }
-    
-    return response.json();
+    return api.get<Currency[]>(`${API_URL}/currencies?select=*&order=code.asc`);
   },
 
   /**
    * Create a new currency
    */
   async create(currencyData: CurrenciesPost): Promise<Currency> {
-    const response = await fetch(`${API_URL}/currencies`, {
-      method: 'POST',
-      headers: await getHeaders('return=representation'),
-      body: JSON.stringify(currencyData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to create currency');
-    }
-    
-    const [newCurrency] = await response.json();
+    const [newCurrency] = await api.post<Currency[]>(`${API_URL}/currencies`, currencyData, { prefer: 'return=representation' });
     return newCurrency;
   },
 
@@ -45,28 +26,13 @@ export const currenciesApi = {
    * Update a currency
    */
   async update(id: string, currencyData: CurrenciesPatch): Promise<void> {
-    const response = await fetch(`${API_URL}/currencies?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: await getHeaders('return=minimal'),
-      body: JSON.stringify(currencyData)
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update currency');
-    }
+    await api.patch<void>(`${API_URL}/currencies?id=eq.${id}`, currencyData, { prefer: 'return=minimal' });
   },
 
   /**
    * Delete a currency
    */
   async delete(id: string): Promise<void> {
-    const response = await fetch(`${API_URL}/currencies?id=eq.${id}`, {
-      method: 'DELETE',
-      headers: await getHeaders()
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete currency');
-    }
+    await api.delete<void>(`${API_URL}/currencies?id=eq.${id}`);
   }
 };
