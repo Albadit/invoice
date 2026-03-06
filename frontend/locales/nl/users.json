@@ -1,0 +1,46 @@
+{
+  "title": "Gebruikers",
+  "subtitle": "Beheer gebruikersaccounts en roltoewijzingen",
+  "searchPlaceholder": "Zoek op e-mail of rol...",
+  "noData": "Geen gebruikers gevonden",
+  "noRole": "Geen rol",
+  "system": "Systeem",
+  "role": "Rol",
+  "addUser": "Gebruiker Toevoegen",
+  "changeRole": "Rol Wijzigen",
+  "editRole": "Gebruikersrol Bewerken",
+  "editRoleFor": "Rol wijzigen voor",
+  "removeRole": "Rol Verwijderen",
+  "resetPassword": "Wachtwoord Resetten",
+  "columns": {
+    "email": "E-mail",
+    "role": "Rol",
+    "created": "Aangemaakt",
+    "lastSignIn": "Laatste Aanmelding",
+    "actions": "Acties"
+  },
+  "resetLink": {
+    "title": "Wachtwoord Reset Link",
+    "description": "Deel deze link met de gebruiker. De link verloopt na 24 uur.",
+    "expiry": "Deze link is 24 uur geldig en kan slechts één keer worden gebruikt."
+  },
+  "messages": {
+    "success": "Succes",
+    "loadError": "Kan gebruikers niet laden. Probeer het opnieuw.",
+    "roleUpdated": "Gebruikersrol succesvol bijgewerkt",
+    "roleUpdateError": "Kan de rol niet bijwerken. Probeer het opnieuw.",
+    "roleRemoved": "Gebruikersrol succesvol verwijderd",
+    "roleRemoveError": "Kan de rol niet verwijderen. Probeer het opnieuw.",
+    "resetTokenError": "Kan de resetlink niet genereren. Probeer het opnieuw.",
+    "userCreated": "Gebruiker succesvol aangemaakt",
+    "userCreateError": "Kan de gebruiker niet aanmaken. Probeer het opnieuw."
+  },
+  "fields": {
+    "email": "E-mail",
+    "emailPlaceholder": "gebruiker@voorbeeld.com",
+    "password": "Wachtwoord",
+    "passwordPlaceholder": "Voer het initiële wachtwoord in",
+    "role": "Rol (optioneel)",
+    "rolePlaceholder": "Selecteer een rol"
+  }
+}

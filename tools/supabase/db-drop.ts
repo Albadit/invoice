@@ -97,7 +97,13 @@ async function dropAllTables() {
     `;
     
     await client.query(dropTablesSQL);
-    console.log('✅ All database objects dropped successfully\n');
+    console.log('✅ All public schema objects dropped successfully');
+
+    // Clean auth.identities and auth.users (Supabase auth schema)
+    console.log('\n🗑️  Cleaning auth data...');
+    await client.query('DELETE FROM auth.identities');
+    await client.query('DELETE FROM auth.users');
+    console.log('✅ Auth users and identities cleared\n');
 
     console.log('🎉 Database cleanup completed successfully!');
     
@@ -132,10 +138,22 @@ Environment variables:
   process.exit(0);
 }
 
-console.log('\n⚠️  WARNING: This will DELETE ALL DATA in your database!');
-console.log('Press Ctrl+C to cancel, or wait 5 seconds to continue...\n');
-
-// Give user 5 seconds to cancel
-setTimeout(() => {
+if (process.argv.includes('--yes') || process.argv.includes('-y')) {
+  console.log('\n⚠️  WARNING: This will DELETE ALL DATA in your database!\n');
   dropAllTables();
-}, 5000);
+} else {
+  import('readline').then((readline) => {
+    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+
+    console.log('\n⚠️  WARNING: This will DELETE ALL DATA in your database!\n');
+    rl.question('Are you sure you want to drop the database? (y/N): ', (answer) => {
+      rl.close();
+      if (answer.toLowerCase() === 'y') {
+        dropAllTables();
+      } else {
+        console.log('❌ Cancelled.\n');
+        process.exit(0);
+      }
+    });
+  });
+}

@@ -46,14 +46,14 @@ WHERE u.email = 'admin@admin.com'
 INSERT INTO roles (name, description, is_system) VALUES
     ('Super Admin',  'Full access to all resources. Cannot be removed.',  true),
     ('Admin',        'Administrative access. Can manage users and settings.', true),
-    ('User',         'Can manage companies, clients, and invoices.',  true)
+    ('Member',       'Can manage companies, clients, and invoices.',  true)
 ON CONFLICT DO NOTHING;
 
 -- =============================================
 -- Seed Permissions
 -- =============================================
 
-INSERT INTO permissions (key, description) VALUES
+INSERT INTO permissions (key, description, route) VALUES
     -- User permissions
     ('users:access',         'Access users page',       '/users'),
     ('users:read',           'View users',              NULL),
@@ -128,15 +128,27 @@ WHERE r.name = 'Admin'
   AND p.key NOT LIKE 'roles:%'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
--- User: everything except role and user permissions
+-- Member: everything except role and user permissions
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id
 FROM roles r
 CROSS JOIN permissions p
-WHERE r.name = 'User'
+WHERE r.name = 'Member'
   AND p.key NOT LIKE 'roles:%'
   AND p.key NOT LIKE 'users:%'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- =============================================
+-- Assign Super Admin role to admin user
+-- =============================================
+
+INSERT INTO user_roles (user_id, role_id, is_system)
+SELECT u.id, r.id, true
+FROM auth.users u
+CROSS JOIN roles r
+WHERE u.email = 'admin@admin.com'
+  AND r.name = 'Super Admin'
+ON CONFLICT (user_id, role_id) DO NOTHING;
 
 -- =============================================
 -- Seed Invoice Management System

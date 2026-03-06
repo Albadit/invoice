@@ -1,0 +1,46 @@
+{
+  "title": "Users",
+  "subtitle": "Manage user accounts and role assignments",
+  "searchPlaceholder": "Search by email or role...",
+  "noData": "No users found",
+  "noRole": "No role",
+  "system": "System",
+  "role": "Role",
+  "addUser": "Add User",
+  "changeRole": "Change Role",
+  "editRole": "Edit User Role",
+  "editRoleFor": "Changing role for",
+  "removeRole": "Remove Role",
+  "resetPassword": "Reset Password",
+  "columns": {
+    "email": "Email",
+    "role": "Role",
+    "created": "Created",
+    "lastSignIn": "Last Sign In",
+    "actions": "Actions"
+  },
+  "resetLink": {
+    "title": "Password Reset Link",
+    "description": "Share this link with the user. The link will expire in 24 hours.",
+    "expiry": "This link is valid for 24 hours and can only be used once."
+  },
+  "messages": {
+    "success": "Success",
+    "loadError": "Failed to load users. Please try again.",
+    "roleUpdated": "User role updated successfully",
+    "roleUpdateError": "Failed to update user role. Please try again.",
+    "roleRemoved": "User role removed successfully",
+    "roleRemoveError": "Failed to remove user role. Please try again.",
+    "resetTokenError": "Failed to generate reset link. Please try again.",
+    "userCreated": "User created successfully",
+    "userCreateError": "Failed to create user. Please try again."
+  },
+  "fields": {
+    "email": "Email",
+    "emailPlaceholder": "user@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "Enter initial password",
+    "role": "Role (optional)",
+    "rolePlaceholder": "Select a role"
+  }
+}

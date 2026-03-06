@@ -15,6 +15,7 @@
 // ─── (auth) group ────────────────────────────────────────────────
 export const AUTH_ROUTES = {
   login: '/login',
+  resetPassword: '/reset-password',
 } as const;
 
 // ─── auth API (non-group, always accessible) ─────────────────────
@@ -29,6 +30,8 @@ export const PROTECTED_ROUTES = {
   invoice: '/invoice',
   editor: '/editor',
   settings: '/settings',
+  users: '/users',
+  roles: '/roles',
 } as const;
 
 // ─── Dynamic protected routes (parameterized) ───────────────────
@@ -48,6 +51,14 @@ export const SETTINGS_ROUTES = {
   page: PROTECTED_ROUTES.settings,
   templates: `${PROTECTED_ROUTES.settings}?tab=templates`,
   currencies: `${PROTECTED_ROUTES.settings}?tab=currencies`,
+} as const;
+
+export const USERS_ROUTES = {
+  page: PROTECTED_ROUTES.users,
+} as const;
+
+export const ROLES_ROUTES = {
+  page: PROTECTED_ROUTES.roles,
 } as const;
 
 // ─── Special ────────────────────────────────────────────────────

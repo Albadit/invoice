@@ -8,6 +8,13 @@ export type Company = Database['public']['Tables']['companies']['Row'];
 export type Template = Database['public']['Tables']['templates']['Row'];
 export type Client = Database['public']['Tables']['clients']['Row'];
 
+// RBAC types
+export type Role = Database['public']['Tables']['roles']['Row'];
+export type Permission = Database['public']['Tables']['permissions']['Row'];
+
+// Admin types
+export type { AdminUser } from '@/lib/database.types';
+
 // Extended types
 export interface InvoiceWithItems extends Invoice {
   items: InvoiceItem[];

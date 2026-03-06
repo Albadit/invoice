@@ -1,0 +1,35 @@
+{
+  "title": "Rolet",
+  "subtitle": "Menaxho rolet dhe lejet e tyre",
+  "noData": "Nuk u gjetën role",
+  "system": "Sistemi",
+  "custom": "Custom",
+  "addRole": "Shto Rol",
+  "editRole": "Ndrysho Rolin",
+  "deleteRole": "Fshi Rolin",
+  "permissions": "Lejet",
+  "managePermissions": "Menaxho Lejet",
+  "fields": {
+    "name": "Emri i Rolit",
+    "namePlaceholder": "p.sh. Redaktor",
+    "description": "Përshkrimi",
+    "descriptionPlaceholder": "Përshkrim i shkurtër i këtij roli"
+  },
+  "columns": {
+    "name": "Emri",
+    "description": "Përshkrimi",
+    "type": "Tipi",
+    "actions": "Veprimet"
+  },
+  "messages": {
+    "success": "Sukses",
+    "loadError": "Dështoi ngarkimi i roleve. Provoni përsëri.",
+    "created": "Roli u krijua me sukses",
+    "createError": "Dështoi krijimi i rolit. Provoni përsëri.",
+    "updated": "Roli u përditësua me sukses",
+    "updateError": "Dështoi përditësimi i rolit. Provoni përsëri.",
+    "deleted": "Roli u fshi me sukses",
+    "deleteError": "Dështoi fshirja e rolit. Mund të jetë i caktuar tek përdorues.",
+    "confirmDelete": "A jeni i sigurt që doni të fshini rolin \"{{name}}\"? Ky veprim nuk mund të zhbëhet."
+  }
+}

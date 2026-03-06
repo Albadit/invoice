@@ -17,7 +17,10 @@
     "clients": "Клиенти",
     "templates": "Шаблони",
     "currencies": "Валути",
-    "templateEditor": "Уредувач на Шаблони"
+    "templateEditor": "Уредувач на Шаблони",
+    "admin": "Админ",
+    "users": "Корисници",
+    "roles": "Улоги"
   },
   "actions": {
     "save": "Зачувај",

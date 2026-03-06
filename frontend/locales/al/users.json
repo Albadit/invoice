@@ -1,0 +1,46 @@
+{
+  "title": "Përdoruesit",
+  "subtitle": "Menaxho llogaritë e përdoruesve dhe caktimin e roleve",
+  "searchPlaceholder": "Kërko sipas emailit ose rolit...",
+  "noData": "Nuk u gjetën përdorues",
+  "noRole": "Pa rol",
+  "system": "Sistem",
+  "role": "Roli",
+  "addUser": "Shto Përdorues",
+  "changeRole": "Ndrysho Rolin",
+  "editRole": "Ndrysho Rolin e Përdoruesit",
+  "editRoleFor": "Ndryshim i rolit për",
+  "removeRole": "Hiq Rolin",
+  "resetPassword": "Rivendos Fjalëkalimin",
+  "columns": {
+    "email": "Email",
+    "role": "Roli",
+    "created": "Krijuar",
+    "lastSignIn": "Hyrja e Fundit",
+    "actions": "Veprimet"
+  },
+  "resetLink": {
+    "title": "Lidhja e Rivendosjes së Fjalëkalimit",
+    "description": "Ndajeni këtë lidhje me përdoruesin. Lidhja skadon pas 24 orësh.",
+    "expiry": "Kjo lidhje është e vlefshme për 24 orë dhe mund të përdoret vetëm një herë."
+  },
+  "messages": {
+    "success": "Sukses",
+    "loadError": "Dështoi ngarkimi i përdoruesve. Provoni përsëri.",
+    "roleUpdated": "Roli i përdoruesit u përditësua me sukses",
+    "roleUpdateError": "Dështoi përditësimi i rolit. Provoni përsëri.",
+    "roleRemoved": "Roli i përdoruesit u hoq me sukses",
+    "roleRemoveError": "Dështoi heqja e rolit. Provoni përsëri.",
+    "resetTokenError": "Dështoi gjenerimi i lidhjes. Provoni përsëri.",
+    "userCreated": "Përdoruesi u krijua me sukses",
+    "userCreateError": "Dështoi krijimi i përdoruesit. Provoni përsëri."
+  },
+  "fields": {
+    "email": "Email",
+    "emailPlaceholder": "perdorues@shembull.com",
+    "password": "Fjalëkalimi",
+    "passwordPlaceholder": "Shkruani fjalëkalimin fillestar",
+    "role": "Roli (opsional)",
+    "rolePlaceholder": "Zgjidhni një rol"
+  }
+}

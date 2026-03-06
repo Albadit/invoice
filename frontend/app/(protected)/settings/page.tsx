@@ -37,10 +37,12 @@ import {
 } from '@/features/clients/components';
 import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
+import { usePermissions } from '@/features/auth/components';
 
 export default function SettingsPage() {
   const { t } = useTranslation('settings');
   const { languageConfig } = useLocale();
+  const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [cooldown, setCooldown] = useState(0);
@@ -852,6 +854,7 @@ export default function SettingsPage() {
           )}
 
           <div className="sm:ml-auto shrink-0">
+            {hasPermission('settings:update') && (
             <Button
               color="primary"
               className="w-full ms:w-fit"
@@ -861,6 +864,7 @@ export default function SettingsPage() {
             >
               {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
             </Button>
+            )}
           </div>
       </StickyHeader>
 
@@ -928,6 +932,7 @@ export default function SettingsPage() {
                   className="w-full sm:w-auto"
                   startContent={<Edit className="size-4" />}
                   onClick={() => setIsManageTemplatesModalOpen(true)}
+                  isDisabled={!hasPermission('templates:update')}
                 >
                   {t('templates.manageTemplates')}
                 </Button>
@@ -965,6 +970,7 @@ export default function SettingsPage() {
                   className="w-full sm:w-auto"
                   startContent={<Edit className="size-4" />}
                   onClick={() => setIsManageCurrenciesModalOpen(true)}
+                  isDisabled={!hasPermission('currencies:update')}
                 >
                   {t('currencies.manageCurrencies')}
                 </Button>
@@ -1095,6 +1101,7 @@ export default function SettingsPage() {
                       color="primary"
                       isIconOnly
                       onClick={() => setIsManageCompaniesModalOpen(true)}
+                      isDisabled={!hasPermission('companies:update')}
                     >
                       <Edit className="size-3.5" />
                     </Button>
@@ -1132,6 +1139,7 @@ export default function SettingsPage() {
                       color="primary"
                       isIconOnly
                       onClick={() => setIsManageClientsModalOpen(true)}
+                      isDisabled={!hasPermission('clients:update')}
                     >
                       <Edit className="size-3.5" />
                     </Button>

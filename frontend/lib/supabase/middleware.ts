@@ -99,6 +99,10 @@ export async function updateSession(request: NextRequest) {
       }
 
       if (!permissions.has(requiredPermission.key)) {
+        // Don't redirect if already on the afterLogin route (avoid infinite loop)
+        if (pathname === ROUTES.afterLogin || pathname.startsWith(ROUTES.afterLogin + '/')) {
+          return supabaseResponse
+        }
         const url = request.nextUrl.clone()
         url.pathname = ROUTES.afterLogin
         return NextResponse.redirect(url)

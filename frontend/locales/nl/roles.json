@@ -1,0 +1,35 @@
+{
+  "title": "Rollen",
+  "subtitle": "Beheer rollen en hun machtigingen",
+  "noData": "Geen rollen gevonden",
+  "system": "Systeem",
+  "custom": "Aangepast",
+  "addRole": "Rol Toevoegen",
+  "editRole": "Rol Bewerken",
+  "deleteRole": "Rol Verwijderen",
+  "permissions": "Machtigingen",
+  "managePermissions": "Machtigingen Beheren",
+  "fields": {
+    "name": "Rolnaam",
+    "namePlaceholder": "bijv. Redacteur",
+    "description": "Beschrijving",
+    "descriptionPlaceholder": "Korte beschrijving van deze rol"
+  },
+  "columns": {
+    "name": "Naam",
+    "description": "Beschrijving",
+    "type": "Type",
+    "actions": "Acties"
+  },
+  "messages": {
+    "success": "Succes",
+    "loadError": "Kan rollen niet laden. Probeer het opnieuw.",
+    "created": "Rol succesvol aangemaakt",
+    "createError": "Kan de rol niet aanmaken. Probeer het opnieuw.",
+    "updated": "Rol succesvol bijgewerkt",
+    "updateError": "Kan de rol niet bijwerken. Probeer het opnieuw.",
+    "deleted": "Rol succesvol verwijderd",
+    "deleteError": "Kan de rol niet verwijderen. Deze is mogelijk toegewezen aan gebruikers.",
+    "confirmDelete": "Weet u zeker dat u de rol \"{{name}}\" wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt."
+  }
+}

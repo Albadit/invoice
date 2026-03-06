@@ -153,7 +153,28 @@ export interface UserRoles {
   id: string
   user_id: string
   role_id: string
+  is_system: boolean
   created_at: string | null
+}
+
+export interface PasswordResetTokens {
+  id: string
+  user_id: string
+  token: string
+  expires_at: string
+  used_at: string | null
+  created_at: string | null
+}
+
+/** Row shape returned by the admin_list_users() RPC function */
+export interface AdminUser {
+  id: string
+  email: string
+  created_at: string
+  last_sign_in_at: string | null
+  role_id: string | null
+  role_name: string | null
+  is_system: boolean
 }
 
 // Helper types for REST API operations
@@ -212,6 +233,8 @@ export type RolePermissionsDelete = Pick<RolePermissions, 'id'>
 export type UserRolesGet = UserRoles
 export type UserRolesPost = Omit<UserRoles, 'id' | 'created_at'>
 export type UserRolesDelete = Pick<UserRoles, 'id'>
+
+export type PasswordResetTokensGet = PasswordResetTokens
 
 export interface Database {
   public: {
@@ -291,6 +314,10 @@ export interface Database {
         Get: UserRolesGet
         Post: UserRolesPost
         Delete: UserRolesDelete
+      }
+      password_reset_tokens: {
+        Row: PasswordResetTokens
+        Get: PasswordResetTokensGet
       }
     }
   }

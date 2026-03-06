@@ -21,6 +21,7 @@ import { useTranslation } from '@/contexts/LocaleProvider';
 import { sidebarSections } from '@/config/navigation';
 import { ROUTES } from '@/config/routes';
 import { createClient } from '@/lib/supabase/client';
+import { usePermissions } from '@/features/auth/components';
 
 // Page-title context – lets StickyHeader push its title up to the mobile header
 interface PageTitleContextType {
@@ -68,20 +69,27 @@ interface SidebarSection {
   items: SidebarItem[];
 }
 
-// Hook to get translated navigation items from config
+// Hook to get translated navigation items from config, filtered by permissions
 function useSidebarSections(): SidebarSection[] {
   const { t } = useTranslation('common');
+  const { permissions, loading } = usePermissions();
   
   return sidebarSections.map((section) => ({
     key: section.key,
     title: section.titleKey ? t(section.titleKey) : undefined,
-    items: section.items.map((item) => ({
-      key: item.key,
-      label: t(item.labelKey),
-      icon: <item.icon className="size-5" />,
-      href: item.href,
-    })),
-  }));
+    items: section.items
+      .filter((item) => {
+        if (!item.permission) return true;
+        if (loading) return false;
+        return permissions.includes(item.permission);
+      })
+      .map((item) => ({
+        key: item.key,
+        label: t(item.labelKey),
+        icon: <item.icon className="size-5" />,
+        href: item.href,
+      })),
+  })).filter((section) => section.items.length > 0);
 }
 
 // Sidebar Item Component

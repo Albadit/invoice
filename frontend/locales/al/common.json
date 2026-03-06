@@ -17,7 +17,10 @@
     "clients": "Klientët",
     "templates": "Shabllonet",
     "currencies": "Monedhat",
-    "templateEditor": "Redaktori i Shablloneve"
+    "templateEditor": "Redaktori i Shablloneve",
+    "admin": "Admin",
+    "users": "Përdoruesit",
+    "roles": "Rolet"
   },
   "actions": {
     "save": "Ruaj",

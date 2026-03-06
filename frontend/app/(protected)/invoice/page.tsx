@@ -41,6 +41,7 @@ import { ConfirmModal, StickyHeader } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
+import { usePermissions } from '@/features/auth/components';
 
 // Format large numbers compactly (e.g., 300100 -> "300.1K")
 function formatRecordCount(count: number): string {
@@ -69,6 +70,7 @@ export default function InvoicesPage() {
   const searchParams = useSearchParams();
   const { t } = useTranslation('invoice');
   const { t: tCommon } = useTranslation('common');
+  const { hasPermission } = usePermissions();
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -405,12 +407,14 @@ export default function InvoicesPage() {
             <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
           </div>
           <div className="sm:ml-auto shrink-0">
+            {hasPermission('invoices:create') && (
             <Button color="primary" variant="solid" className='w-full lg:w-fit'
               onClick={() => router.push(INVOICE_ROUTES.new)}
               startContent={<Plus className="size-4" />}
             >
               {t('createNew')}
             </Button>
+            )}
           </div>
       </StickyHeader>
 
@@ -592,13 +596,15 @@ export default function InvoicesPage() {
                       >
                         {t('actions.downloadPdf')}
                       </DropdownItem>
+                      {hasPermission('invoices:update') ? (
                       <DropdownItem key="edit"
                         onClick={() => router.push(INVOICE_ROUTES.edit(invoice.id))}
                         startContent={<Edit className="size-4" />}
                       >
                         {tCommon('actions.edit')}
                       </DropdownItem>
-                      {invoice.status !== 'paid' ? (
+                      ) : null}
+                      {hasPermission('invoices:update') && invoice.status !== 'paid' ? (
                       <DropdownItem color="success" key="paid" 
                         onClick={() => openConfirm({
                           title: t('confirm.markAsPaidTitle'),
@@ -621,7 +627,7 @@ export default function InvoicesPage() {
                         {t('actions.markAsPaid')}
                       </DropdownItem>
                       ) : null}
-                      {invoice.status !== 'pending' ? (
+                      {hasPermission('invoices:update') && invoice.status !== 'pending' ? (
                       <DropdownItem key="pending" 
                         onClick={() => openConfirm({
                           title: t('confirm.markAsPendingTitle'),
@@ -643,6 +649,7 @@ export default function InvoicesPage() {
                         {t('actions.markAsPending')}
                       </DropdownItem>
                       ) : null}
+                      {hasPermission('invoices:create') ? (
                       <DropdownItem key="duplicate" 
                         onClick={() => openConfirm({
                           title: t('confirm.duplicateTitle'),
@@ -663,7 +670,8 @@ export default function InvoicesPage() {
                       >
                         {t('actions.duplicate')}
                       </DropdownItem>
-                      {invoice.status !== 'cancelled' ? (
+                      ) : null}
+                      {hasPermission('invoices:update') && invoice.status !== 'cancelled' ? (
                       <DropdownItem color="danger" key="cancelled" 
                         onClick={() => openConfirm({
                           title: t('confirm.cancelTitle'),
@@ -686,7 +694,7 @@ export default function InvoicesPage() {
                         {t('actions.cancel')}
                       </DropdownItem>
                       ) : null}
-                      {invoice.status === 'cancelled' ? (
+                      {hasPermission('invoices:delete') && invoice.status === 'cancelled' ? (
                       <DropdownItem color="danger" key="delete" 
                         onClick={() => openConfirm({
                           title: t('confirm.deleteTitle'),

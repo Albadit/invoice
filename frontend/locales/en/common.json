@@ -17,7 +17,10 @@
     "clients": "Clients",
     "templates": "Templates",
     "currencies": "Currencies",
-    "templateEditor": "Template Editor"
+    "templateEditor": "Template Editor",
+    "admin": "Admin",
+    "users": "Users",
+    "roles": "Roles"
   },
   "actions": {
     "save": "Save",

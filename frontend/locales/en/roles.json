@@ -1,0 +1,35 @@
+{
+  "title": "Roles",
+  "subtitle": "Manage roles and their permissions",
+  "noData": "No roles found",
+  "system": "System",
+  "custom": "Custom",
+  "addRole": "Add Role",
+  "editRole": "Edit Role",
+  "deleteRole": "Delete Role",
+  "permissions": "Permissions",
+  "managePermissions": "Manage Permissions",
+  "fields": {
+    "name": "Role Name",
+    "namePlaceholder": "e.g. Editor",
+    "description": "Description",
+    "descriptionPlaceholder": "Brief description of this role"
+  },
+  "columns": {
+    "name": "Name",
+    "description": "Description",
+    "type": "Type",
+    "actions": "Actions"
+  },
+  "messages": {
+    "success": "Success",
+    "loadError": "Failed to load roles. Please try again.",
+    "created": "Role created successfully",
+    "createError": "Failed to create role. Please try again.",
+    "updated": "Role updated successfully",
+    "updateError": "Failed to update role. Please try again.",
+    "deleted": "Role deleted successfully",
+    "deleteError": "Failed to delete role. It may be assigned to users.",
+    "confirmDelete": "Are you sure you want to delete the role \"{{name}}\"? This action cannot be undone."
+  }
+}
