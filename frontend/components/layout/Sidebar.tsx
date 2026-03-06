@@ -89,10 +89,12 @@ function SidebarItemComponent({
   item,
   isActive,
   isCollapsed,
+  onNavigate,
 }: {
   item: SidebarItem;
   isActive: boolean;
   isCollapsed: boolean;
+  onNavigate?: () => void;
 }) {
   const router = useRouter();
 
@@ -105,7 +107,7 @@ function SidebarItemComponent({
         isActive && 'bg-primary/10 text-primary'
       )}
       isIconOnly={isCollapsed}
-      onPress={() => router.push(item.href, { scroll: false })}
+      onPress={() => { router.push(item.href, { scroll: false }); onNavigate?.(); }}
     >
       <span className={cn(isActive && 'text-primary')}>{item.icon}</span>
       {!isCollapsed && (
@@ -132,10 +134,12 @@ function SidebarSectionComponent({
   section,
   isCollapsed,
   activeKey,
+  onNavigate,
 }: {
   section: SidebarSection;
   isCollapsed: boolean;
   activeKey: string | null;
+  onNavigate?: () => void;
 }) {
   return (
     <div className="flex flex-col gap-1">
@@ -150,6 +154,7 @@ function SidebarSectionComponent({
           item={item}
           isActive={item.key === activeKey}
           isCollapsed={isCollapsed}
+          onNavigate={onNavigate}
         />
       ))}
     </div>
@@ -287,6 +292,7 @@ export function Sidebar() {
                 section={section}
                 isCollapsed={isCollapsed}
                 activeKey={activeKey}
+                onNavigate={() => setIsMobileOpen(false)}
               />
             ))}
           </nav>

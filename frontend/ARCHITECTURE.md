@@ -21,6 +21,10 @@ The application is structured into three distinct layers with strict dependency 
     *   **Role**: The application shell. Handles routing, layouts, and page composition.
     *   **Dependencies**: Can import from `features` and `shared`.
     *   **Responsibility**: Wiring everything together.
+    *   **Route Groups**:
+        *   `(public)` — Pages accessible **without** authentication (e.g., landing page, about, pricing).
+        *   `(auth)` — Authentication-related pages (e.g., login, signup, forgot password). Uses a minimal/centered layout.
+        *   `(protected)` — Pages that **require** authentication (e.g., dashboard, settings, profile). Protected by auth middleware/guards.
 
 2.  **Feature Layer** (`features/`)
     *   **Role**: Domain-specific business logic and UI (e.g., `auth`, `users`, `bookings`).
@@ -39,7 +43,15 @@ frontend/
 ├── app/                  # Next.js App Router (Pages, Layouts, Route Handlers)
 │   ├── layout.tsx        # Root layout
 │   ├── page.tsx          # Home page
-│   └── [routes]/         # Application routes (e.g., /about, /clinics)
+│   ├── (auth)/           # Authentication route group (login, signup, etc.)
+│   │   ├── login/        # Login page
+│   │   ├── signup/       # Signup page
+│   │   ├── forgot-password/ # Forgot password page
+│   │   └── [routes]/     # Other auth routes (e.g., /verify-email, /reset-password)
+│   ├── (public)/         # Unauthenticated route group (no auth required)
+│   │   └── [routes]/     # Public routes (e.g., /about, /pricing)
+│   └── (protected)/      # Authenticated route group (auth required)
+│       └── [routes]/     # Other protected routes
 │
 ├── features/             # Domain-specific modules (Business Logic + UI)
 │   ├── auth/             # Authentication feature
@@ -88,6 +100,14 @@ We use `eslint-plugin-boundaries` to automatically enforce these rules. If you t
 
 ### `app/`
 Contains the application routing logic. Files here should primarily focus on layout and data fetching (for Server Components), delegating complex UI and logic to components in `features/` or `components/`.
+
+The `app/` directory uses **Next.js Route Groups** to separate public and protected areas:
+
+*   **`(auth)/`** — Contains authentication-related pages (login, signup, forgot password, etc.). Logged-in users can be redirected away from these pages.
+*   **`(public)/`** — Contains pages that do **not** require authentication. Routes inside are accessible to all visitors (e.g., /about, /pricing).
+*   **`(protected)/`** — Contains pages that **require** a logged-in user. Access is guarded by auth middleware or a layout-level check (e.g., dashboard, settings).
+
+> **Note**: Route group folders (wrapped in parentheses) do **not** affect the URL structure. A file at `app/(public)/about/page.tsx` maps to `/about`, not `/(public)/about`.
 
 ### `features/`
 This is where the bulk of the business logic lives. Each folder represents a domain.

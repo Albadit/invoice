@@ -122,3 +122,102 @@ WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Classic');
 
 -- Ensure Classic template is flagged as system
 UPDATE templates SET is_system = true WHERE name = 'Classic' AND user_id IS NULL;
+
+-- =============================================
+-- Seed System Roles
+-- =============================================
+
+INSERT INTO roles (name, description, is_system) VALUES
+    ('Super Admin',  'Full access to all resources. Cannot be removed.',  true),
+    ('Admin',        'Administrative access. Can manage users and settings.', true),
+    ('User',         'Can manage companies, clients, and invoices.',  true)
+ON CONFLICT DO NOTHING;
+
+-- =============================================
+-- Seed Permissions
+-- =============================================
+
+INSERT INTO permissions (key, description) VALUES
+    -- User permissions
+    ('users:access',         'Access users page'),
+    ('users:read',           'View users'),
+    ('users:create',         'Create users'),
+    ('users:update',         'Update users'),
+    ('users:delete',         'Delete users'),
+    -- Role permissions
+    ('roles:access',         'Access roles page'),
+    ('roles:read',           'View roles'),
+    ('roles:create',         'Create roles'),
+    ('roles:update',         'Update roles'),
+    ('roles:delete',         'Delete roles'),
+    -- Company permissions
+    ('companies:access',     'Access companies page'),
+    ('companies:read',       'View companies'),
+    ('companies:create',     'Create companies'),
+    ('companies:update',     'Update companies'),
+    ('companies:delete',     'Delete companies'),
+    -- Client permissions
+    ('clients:access',       'Access clients page'),
+    ('clients:read',         'View clients'),
+    ('clients:create',       'Create clients'),
+    ('clients:update',       'Update clients'),
+    ('clients:delete',       'Delete clients'),
+    -- Invoice permissions
+    ('invoices:access',      'Access invoices page'),
+    ('invoices:read',        'View invoices'),
+    ('invoices:create',      'Create invoices'),
+    ('invoices:update',      'Update invoices'),
+    ('invoices:delete',      'Delete invoices'),
+    -- Template permissions
+    ('templates:access',     'Access templates page'),
+    ('templates:read',       'View templates'),
+    ('templates:create',     'Create templates'),
+    ('templates:update',     'Update templates'),
+    ('templates:delete',     'Delete templates'),
+    -- Currency permissions
+    ('currencies:access',    'Access currencies page'),
+    ('currencies:read',      'View currencies'),
+    ('currencies:create',    'Create currencies'),
+    ('currencies:update',    'Update currencies'),
+    ('currencies:delete',    'Delete currencies'),
+    -- Settings / user management
+    ('settings:access',      'Access settings page'),
+    ('settings:read',        'View settings'),
+    ('settings:create',      'Create settings'),
+    ('settings:update',      'Update settings'),
+    ('settings:delete',      'Delete settings'),
+    -- Dashboard
+    ('dashboard:access',     'Access dashboard page'),
+    ('dashboard:read',       'View dashboard and analytics')
+ON CONFLICT (key) DO NOTHING;
+
+-- =============================================
+-- Seed Role ↔ Permission mappings
+-- =============================================
+
+-- Super Admin gets ALL permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'Super Admin'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- Admin gets everything except role permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'Admin'
+  AND p.key NOT LIKE 'roles:%'
+ON CONFLICT (role_id, permission_id) DO NOTHING;
+
+-- User: everything except role and user permissions
+INSERT INTO role_permissions (role_id, permission_id)
+SELECT r.id, p.id
+FROM roles r
+CROSS JOIN permissions p
+WHERE r.name = 'User'
+  AND p.key NOT LIKE 'roles:%'
+  AND p.key NOT LIKE 'users:%'
+ON CONFLICT (role_id, permission_id) DO NOTHING;

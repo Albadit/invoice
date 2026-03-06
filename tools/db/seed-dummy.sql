@@ -7,6 +7,15 @@ BEGIN
     PERFORM set_config('seed.user_id', _uid::text, false);
 END $$;
 
+-- Assign the Owner role to the test user
+INSERT INTO user_roles (user_id, role_id)
+SELECT
+    current_setting('seed.user_id')::uuid,
+    r.id
+FROM roles r
+WHERE r.name = 'Owner'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
 -- Insert sample companies with settings (only if they don't exist)
 INSERT INTO companies (user_id, name, email, phone, street, city, zip_code, country, currency_id, template_id, tax_percent, terms)
 SELECT

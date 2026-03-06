@@ -125,6 +125,36 @@ export interface Templates {
   updated_at: string | null
 }
 
+export interface Roles {
+  id: string
+  name: string
+  description: string | null
+  is_system: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
+export interface Permissions {
+  id: string
+  key: string
+  description: string | null
+  created_at: string | null
+}
+
+export interface RolePermissions {
+  id: string
+  role_id: string
+  permission_id: string
+  created_at: string | null
+}
+
+export interface UserRoles {
+  id: string
+  user_id: string
+  role_id: string
+  created_at: string | null
+}
+
 // Helper types for REST API operations
 export type CompaniesGet = Companies
 export type CompaniesPost = Omit<Companies, 'id' | 'created_at' | 'updated_at' | 'user_id'>
@@ -161,6 +191,26 @@ export type TemplatesPost = Omit<Templates, 'id' | 'created_at' | 'updated_at' |
 export type TemplatesPut = Omit<Templates, 'created_at' | 'updated_at'>
 export type TemplatesPatch = Partial<TemplatesPost>
 export type TemplatesDelete = Pick<Templates, 'id'>
+
+export type RolesGet = Roles
+export type RolesPost = Omit<Roles, 'id' | 'created_at' | 'updated_at' | 'is_system'>
+export type RolesPut = Omit<Roles, 'created_at' | 'updated_at'>
+export type RolesPatch = Partial<RolesPost>
+export type RolesDelete = Pick<Roles, 'id'>
+
+export type PermissionsGet = Permissions
+export type PermissionsPost = Omit<Permissions, 'id' | 'created_at'>
+export type PermissionsPut = Omit<Permissions, 'created_at'>
+export type PermissionsPatch = Partial<PermissionsPost>
+export type PermissionsDelete = Pick<Permissions, 'id'>
+
+export type RolePermissionsGet = RolePermissions
+export type RolePermissionsPost = Omit<RolePermissions, 'id' | 'created_at'>
+export type RolePermissionsDelete = Pick<RolePermissions, 'id'>
+
+export type UserRolesGet = UserRoles
+export type UserRolesPost = Omit<UserRoles, 'id' | 'created_at'>
+export type UserRolesDelete = Pick<UserRoles, 'id'>
 
 export interface Database {
   public: {
@@ -212,6 +262,34 @@ export interface Database {
         Put: TemplatesPut
         Patch: TemplatesPatch
         Delete: TemplatesDelete
+      }
+      roles: {
+        Row: Roles
+        Get: RolesGet
+        Post: RolesPost
+        Put: RolesPut
+        Patch: RolesPatch
+        Delete: RolesDelete
+      }
+      permissions: {
+        Row: Permissions
+        Get: PermissionsGet
+        Post: PermissionsPost
+        Put: PermissionsPut
+        Patch: PermissionsPatch
+        Delete: PermissionsDelete
+      }
+      role_permissions: {
+        Row: RolePermissions
+        Get: RolePermissionsGet
+        Post: RolePermissionsPost
+        Delete: RolePermissionsDelete
+      }
+      user_roles: {
+        Row: UserRoles
+        Get: UserRolesGet
+        Post: UserRolesPost
+        Delete: UserRolesDelete
       }
     }
   }
