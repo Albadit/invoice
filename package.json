@@ -8,11 +8,11 @@
     "predev:frontend": "npm --prefix frontend install",
     "dev:frontend": "npm --prefix frontend run dev",
     "db:gen": "tsx ./tools/supabase/generate-types.ts",
-    "db:migrate": "tsx ./tools/supabase/db-migrate.ts",
-    "db:schema": "tsx ./tools/supabase/db-schema.ts",
-    "db:seed": "tsx ./tools/supabase/db-seed.ts",
-    "db:drop": "tsx ./tools/supabase/db-drop.ts",
-    "db:reset": "npm-run-all \"db:drop -- --yes\" db:schema db:seed"
+    "db:migrate": "tsx ./tools/supabase/db.ts migrate",
+    "db:schema": "tsx ./tools/supabase/db.ts schema",
+    "db:seed": "tsx ./tools/supabase/db.ts seed",
+    "db:drop": "tsx ./tools/supabase/db.ts drop --yes",
+    "db:reset": "tsx ./tools/supabase/db.ts reset --yes"
   },
   "devDependencies": {
     "@types/pg": "^8.16.0",

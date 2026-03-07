@@ -1,96 +1,233 @@
 #!/usr/bin/env tsx
 
 /**
- * Generate TypeScript types from PostgreSQL database
- * This script connects to the database and generates types
+ * Generate TypeScript types from Supabase REST API (OpenAPI spec)
+ * 
+ * Uses only SUPABASE_URL + SUPABASE_ANON_KEY — no direct Postgres connection needed.
+ * Fetches the PostgREST OpenAPI spec and generates types from definitions.
+ * 
+ * Usage:
+ *   npx tsx generate-types-rest.ts
+ * 
+ * Env vars (from .env or environment):
+ *   NEXT_PUBLIC_SUPABASE_URL   - e.g. http://localhost:8000
+ *   NEXT_PUBLIC_SUPABASE_ANON_KEY
  */
 
 import { config } from 'dotenv';
-import { Client } from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Load environment variables from .env file
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 config({ path: path.join(__dirname, '.env') });
 
-// Database connection configuration
-interface DBConfig {
-  host: string;
-  port: number;
-  database: string;
-  user: string;
-  password: string;
+const SUPABASE_URL = process.env.SUPABASE_URL || 'http://localhost:8000';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+
+if (!SUPABASE_ANON_KEY) {
+  console.error('❌ NEXT_PUBLIC_SUPABASE_ANON_KEY is required');
+  process.exit(1);
 }
 
-const DB_CONFIG: DBConfig = {
-  host: process.env.POSTGRES_HOST || 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
-  database: process.env.POSTGRES_DB || 'postgres',
-  user: process.env.POSTGRES_USER || 'postgres',
-  password: process.env.POSTGRES_PASSWORD || 'postgres',
-};
+// ── OpenAPI Schema types ────────────────────────────────────────────
 
-interface Column {
-  column_name: string;
-  data_type: string;
-  udt_name: string;
-  is_nullable: string;
-  column_default: string | null;
-  is_generated: string;
+interface OpenApiProperty {
+  type?: string;
+  format?: string;
+  description?: string;
+  default?: string;
+  enum?: string[];
+  items?: { type?: string; format?: string; enum?: string[] };
+  maxLength?: number;
 }
 
-interface TableInfo {
-  table_name: string;
-  columns: Column[];
+interface OpenApiDefinition {
+  type: string;
+  required?: string[];
+  properties: Record<string, OpenApiProperty>;
+  description?: string;
 }
 
-interface EnumRow {
-  enum_name: string;
-  enum_values: string[] | string;
+interface OpenApiSpec {
+  definitions: Record<string, OpenApiDefinition>;
+  paths?: Record<string, unknown>;
 }
 
-interface TypeMap {
-  [key: string]: string;
+// ── Type mapping ────────────────────────────────────────────────────
+
+function pgFormatToTs(prop: OpenApiProperty): string {
+  const fmt = prop.format || '';
+  const type = prop.type || '';
+
+  // Enum column
+  if (prop.enum && prop.enum.length > 0) {
+    return prop.enum.map(v => `'${v}'`).join(' | ');
+  }
+
+  // Array type
+  if (type === 'array') {
+    if (prop.items?.enum) {
+      const inner = prop.items.enum.map(v => `'${v}'`).join(' | ');
+      return `(${inner})[]`;
+    }
+    const innerType = pgFormatToTs({ type: prop.items?.type, format: prop.items?.format });
+    return `${innerType}[]`;
+  }
+
+  // Map by format (carries the original PG type name)
+  const formatMap: Record<string, string> = {
+    'uuid': 'string',
+    'text': 'string',
+    'character varying': 'string',
+    'name': 'string',
+    'citext': 'string',
+    'inet': 'string',
+    'integer': 'number',
+    'bigint': 'number',
+    'smallint': 'number',
+    'numeric': 'number',
+    'real': 'number',
+    'double precision': 'number',
+    'money': 'string',
+    'boolean': 'boolean',
+    'date': 'string',
+    'time with time zone': 'string',
+    'time without time zone': 'string',
+    'timestamp with time zone': 'string',
+    'timestamp without time zone': 'string',
+    'interval': 'string',
+    'json': 'Json',
+    'jsonb': 'Json',
+    'bytea': 'string',
+    'tsvector': 'string',
+    'tsquery': 'string',
+    'point': 'string',
+    'oid': 'number',
+  };
+
+  if (fmt && formatMap[fmt]) return formatMap[fmt];
+
+  // Fallback by JSON Schema type
+  const typeMap: Record<string, string> = {
+    'string': 'string',
+    'integer': 'number',
+    'number': 'number',
+    'boolean': 'boolean',
+    'object': 'Json',
+  };
+
+  return typeMap[type] || 'unknown';
 }
+
+// ── Helpers ─────────────────────────────────────────────────────────
+
+function toPascalCase(str: string): string {
+  return str
+    .split('_')
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+    .join('');
+}
+
+/** Heuristic: detect likely PK columns from default values and required fields */
+function detectPrimaryKeys(
+  tableName: string,
+  props: Record<string, OpenApiProperty>,
+  required: string[],
+): string[] {
+  const pks: string[] = [];
+  for (const [col, prop] of Object.entries(props)) {
+    const def = prop.default || '';
+    // uuid generation functions
+    if (/gen_random_uuid|uuid_generate/i.test(def)) {
+      pks.push(col);
+      continue;
+    }
+    // serial / identity columns (nextval)
+    if (/nextval\(/i.test(def)) {
+      pks.push(col);
+      continue;
+    }
+  }
+  // Fallback chain: 'id' column → first required column → first column
+  if (pks.length === 0) {
+    if (props['id']) {
+      pks.push('id');
+    } else if (required.length > 0) {
+      pks.push(required[0]);
+    } else {
+      const firstCol = Object.keys(props)[0];
+      if (firstCol) pks.push(firstCol);
+    }
+  }
+  return pks;
+}
+
+/** Detect columns that are auto-generated (server defaults) */
+function isAutoColumn(col: string, prop: OpenApiProperty): boolean {
+  const def = prop.default || '';
+  if (/gen_random_uuid|uuid_generate|nextval\(/i.test(def)) return true;
+  if (col === 'created_at' || col === 'updated_at') return true;
+  if (prop.format === 'tsvector' || prop.type === 'tsvector') return true;
+  return false;
+}
+
+// ── Main ────────────────────────────────────────────────────────────
 
 async function generateTypes() {
-  const client = new Client(DB_CONFIG);
+  const openApiUrl = `${SUPABASE_URL}/rest/v1/`;
 
-  try {
-    await client.connect();
-    console.log('Connected to database...');
+  console.log(`Fetching OpenAPI spec from ${openApiUrl} ...`);
 
-    // Query to get all tables and their columns
-    const query = `
-      SELECT 
-        t.table_name,
-        json_agg(
-          json_build_object(
-            'column_name', c.column_name,
-            'data_type', c.data_type,
-            'udt_name', c.udt_name,
-            'is_nullable', c.is_nullable,
-            'column_default', c.column_default,
-            'is_generated', c.is_generated
-          ) ORDER BY c.ordinal_position
-        ) as columns
-      FROM information_schema.tables t
-      LEFT JOIN information_schema.columns c 
-        ON t.table_name = c.table_name 
-        AND t.table_schema = c.table_schema
-      WHERE t.table_schema = 'public'
-        AND t.table_type = 'BASE TABLE'
-      GROUP BY t.table_name
-      ORDER BY t.table_name;
-    `;
+  const response = await fetch(openApiUrl, {
+    headers: {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Accept': 'application/openapi+json',
+    },
+  });
 
-    const result = await client.query<TableInfo>(query);
+  if (!response.ok) {
+    console.error(`❌ Failed to fetch OpenAPI spec: ${response.status} ${response.statusText}`);
+    process.exit(1);
+  }
 
-    // Generate TypeScript interfaces
-    let typeDefinitions = `// Auto-generated TypeScript types from PostgreSQL database
+  const spec: OpenApiSpec = await response.json() as OpenApiSpec;
+  const definitions = spec.definitions;
+
+  if (!definitions || Object.keys(definitions).length === 0) {
+    console.error('❌ No table definitions found in OpenAPI spec. Check RLS / grants for anon role.');
+    process.exit(1);
+  }
+
+  const tableNames = Object.keys(definitions).sort();
+  console.log(`Found ${tableNames.length} tables: ${tableNames.join(', ')}`);
+
+  // ── Collect enums ───────────────────────────────────────────────
+  const enumTypes = new Map<string, string[]>(); // enumTypeName -> values
+
+  for (const tableName of tableNames) {
+    const def = definitions[tableName];
+    for (const [, prop] of Object.entries(def.properties)) {
+      if (prop.enum && prop.enum.length > 0 && prop.format) {
+        // PostgREST puts the PG type name in format for enum columns
+        const enumName = prop.format;
+        if (!enumTypes.has(enumName)) {
+          enumTypes.set(enumName, prop.enum);
+        }
+      }
+      if (prop.items?.enum && prop.items.format) {
+        const enumName = prop.items.format;
+        if (!enumTypes.has(enumName)) {
+          enumTypes.set(enumName, prop.items.enum);
+        }
+      }
+    }
+  }
+
+  // ── Build output ────────────────────────────────────────────────
+  let out = `// Auto-generated TypeScript types from Supabase REST API (OpenAPI spec)
 // Generated on: ${new Date().toISOString()}
 
 export type Json =
@@ -103,168 +240,86 @@ export type Json =
 
 `;
 
-    // Map PostgreSQL types to TypeScript types
-    const typeMap: TypeMap = {
-      'uuid': 'string',
-      'text': 'string',
-      'character varying': 'string',
-      'varchar': 'string',
-      'integer': 'number',
-      'bigint': 'number',
-      'smallint': 'number',
-      'numeric': 'number',
-      'decimal': 'number',
-      'real': 'number',
-      'double precision': 'number',
-      'boolean': 'boolean',
-      'date': 'string',
-      'timestamp with time zone': 'string',
-      'timestamp without time zone': 'string',
-      'time': 'string',
-      'json': 'Json',
-      'jsonb': 'Json',
-      'ARRAY': 'string[]',
-      'USER-DEFINED': 'string', // Will be handled separately for enums
-    };
-
-    // Get all enums
-    const enumQuery = `
-      SELECT 
-        t.typname as enum_name,
-        array_agg(e.enumlabel ORDER BY e.enumsortorder) as enum_values
-      FROM pg_type t
-      JOIN pg_enum e ON t.oid = e.enumtypid
-      JOIN pg_namespace n ON t.typnamespace = n.oid
-      WHERE n.nspname = 'public'
-      GROUP BY t.typname;
-    `;
-
-    const enumResult = await client.query<EnumRow>(enumQuery);
-    const enums: Record<string, string[]> = {};
-
-    enumResult.rows.forEach((row: EnumRow) => {
-      // Parse the array if it comes as a string or handle it as an array
-      let enumValues: string[];
-      if (typeof row.enum_values === 'string') {
-        // PostgreSQL array format: {value1,value2,value3}
-        enumValues = row.enum_values.replace(/[{}]/g, '').split(',');
-      } else if (Array.isArray(row.enum_values)) {
-        enumValues = row.enum_values;
-      } else {
-        console.warn(`Unexpected enum_values format for ${row.enum_name}:`, row.enum_values);
-        return;
-      }
-      
-      enums[row.enum_name] = enumValues;
-      typeDefinitions += `export type ${toPascalCase(row.enum_name)} = ${enumValues.map((v: string) => `'${v}'`).join(' | ')}\n\n`;
-    });
-
-    // Generate interfaces for each table
-    result.rows.forEach((table: TableInfo) => {
-      const tableName = table.table_name;
-      const interfaceName = toPascalCase(tableName);
-      
-      typeDefinitions += `export interface ${interfaceName} {\n`;
-      
-      table.columns.forEach((col: Column) => {
-        const columnName = col.column_name;
-        let tsType = typeMap[col.data_type] || 'unknown';
-        
-        // Handle custom enums
-        if (col.data_type === 'USER-DEFINED' && enums[col.udt_name]) {
-          tsType = toPascalCase(col.udt_name);
-        }
-        
-        // Handle nullable types
-        const nullable = col.is_nullable === 'YES' ? ' | null' : '';
-        
-        typeDefinitions += `  ${columnName}: ${tsType}${nullable}\n`;
-      });
-      
-      typeDefinitions += `}\n\n`;
-    });
-
-    // Get primary keys for each table
-    const pkQuery = `
-      SELECT
-        tc.table_name,
-        kcu.column_name
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.key_column_usage kcu
-        ON tc.constraint_name = kcu.constraint_name
-        AND tc.table_schema = kcu.table_schema
-      WHERE tc.constraint_type = 'PRIMARY KEY'
-        AND tc.table_schema = 'public'
-      ORDER BY tc.table_name, kcu.ordinal_position;
-    `;
-    const pkResult = await client.query<{ table_name: string; column_name: string }>(pkQuery);
-    const primaryKeys: Record<string, string[]> = {};
-    pkResult.rows.forEach(row => {
-      if (!primaryKeys[row.table_name]) primaryKeys[row.table_name] = [];
-      primaryKeys[row.table_name].push(row.column_name);
-    });
-
-    // Add REST API operation types
-    typeDefinitions += `// Helper types for REST API operations\n`;
-    result.rows.forEach((table: TableInfo) => {
-      const tableName = table.table_name;
-      const interfaceName = toPascalCase(tableName);
-      const pkColumns = primaryKeys[tableName] || ['id'];
-      const pkOmitList = pkColumns.map(c => `'${c}'`).join(' | ');
-      const pkPickList = pkColumns.map(c => `'${c}'`).join(' | ');
-      
-      typeDefinitions += `export type ${interfaceName}Get = ${interfaceName}\n`;
-      // Collect generated/computed columns to exclude from Post type
-      const generatedCols = (table.columns || []).filter(
-        (col: Column) => col.is_generated === 'ALWAYS' || col.data_type === 'tsvector' || col.udt_name === 'tsvector'
-      ).map((col: Column) => `'${col.column_name}'`);
-      const omitList = [pkOmitList, "'created_at'", "'updated_at'", ...generatedCols].join(' | ');
-      typeDefinitions += `export type ${interfaceName}Post = Omit<${interfaceName}, ${omitList}>\n`;
-      typeDefinitions += `export type ${interfaceName}Put = Omit<${interfaceName}, 'created_at' | 'updated_at'>\n`;
-      typeDefinitions += `export type ${interfaceName}Patch = Partial<${interfaceName}Post>\n`;
-      typeDefinitions += `export type ${interfaceName}Delete = Pick<${interfaceName}, ${pkPickList}>\n\n`;
-    });
-
-    // Add Database type
-    typeDefinitions += `export interface Database {\n`;
-    typeDefinitions += `  public: {\n`;
-    typeDefinitions += `    Tables: {\n`;
-    result.rows.forEach((table: TableInfo) => {
-      const tableName = table.table_name;
-      const interfaceName = toPascalCase(tableName);
-      typeDefinitions += `      ${tableName}: {\n`;
-      typeDefinitions += `        Row: ${interfaceName}\n`;
-      typeDefinitions += `        Get: ${interfaceName}Get\n`;
-      typeDefinitions += `        Post: ${interfaceName}Post\n`;
-      typeDefinitions += `        Put: ${interfaceName}Put\n`;
-      typeDefinitions += `        Patch: ${interfaceName}Patch\n`;
-      typeDefinitions += `        Delete: ${interfaceName}Delete\n`;
-      typeDefinitions += `      }\n`;
-    });
-    typeDefinitions += `    }\n`;
-    typeDefinitions += `  }\n`;
-    typeDefinitions += `}\n`;
-
-    // Write to file
-    const outputPath = path.join(__dirname, '..', '..', 'frontend', 'lib', 'database.types.ts');
-    fs.writeFileSync(outputPath, typeDefinitions);
-    
-    console.log(`✅ Types generated successfully at: ${outputPath}`);
-    
-  } catch (error) {
-    console.error('Error generating types:', error);
-    process.exit(1);
-  } finally {
-    await client.end();
+  // Enum types
+  for (const [enumName, values] of [...enumTypes.entries()].sort((a, b) => a[0].localeCompare(b[0]))) {
+    out += `export type ${toPascalCase(enumName)} = ${values.map(v => `'${v}'`).join(' | ')}\n\n`;
   }
+
+  // Table interfaces
+  for (const tableName of tableNames) {
+    const def = definitions[tableName];
+    const required = new Set(def.required || []);
+    const interfaceName = toPascalCase(tableName);
+
+    out += `export interface ${interfaceName} {\n`;
+
+    for (const [col, prop] of Object.entries(def.properties)) {
+      let tsType: string;
+
+      // Use named enum type if this column is a known enum
+      if (prop.enum && prop.format && enumTypes.has(prop.format)) {
+        tsType = toPascalCase(prop.format);
+      } else if (prop.items?.enum && prop.items.format && enumTypes.has(prop.items.format)) {
+        tsType = `${toPascalCase(prop.items.format)}[]`;
+      } else {
+        tsType = pgFormatToTs(prop);
+      }
+
+      const nullable = required.has(col) ? '' : ' | null';
+      out += `  ${col}: ${tsType}${nullable}\n`;
+    }
+
+    out += `}\n\n`;
+  }
+
+  // REST operation helper types
+  out += `// Helper types for REST API operations\n`;
+  for (const tableName of tableNames) {
+    const def = definitions[tableName];
+    const interfaceName = toPascalCase(tableName);
+    const pkColumns = detectPrimaryKeys(tableName, def.properties, def.required || []);
+
+    const pkPickList = pkColumns.map(c => `'${c}'`).join(' | ');
+
+    // Columns to omit from Post type
+    const autoColumns = Object.entries(def.properties)
+      .filter(([col, prop]) => isAutoColumn(col, prop))
+      .map(([col]) => `'${col}'`);
+    const omitSet = new Set([...pkColumns.map(c => `'${c}'`), ...autoColumns]);
+    const omitList = [...omitSet].join(' | ');
+
+    out += `export type ${interfaceName}Get = ${interfaceName}\n`;
+    out += `export type ${interfaceName}Post = Omit<${interfaceName}, ${omitList}>\n`;
+    out += `export type ${interfaceName}Put = Omit<${interfaceName}, 'created_at' | 'updated_at'>\n`;
+    out += `export type ${interfaceName}Patch = Partial<${interfaceName}Post>\n`;
+    out += `export type ${interfaceName}Delete = Pick<${interfaceName}, ${pkPickList}>\n\n`;
+  }
+
+  // Database type
+  out += `export interface Database {\n`;
+  out += `  public: {\n`;
+  out += `    Tables: {\n`;
+  for (const tableName of tableNames) {
+    const interfaceName = toPascalCase(tableName);
+    out += `      ${tableName}: {\n`;
+    out += `        Row: ${interfaceName}\n`;
+    out += `        Get: ${interfaceName}Get\n`;
+    out += `        Post: ${interfaceName}Post\n`;
+    out += `        Put: ${interfaceName}Put\n`;
+    out += `        Patch: ${interfaceName}Patch\n`;
+    out += `        Delete: ${interfaceName}Delete\n`;
+    out += `      }\n`;
+  }
+  out += `    }\n`;
+  out += `  }\n`;
+  out += `}\n`;
+
+  // Write
+  const outputPath = path.join(__dirname, '..', '..', 'frontend', 'lib', 'database.types.ts');
+  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  fs.writeFileSync(outputPath, out);
+
+  console.log(`✅ Types generated successfully at: ${outputPath}`);
 }
 
-function toPascalCase(str: string): string {
-  return str
-    .split('_')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join('');
-}
-
-// Run the script
 generateTypes();
