@@ -72,38 +72,34 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6 p-4 sm:p-8 max-w-7xl mx-auto w-full">
       {/* Header */}
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
-          <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold">{t('title')}</h1>
-            <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
-          </div>
-          <div className="sm:ml-auto shrink-0 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Select
-              label={t('filterYear')}
-              labelPlacement="inside"
-              selectedKeys={[selectedYear]}
-              onChange={(e) => setSelectedYear(e.target.value || 'all')}
-              className="w-full sm:w-36"
-              size="sm"
-            >
-              {[
-                <SelectItem key="all">{t('allYears')}</SelectItem>,
-                ...availableYears.map((y) => <SelectItem key={String(y)}>{String(y)}</SelectItem>),
-              ]}
-            </Select>
-            <Select
-              label={t('filterCompany')}
-              labelPlacement="inside"
-              selectedKeys={[selectedCompany]}
-              onChange={(e) => setSelectedCompany(e.target.value || 'all')}
-              className="w-full sm:w-64"
-              size="sm"
-            >
-              {[
-                <SelectItem key="all">{t('allCompanies')}</SelectItem>,
-                ...companies.map((c) => <SelectItem key={c.id}>{c.name}</SelectItem>),
-              ]}
-            </Select>
-          </div>
+        <div className="sm:ml-auto shrink-0 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <Select
+            label={t('filterYear')}
+            labelPlacement="inside"
+            selectedKeys={[selectedYear]}
+            onChange={(e) => setSelectedYear(e.target.value || 'all')}
+            className="w-full sm:w-36"
+            size="sm"
+          >
+            {[
+              <SelectItem key="all">{t('allYears')}</SelectItem>,
+              ...availableYears.map((y) => <SelectItem key={String(y)}>{String(y)}</SelectItem>),
+            ]}
+          </Select>
+          <Select
+            label={t('filterCompany')}
+            labelPlacement="inside"
+            selectedKeys={[selectedCompany]}
+            onChange={(e) => setSelectedCompany(e.target.value || 'all')}
+            className="w-full sm:w-64"
+            size="sm"
+          >
+            {[
+              <SelectItem key="all">{t('allCompanies')}</SelectItem>,
+              ...companies.map((c) => <SelectItem key={c.id}>{c.name}</SelectItem>),
+            ]}
+          </Select>
+        </div>
       </StickyHeader>
 
       {loading ? (

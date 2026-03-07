@@ -40,11 +40,19 @@ export function StickyHeader({ children, title, subtitle, className = '' }: Stic
     return () => { setPageTitle(''); setPageSubtitle(''); };
   }, [title, subtitle, setPageTitle, setPageSubtitle]);
 
+  const hasChildren = !!children;
+
   return (
     <section
-      className={`sticky top-16 lg:top-0 z-30 bg-background/80 backdrop-blur-md -mx-4 sm:-mx-8 -mt-4 sm:-mt-8 px-4 sm:px-8 py-3 border-b border-divider ${className}`.trim()}
+      className={`${hasChildren ? '' : 'hidden lg:block '}sticky top-16 lg:top-0 z-30 bg-background/80 backdrop-blur-md -mx-4 sm:-mx-8 -mt-4 sm:-mt-8 px-4 sm:px-8 py-3 border-b border-divider ${className}`.trim()}
     >
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        {title && (
+          <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold">{title}</h1>
+            {subtitle && <p className="text-xs sm:text-sm text-default-500">{subtitle}</p>}
+          </div>
+        )}
         {children}
       </div>
     </section>

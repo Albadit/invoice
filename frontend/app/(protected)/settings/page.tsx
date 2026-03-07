@@ -838,35 +838,30 @@ export default function SettingsPage() {
   return (
     <main className="min-h-screen max-w-6xl mx-auto p-4 sm:p-8 flex flex-col gap-6 sm:gap-8">
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
-          <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">{t('title')}</h1>
-            <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
-          </div>
-
-          {/* Company context banner (inline) */}
-          {selectedCompanyObj && (
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
-              <Building2 className="size-4 text-primary shrink-0" />
-              <div className="min-w-0">
-                <p className="text-[10px] leading-tight text-primary-600 dark:text-primary-400 font-medium">{t('companies.editingCompany')}</p>
-                <p className="text-sm font-semibold text-foreground truncate">{selectedCompanyObj.name}</p>
-              </div>
+        {/* Company context banner (inline) */}
+        {selectedCompanyObj && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 border border-primary/20">
+            <Building2 className="size-4 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] leading-tight text-primary-600 dark:text-primary-400 font-medium">{t('companies.editingCompany')}</p>
+              <p className="text-sm font-semibold text-foreground truncate">{selectedCompanyObj.name}</p>
             </div>
-          )}
-
-          <div className="sm:ml-auto shrink-0">
-            {hasPermission('settings:update') && (
-            <Button
-              color="primary"
-              className="w-full ms:w-fit"
-              onClick={handleSave}
-              disabled={saving || cooldown > 0}
-              startContent={<Save className="size-4" />}
-            >
-              {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
-            </Button>
-            )}
           </div>
+        )}
+
+        <div className="sm:ml-auto shrink-0">
+          {hasPermission('settings:update') && (
+          <Button
+            color="primary"
+            className="w-full ms:w-fit"
+            onClick={handleSave}
+            disabled={saving || cooldown > 0}
+            startContent={<Save className="size-4" />}
+          >
+            {saving ? t('actions.saving') : cooldown > 0 ? `${t('actions.wait')} ${cooldown}s` : t('actions.save')}
+          </Button>
+          )}
+        </div>
       </StickyHeader>
 
       {/* Two-column layout: settings left, company/client selector right (sticky) */}

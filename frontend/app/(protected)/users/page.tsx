@@ -173,10 +173,6 @@ export default function UsersPage() {
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
-        <div className="hidden lg:flex flex-col gap-0.5 min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold">{t('title')}</h1>
-          <p className="text-xs sm:text-sm text-default-500">{t('subtitle')}</p>
-        </div>
         <ViewAuth permission="users:create">
           <div className="w-full sm:w-auto sm:ml-auto shrink-0">
             <Button

@@ -377,20 +377,17 @@ export default function InvoiceEditPage() {
       
       <div className="max-w-7xl mx-auto">
         <StickyHeader className="mb-6" title={isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}>
-            <h1 className="hidden lg:block text-xl sm:text-3xl font-bold min-w-0 truncate">
-              {isNewInvoice ? t('newInvoice') : `${t('editInvoice')} ${invoiceCode}`}
-            </h1>
-            <div className="sm:ml-auto shrink-0 flex flex-row gap-2 items-center">
-              <Button 
-                color="primary"
-                className="w-full lg:w-fit"
-                onClick={handleSave}
-                disabled={saving}
-                startContent={<Save className="size-4" />}
-              >
-                {saving ? t('actions.saving') : t('actions.save')}
-              </Button>
-            </div>
+          <div className="sm:ml-auto shrink-0 flex flex-row gap-2 items-center">
+            <Button 
+              color="primary"
+              className="w-full lg:w-fit"
+              onClick={handleSave}
+              disabled={saving}
+              startContent={<Save className="size-4" />}
+            >
+              {saving ? t('actions.saving') : t('actions.save')}
+            </Button>
+          </div>
         </StickyHeader>
 
         <div className="flex max-xl:flex-col gap-6 relative">
