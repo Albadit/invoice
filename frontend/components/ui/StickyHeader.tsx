@@ -4,7 +4,7 @@ import { type ReactNode, useEffect } from 'react';
 import { usePageTitle } from '@/components/layout';
 
 interface StickyHeaderProps {
-  children: ReactNode;
+  children?: ReactNode;
   /** Plain-text page title shown in the mobile header bar */
   title?: string;
   /** Plain-text page subtitle shown in the mobile header bar */
