@@ -193,5 +193,19 @@
     "settingsSavedDescription": "Je factuurvoorkeuren zijn succesvol bijgewerkt.",
     "noCompanySelected": "Geen bedrijf geselecteerd. Selecteer eerst een bedrijf.",
     "requiredFieldsMissing": "Sjabloon, valuta en belasting zijn verplicht. Vul alle verplichte velden in."
+  },
+  "backup": {
+    "title": "Back-up & Herstel",
+    "description": "Exporteer je gegevens als JSON back-upbestand of herstel vanuit een eerdere back-up.",
+    "export": "Exporteer Back-up",
+    "import": "Importeer Back-up",
+    "exportSuccess": "Back-up succesvol geëxporteerd.",
+    "exportError": "Exporteren van back-up mislukt. Probeer het opnieuw.",
+    "importSuccess": "Back-up succesvol geïmporteerd. Je gegevens zijn hersteld.",
+    "importError": "Importeren van back-up mislukt. Het bestand is mogelijk ongeldig.",
+    "importConfirmTitle": "Importeer Back-up",
+    "importConfirmMessage": "Het importeren van een back-up zal gegevens samenvoegen in je account. Bestaande records met dezelfde ID worden overschreven. Weet je zeker dat je wilt doorgaan?",
+    "warning": "Waarschuwing",
+    "warningText": "Het importeren van een back-up overschrijft bestaande records met dezelfde ID's. Deze actie kan niet ongedaan worden gemaakt."
   }
 }

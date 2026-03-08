@@ -94,9 +94,29 @@ export function useDashboardComputed(
     };
   }, [primaryCurrencyId, currencies]);
 
-  // Monthly buckets for charts
+  // Monthly buckets for charts (or yearly when "all" is selected)
   const monthlyData = useMemo<MonthlyBucket[]>(() => {
-    const year = selectedYear !== 'all' ? Number(selectedYear) : new Date().getFullYear();
+    if (selectedYear === 'all') {
+      // Yearly buckets — one per available year
+      if (!availableYears.length) return [];
+      const buckets: MonthlyBucket[] = availableYears
+        .slice().sort((a, b) => a - b)
+        .map((y) => ({ key: String(y), label: String(y), paid: 0, pending: 0, overdue: 0, cancelled: 0 }));
+      filteredStats.forEach((inv) => {
+        if (!inv.issue_date) return;
+        const year = String(new Date(inv.issue_date).getFullYear());
+        const b = buckets.find((bu) => bu.key === year);
+        if (!b) return;
+        const a = inv.total_amount ?? 0;
+        const effStatus = getEffectiveStatus(inv.status as InvoiceStatus, inv.due_date);
+        if (effStatus === 'paid') b.paid += a;
+        else if (effStatus === 'overdue') b.overdue += a;
+        else if (effStatus === 'pending') b.pending += a;
+        else if (effStatus === 'cancelled') b.cancelled += a;
+      });
+      return buckets;
+    }
+    const year = Number(selectedYear);
     const months: MonthlyBucket[] = [];
     for (let i = 0; i < 12; i++) {
       const d = new Date(year, i, 1);
@@ -115,7 +135,7 @@ export function useDashboardComputed(
       else if (effStatus === 'cancelled') m.cancelled += a;
     });
     return months;
-  }, [filteredStats, selectedYear]);
+  }, [filteredStats, selectedYear, availableYears]);
 
   const paidPct = computed.total ? Math.round((computed.paid.count / computed.total) * 100) : 0;
   const overduePct = computed.total ? Math.round((computed.overdue.count / computed.total) * 100) : 0;

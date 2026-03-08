@@ -53,6 +53,7 @@ export interface DashboardGraphProps {
     overdue: string;
   };
   title: string;
+  isAllYears?: boolean;
 }
 
 type TimePeriod = "1-year" | "6-months" | "3-months" | "30-days" | "7-days";
@@ -71,6 +72,7 @@ export default function DashboardGraph({
   fmt,
   statusLabels,
   title: sectionTitle,
+  isAllYears,
 }: DashboardGraphProps) {
   const {t} = useTranslation("dashboard");
   const {locale} = useLocale();
@@ -122,7 +124,7 @@ export default function DashboardGraph({
   const [timePeriod, setTimePeriod] = React.useState<TimePeriod>("1-year");
 
   // ── Daily buckets for 7-day / 30-day periods ───────────────────
-  const isDailyPeriod = timePeriod === "7-days" || timePeriod === "30-days";
+  const isDailyPeriod = !isAllYears && (timePeriod === "7-days" || timePeriod === "30-days");
 
   // ── Shared X-axis config (single source of truth) ──────────────
   const xAxisProps = React.useMemo(() => {
@@ -189,6 +191,7 @@ export default function DashboardGraph({
   }, [dailyData, dayLabelLong]);
 
   const filteredMonthlyData = React.useMemo(() => {
+    if (isAllYears) return monthlyData;
     const periodMonths: Record<TimePeriod, number> = {"1-year": 12, "6-months": 6, "3-months": 3, "30-days": 1, "7-days": 1};
     if (isDailyPeriod || timePeriod === "1-year") return monthlyData;
 
@@ -212,15 +215,18 @@ export default function DashboardGraph({
 
     // Past / future year: show the last N months of that year
     return monthlyData.slice(-n);
-  }, [monthlyData, timePeriod, isDailyPeriod]); // periodMonths is a static mapping
+  }, [monthlyData, timePeriod, isDailyPeriod, isAllYears]); // periodMonths is a static mapping
 
   const data: Chart[] = React.useMemo(() => {
     // Use daily or monthly data depending on the selected period
     const toChartData = isDailyPeriod
       ? (getter: (d: DailyBucket) => number): ChartData[] =>
           dailyData.map((d) => ({month: d.label, value: getter(d)}))
-      : (getter: (m: MonthlyBucket) => number): ChartData[] =>
-          filteredMonthlyData.map((m) => ({month: monthShort(bucketMonthIndex(m)), value: getter(m)}));
+      : isAllYears
+        ? (getter: (m: MonthlyBucket) => number): ChartData[] =>
+            filteredMonthlyData.map((m) => ({month: m.label, value: getter(m)}))
+        : (getter: (m: MonthlyBucket) => number): ChartData[] =>
+            filteredMonthlyData.map((m) => ({month: monthShort(bucketMonthIndex(m)), value: getter(m)}));
 
     // Compute period-filtered totals from the visible data
     type Totals = {paid: number; pending: number; overdue: number};
@@ -303,7 +309,7 @@ export default function DashboardGraph({
         chartData: overdueData,
       },
     ];
-  }, [isDailyPeriod, dailyData, filteredMonthlyData, stats, statusLabels, monthShort]);
+  }, [isDailyPeriod, isAllYears, dailyData, filteredMonthlyData, stats, statusLabels, monthShort]);
 
   /** Formats a value: delegates "currency" to the fmt prop, everything else to the shared util. */
   const fmtValue = React.useCallback(
@@ -343,12 +349,12 @@ export default function DashboardGraph({
       }));
     }
     return filteredMonthlyData.map((m) => ({
-      month: monthShort(bucketMonthIndex(m)),
+      month: isAllYears ? m.label : monthShort(bucketMonthIndex(m)),
       paid: m.paid,
       pending: m.pending,
       overdue: m.overdue,
     }));
-  }, [activeChart, isDailyPeriod, dailyData, filteredMonthlyData, monthShort]);
+  }, [activeChart, isDailyPeriod, isAllYears, dailyData, filteredMonthlyData, monthShort]);
 
   return (
     <Card as="dl" className="dark:border-default-100 border border-transparent">
@@ -359,17 +365,19 @@ export default function DashboardGraph({
               <dt className="text-medium text-foreground font-medium">{sectionTitle}</dt>
             </div>
             <Spacer y={2} />
-            <Tabs
-              size="sm"
-              selectedKey={timePeriod}
-              onSelectionChange={(key) => setTimePeriod(key as TimePeriod)}
-            >
-              <Tab key="1-year" title={t("period1Year")} />
-              <Tab key="6-months" title={t("period6Months")} />
-              <Tab key="3-months" title={t("period3Months")} />
-              <Tab key="30-days" title={t("period30Days")} />
-              <Tab key="7-days" title={t("period7Days")} />
-            </Tabs>
+            {!isAllYears && (
+              <Tabs
+                size="sm"
+                selectedKey={timePeriod}
+                onSelectionChange={(key) => setTimePeriod(key as TimePeriod)}
+              >
+                <Tab key="1-year" title={t("period1Year")} />
+                <Tab key="6-months" title={t("period6Months")} />
+                <Tab key="3-months" title={t("period3Months")} />
+                <Tab key="30-days" title={t("period30Days")} />
+                <Tab key="7-days" title={t("period7Days")} />
+              </Tabs>
+            )}
             <div className="mt-2 flex w-full items-center">
               <div className="-my-3 flex w-full items-center gap-4 overflow-x-auto py-3">
                 {data.map(({key, change, changeType, value, title}) => (
@@ -475,9 +483,11 @@ export default function DashboardGraph({
                         </div>
                       ))}
                       <span className="text-small text-foreground-400 font-medium">
-                        {isDailyPeriod
-                          ? (shortToLongDay[String(label ?? "")] ?? String(label ?? ""))
-                          : (shortToLongMonth[String(label ?? "")] ?? String(label ?? ""))}
+                        {isAllYears
+                          ? String(label ?? "")
+                          : isDailyPeriod
+                            ? (shortToLongDay[String(label ?? "")] ?? String(label ?? ""))
+                            : (shortToLongMonth[String(label ?? "")] ?? String(label ?? ""))}
                       </span>
                     </div>
                   </div>
@@ -541,9 +551,11 @@ export default function DashboardGraph({
                         </div>
                       ))}
                       <span className="text-small text-foreground-400 font-medium">
-                        {isDailyPeriod
-                          ? (shortToLongDay[String(label ?? "")] ?? String(label ?? ""))
-                          : (shortToLongMonth[String(label ?? "")] ?? String(label ?? ""))}
+                        {isAllYears
+                          ? String(label ?? "")
+                          : isDailyPeriod
+                            ? (shortToLongDay[String(label ?? "")] ?? String(label ?? ""))
+                            : (shortToLongMonth[String(label ?? "")] ?? String(label ?? ""))}
                       </span>
                     </div>
                   </div>

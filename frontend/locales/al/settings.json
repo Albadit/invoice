@@ -193,5 +193,19 @@
     "settingsSavedDescription": "Preferencat e faturës u përditësuan me sukses.",
     "noCompanySelected": "Asnjë kompani e zgjedhur. Zgjidh një kompani së pari.",
     "requiredFieldsMissing": "Shablloni, valuta dhe taksa janë të detyrueshme. Plotëso të gjitha fushat e detyrueshme."
+  },
+  "backup": {
+    "title": "Kopje Sigurie & Rikthim",
+    "description": "Eksporto të dhënat si skedar kopje sigurie JSON ose rikthe nga një kopje e mëparshme.",
+    "export": "Eksporto Kopjen",
+    "import": "Importo Kopjen",
+    "exportSuccess": "Kopja e sigurisë u eksportua me sukses.",
+    "exportError": "Eksportimi i kopjes dështoi. Provo përsëri.",
+    "importSuccess": "Kopja u importua me sukses. Të dhënat u rikthyen.",
+    "importError": "Importimi i kopjes dështoi. Skedari mund të jetë i pavlefshëm.",
+    "importConfirmTitle": "Importo Kopjen",
+    "importConfirmMessage": "Importimi i kopjes do të bashkojë të dhënat në llogarinë tënde. Rekordet ekzistuese me të njëjtin ID do të mbishkruhen. Je i sigurt që dëshiron të vazhdosh?",
+    "warning": "Kujdes",
+    "warningText": "Importimi i kopjes do të mbishkruajë rekordet ekzistuese që kanë të njëjtin ID. Ky veprim nuk mund të kthehet mbrapsht."
   }
 }

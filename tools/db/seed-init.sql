@@ -143,6 +143,7 @@ CROSS JOIN permissions p
 WHERE r.name = 'Member'
   AND p.key NOT LIKE 'roles:%'
   AND p.key NOT LIKE 'users:%'
+  AND p.key NOT LIKE 'permissions:%'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 -- =============================================

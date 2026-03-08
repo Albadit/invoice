@@ -180,6 +180,7 @@ export default function DashboardPage() {
               overdue: tInvoice('status.overdue'),
             }}
             title={t('monthlyTrend')}
+            isAllYears={selectedYear === 'all'}
           />
 
           {/* ---- Bottom Row: Donut + Bar -------------------------*/}
