@@ -3,7 +3,6 @@
  */
 
 import api, { API_URL } from '@/lib/api/api';
-import { createClient } from '@/lib/supabase/client';
 import type { Company } from '@/lib/types';
 import type { CompaniesPost, CompaniesPatch } from '@/lib/database.types';
 
@@ -53,54 +52,44 @@ export const companiesApi = {
 };
 
 /**
- * Storage API functions for company logo uploads
+ * Storage API functions for company logo uploads.
+ * Routes through /api/storage/logo so the client never touches Supabase directly.
  */
 export const storageApi = {
   /**
    * Upload a file to the logo bucket
    */
   async uploadLogo(file: File): Promise<string> {
-    const supabase = createClient();
-    
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
-    const filePath = fileName;
-    
-    // Upload file using Supabase client
-    const { error } = await supabase.storage
-      .from('logos')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
-    if (error) {
-      console.error('Upload error:', error);
-      throw new Error(error.message || 'Failed to upload logo');
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch('/api/storage/logo', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to upload logo');
     }
-    
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('logos')
-      .getPublicUrl(filePath);
-    
-    return urlData.publicUrl;
+
+    const { publicUrl } = await res.json();
+    return publicUrl;
   },
 
   /**
    * Delete a logo from storage
    */
   async deleteLogo(path: string): Promise<void> {
-    const supabase = createClient();
-    
-    const { error } = await supabase.storage
-      .from('logos')
-      .remove([path]);
-    
-    if (error) {
-      console.error('Delete error:', error);
-      throw new Error(error.message || 'Failed to delete logo');
+    const res = await fetch('/api/storage/logo', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Failed to delete logo');
     }
   }
 };

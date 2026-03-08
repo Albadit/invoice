@@ -10,6 +10,8 @@ import type {
   ClientsPatch
 } from '@/lib/database.types';
 
+import { DEFAULT_API_PAGE_SIZE } from '@/config/constants';
+
 export type { PaginatedResponse };
 
 /**
@@ -28,7 +30,7 @@ export const clientsApi = {
     signal?: AbortSignal;
   }): Promise<PaginatedResponse<Client>> {
     const {
-      limit = 50,
+      limit = DEFAULT_API_PAGE_SIZE,
       offset = 0,
       search,
       companyId,

@@ -9,7 +9,7 @@ import { addToast } from "@heroui/toast";
 import { StickyHeader, ImportPreviewPanel, DuplicateChecker } from '@/components/ui';
 import type { PreviewData, OverwriteSelection } from '@/components/ui';
 import type { ImportPreviewPanelHandle } from '@/components/ui/ImportPreviewPanel';
-import type { DuplicateGroup } from '@/app/(protected)/backup/duplicates/route';
+import type { DuplicateGroup } from '@/lib/types';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
 export default function BackupPage() {

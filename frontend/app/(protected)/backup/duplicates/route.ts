@@ -1,26 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { DuplicateGroup } from '@/lib/types';
 
 /**
- * GET  /settings/backup/duplicates  — find duplicate records
- * DELETE /settings/backup/duplicates — delete a specific record by type + id
+ * GET  /backup/duplicates  — find duplicate records
+ * DELETE /backup/duplicates — delete a specific record by type + id
  */
 
 type Row = Record<string, unknown>;
-
-export interface DuplicateGroup {
-  type: 'company' | 'client' | 'invoice';
-  key: string;
-  records: DuplicateRecord[];
-}
-
-export interface DuplicateRecord {
-  id: string;
-  label: string;
-  sublabel: string | null;
-  fields: Record<string, string | null>;
-  created_at: string | null;
-}
 
 export async function GET() {
   try {

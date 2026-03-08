@@ -25,9 +25,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EllipsisVertical, Plus, Download, Edit, HandCoins, Copy, Clock, Trash, Ban, Eye, Search, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { dateFormats } from '@/config/formatting';
-import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
+import { handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { getEffectiveStatus } from '@/config/formatting';
-import { InvoicePreviewModal } from '@/features/invoice/components';
+import { InvoicePreviewModal, StatusBadge } from '@/features/invoice/components';
 import { ConfirmModal, StickyHeader, Pagination, DataTable } from '@/components/ui';
 import type { DataTableColumn, BulkAction } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
@@ -35,6 +35,7 @@ import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
 import { usePermissions } from '@/features/auth/components';
 import { useSessionState } from '@/lib/hooks/useSessionState';
+import { DEFAULT_ROWS_PER_PAGE } from '@/config/constants';
 
 // Format large numbers compactly (e.g., 300100 -> "300.1K")
 // Map UI column keys to DB column names (constant, never changes)
@@ -71,7 +72,7 @@ export default function InvoicesPage() {
   }>({ isOpen: false, title: '', message: '', confirmColor: 'primary', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useSessionState('invoices:page', 1, { skipRestore: hasUrlParams });
-  const [rowsPerPage, setRowsPerPage] = useSessionState('invoices:rowsPerPage', 10);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('invoices:rowsPerPage', DEFAULT_ROWS_PER_PAGE);
   const [totalCount, setTotalCount] = useState(0);
   const [sortDescriptors, setSortDescriptors] = useSessionState<SortDescriptor[]>('invoices:sort', [
     { column: 'created_at', direction: 'descending' }
@@ -447,12 +448,17 @@ export default function InvoicesPage() {
       key: 'status',
       label: t('table.status'),
       allowsSorting: true,
-      render: (inv) => getStatusBadge(getEffectiveStatus(inv.status, inv.due_date), {
-        pending: t('status.pending'),
-        paid: t('status.paid'),
-        overdue: t('status.overdue'),
-        cancelled: t('status.cancelled'),
-      }),
+      render: (inv) => (
+        <StatusBadge
+          status={getEffectiveStatus(inv.status, inv.due_date)}
+          labels={{
+            pending: t('status.pending'),
+            paid: t('status.paid'),
+            overdue: t('status.overdue'),
+            cancelled: t('status.cancelled'),
+          }}
+        />
+      ),
     },
     {
       key: 'total_amount',

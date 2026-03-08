@@ -6,16 +6,13 @@
  * shared `lib/utils` module.
  */
 
+import { STATUS_THEME } from '@/config/constants';
+
 /**
- * HeroUI theme color tokens by invoice status.
- * Used consistently across KPI cards, charts, chips, etc.
+ * Re-export the shared status theme map for backward compatibility.
+ * @deprecated Import directly from '@/config/constants' instead.
  */
-export const STATUS_THEME_MAP: Record<string, string> = {
-  paid: 'success',
-  pending: 'warning',
-  overdue: 'danger',
-  cancelled: 'default',
-};
+export const STATUS_THEME_MAP = STATUS_THEME;
 
 /**
  * Format a numeric value for display based on its type.

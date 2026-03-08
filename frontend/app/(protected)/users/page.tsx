@@ -15,6 +15,7 @@ import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { AdminUser, Role } from '@/lib/types';
 import { useSessionState } from '@/lib/hooks/useSessionState';
+import { DEFAULT_ROWS_PER_PAGE } from '@/config/constants';
 
 export default function UsersPage() {
   const { t } = useTranslation('users');
@@ -42,7 +43,7 @@ export default function UsersPage() {
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useSessionState('users:page', 1);
-  const [rowsPerPage, setRowsPerPage] = useSessionState('users:rowsPerPage', 10);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('users:rowsPerPage', DEFAULT_ROWS_PER_PAGE);
 
   const loadData = useCallback(async () => {
     setLoading(true);

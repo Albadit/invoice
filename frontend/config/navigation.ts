@@ -15,6 +15,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { PROTECTED_ROUTES, INVOICE_ROUTES, EDITOR_ROUTES, SETTINGS_ROUTES, USERS_ROUTES, ROLES_ROUTES, PERMISSIONS_ROUTES } from '@/config/routes';
+import { APP_NAME } from "@/config/constants";
 
 export interface NavItem {
   /** Unique key, also used to resolve i18n label via `navigation.{key}` in common.json */
@@ -58,7 +59,7 @@ export interface NavSection {
  * Sidebar brand (logo + name shown in the header).
  */
 export const sidebarBrand = {
-  name: 'Invoice',
+  name: APP_NAME,
   icon: FileText,
 } as const;
 

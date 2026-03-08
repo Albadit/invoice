@@ -21,6 +21,8 @@ import type {
   InvoicesPatch
 } from '@/lib/database.types';
 
+import { DEFAULT_API_PAGE_SIZE } from '@/config/constants';
+
 export type { PaginatedResponse, CursorPaginatedResponse, PageCursor };
 
 /**
@@ -65,7 +67,7 @@ export const invoicesApi = {
     signal?: AbortSignal;
   }): Promise<CursorPaginatedResponse<InvoiceWithItems>> {
     const { 
-      limit = 50, 
+      limit = DEFAULT_API_PAGE_SIZE, 
       cursor = null,
       status = 'active', 
       search, 

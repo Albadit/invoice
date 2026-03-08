@@ -15,6 +15,7 @@ import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Permission } from '@/lib/types';
 import { useSessionState } from '@/lib/hooks/useSessionState';
+import { DEFAULT_ROWS_PER_PAGE } from '@/config/constants';
 
 export default function PermissionsPage() {
   const { t } = useTranslation('permissions');
@@ -36,7 +37,7 @@ export default function PermissionsPage() {
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useSessionState('permissions:page', 1);
-  const [rowsPerPage, setRowsPerPage] = useSessionState('permissions:rowsPerPage', 10);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('permissions:rowsPerPage', DEFAULT_ROWS_PER_PAGE);
   const [search, setSearch] = useSessionState('permissions:search', '');
 
   const loadPermissions = useCallback(async () => {

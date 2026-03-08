@@ -1,37 +1,15 @@
-import { Chip } from "@heroui/chip";
 import type { InvoiceStatus, InvoiceWithItems } from '@/lib/types';
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { invoicesApi } from '@/features/invoice/api';
 import { getSubtotal, getDiscountTotal, getTaxTotal } from '@/features/invoice/utils/calculations';
 import { INVOICE_ROUTES } from '@/config/routes';
+import { StatusBadge, type StatusLabels } from '@/features/invoice/components/StatusBadge';
 
 /**
- * Get status badge component for invoice status
+ * @deprecated Use `<StatusBadge status={...} labels={...} />` directly.
  */
-export function getStatusBadge(status: InvoiceStatus, statusLabels?: { pending: string; paid: string; overdue: string; cancelled: string }) {
-  const defaultLabels = {
-    pending: 'Pending',
-    paid: 'Paid',
-    overdue: 'Overdue',
-    cancelled: 'Cancelled',
-  };
-  
-  const labels = statusLabels || defaultLabels;
-  
-  const statusConfig = {
-    pending: { color: 'warning' as const, text: labels.pending },
-    paid: { color: 'success' as const, text: labels.paid },
-    overdue: { color: 'danger' as const, text: labels.overdue },
-    cancelled: { color: 'default' as const, text: labels.cancelled },
-  };
-
-  const config = statusConfig[status] || statusConfig.pending;
-  
-  return (
-    <Chip color={config.color} variant="flat" size="sm">
-      {config.text}
-    </Chip>
-  );
+export function getStatusBadge(status: InvoiceStatus, statusLabels?: StatusLabels) {
+  return StatusBadge({ status, labels: statusLabels });
 }
 
 /**

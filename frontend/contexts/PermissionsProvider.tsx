@@ -1,7 +1,6 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
-import { createClient } from '@/lib/supabase/client';
 
 interface PermissionsContextType {
   permissions: string[];
@@ -25,6 +24,14 @@ export function usePermissions() {
   return useContext(PermissionsContext);
 }
 
+/** Shape returned by the /api/auth/permissions API route. */
+interface PermissionsResponse {
+  permissions: string[];
+  roles: string[];
+  isSystemUser: boolean;
+  userId: string | null;
+}
+
 export function PermissionsProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<string[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
@@ -36,58 +43,26 @@ export function PermissionsProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
 
     async function fetchPermissions() {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      try {
+        const res = await fetch('/api/auth/permissions');
+        if (!res.ok) throw new Error('Failed to fetch permissions');
+        const data: PermissionsResponse = await res.json();
 
-      if (!user) {
+        if (!cancelled) {
+          setPermissions(data.permissions);
+          setRoles(data.roles);
+          setIsSystemUser(data.isSystemUser);
+          setUserId(data.userId);
+        }
+      } catch {
         if (!cancelled) {
           setPermissions([]);
           setRoles([]);
           setIsSystemUser(false);
           setUserId(null);
-          setLoading(false);
         }
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('is_system, role:roles!inner(name, role_permissions:role_permissions!inner(permission:permissions!inner(key)))')
-        .eq('user_id', user.id);
-
-      if (error || !data) {
-        if (!cancelled) {
-          setPermissions([]);
-          setRoles([]);
-          setIsSystemUser(false);
-          setUserId(user.id);
-          setLoading(false);
-        }
-        return;
-      }
-
-      const permissionKeys = new Set<string>();
-      const roleNames = new Set<string>();
-      let systemFlag = false;
-
-      for (const ur of data) {
-        if (ur.is_system) systemFlag = true;
-        const role = ur.role as unknown as {
-          name: string;
-          role_permissions: { permission: { key: string } }[];
-        };
-        roleNames.add(role.name);
-        for (const rp of role.role_permissions) {
-          permissionKeys.add(rp.permission.key);
-        }
-      }
-
-      if (!cancelled) {
-        setPermissions(Array.from(permissionKeys));
-        setRoles(Array.from(roleNames));
-        setIsSystemUser(systemFlag);
-        setUserId(user.id);
-        setLoading(false);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 

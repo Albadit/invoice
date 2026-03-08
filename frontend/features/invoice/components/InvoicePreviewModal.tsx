@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import { dateFormats } from '@/config/formatting';
 import type { InvoiceWithItems } from '@/lib/types';
 import { formatWithCurrency, getEffectiveStatus } from '@/config/formatting';
-import { getStatusBadge } from '@/features/invoice/utils/invoice-utils';
+import { StatusBadge } from '@/features/invoice/components/StatusBadge';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { tl } from '@/lib/i18n/translate';
 import type { Translations } from '@/lib/i18n/translate';
@@ -119,12 +119,15 @@ export function InvoicePreviewModal({
                     )}
                     <div>
                       <span className="font-semibold">{t('preview.status') || 'Status:'} </span>
-                      {getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {
-                        pending: t('status.pending'),
-                        paid: t('status.paid'),
-                        overdue: t('status.overdue'),
-                        cancelled: t('status.cancelled'),
-                      })}
+                      <StatusBadge
+                        status={getEffectiveStatus(invoice.status, invoice.due_date)}
+                        labels={{
+                          pending: t('status.pending'),
+                          paid: t('status.paid'),
+                          overdue: t('status.overdue'),
+                          cancelled: t('status.cancelled'),
+                        }}
+                      />
                     </div>
                   </div>
                 </div>

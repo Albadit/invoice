@@ -19,6 +19,7 @@ import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
 import { useSessionState } from '@/lib/hooks/useSessionState';
+import { DEFAULT_ROWS_PER_PAGE } from '@/config/constants';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -44,7 +45,7 @@ export default function RolesPage() {
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [currentPage, setCurrentPage] = useSessionState('roles:page', 1);
-  const [rowsPerPage, setRowsPerPage] = useSessionState('roles:rowsPerPage', 10);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('roles:rowsPerPage', DEFAULT_ROWS_PER_PAGE);
 
   const loadRoles = useCallback(async () => {
     setLoading(true);

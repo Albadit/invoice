@@ -59,3 +59,21 @@ export type InvoiceStat = {
   issue_date: string | null;
   due_date: string | null;
 };
+
+// ── Backup / Duplicate types ───────────────────────────────────────
+
+/** A group of duplicate records sharing the same key (e.g. same name). */
+export interface DuplicateGroup {
+  type: 'company' | 'client' | 'invoice';
+  key: string;
+  records: DuplicateRecord[];
+}
+
+/** A single record within a duplicate group. */
+export interface DuplicateRecord {
+  id: string;
+  label: string;
+  sublabel: string | null;
+  fields: Record<string, string | null>;
+  created_at: string | null;
+}

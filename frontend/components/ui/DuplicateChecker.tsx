@@ -7,7 +7,7 @@ import { Chip } from "@heroui/chip";
 import { Trash2, ArrowRight, ArrowLeft, Building2, Users, FileText, Check } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { useTranslation } from '@/contexts/LocaleProvider';
-import type { DuplicateGroup, DuplicateRecord } from '@/app/(protected)/backup/duplicates/route';
+import type { DuplicateGroup, DuplicateRecord } from '@/lib/types';
 
 export interface DuplicateCheckerProps {
   groups: DuplicateGroup[];

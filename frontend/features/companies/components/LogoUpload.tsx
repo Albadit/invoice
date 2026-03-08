@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from "@heroui/button";
 import { useTranslation } from '@/contexts/LocaleProvider';
+import { MAX_LOGO_FILE_SIZE, LOGO_ACCEPTED_TYPE_PREFIX } from '@/config/constants';
 
 interface LogoUploadProps {
   logoUrl: string;
@@ -52,13 +53,13 @@ export function LogoUpload({ logoUrl, onLogoUrlChange, onPendingFileChange, imag
 
   const handleFileUpload = async (file: File) => {
     // Validate file type
-    if (!file.type.startsWith('image/')) {
+    if (!file.type.startsWith(LOGO_ACCEPTED_TYPE_PREFIX)) {
       alert(t('logo.invalidType'));
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validate file size
+    if (file.size > MAX_LOGO_FILE_SIZE) {
       alert(t('logo.tooLarge'));
       return;
     }
