@@ -21,6 +21,7 @@
     "admin": "Admin",
     "users": "Përdoruesit",
     "roles": "Rolet",
+    "permissions": "Lejet",
     "profile": "Profili"
   },
   "actions": {

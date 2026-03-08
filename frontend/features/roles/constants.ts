@@ -6,6 +6,6 @@ export const permissionSections = [
   },
   {
     key: 'admin',
-    categories: ['users', 'roles'],
+    categories: ['users', 'roles', 'permissions'],
   },
 ] as const;

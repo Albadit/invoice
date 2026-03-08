@@ -16,6 +16,7 @@ interface EditRolePermissionsModalProps {
   onClose: () => void;
   onSave: () => void;
   role: Role | null;
+  readOnly?: boolean;
 }
 
 export function EditRolePermissionsModal({
@@ -23,6 +24,7 @@ export function EditRolePermissionsModal({
   onClose,
   onSave,
   role,
+  readOnly = false,
 }: EditRolePermissionsModalProps) {
   const { t } = useTranslation('roles');
   const { t: tCommon } = useTranslation('common');
@@ -71,39 +73,10 @@ export function EditRolePermissionsModal({
   function togglePermission(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      const perm = allPermissions.find((p) => p.id === id);
-      if (!perm) return next;
-
-      const [category, action] = perm.key.split(':');
-      const isEnabling = !next.has(id);
-
-      if (isEnabling) {
-        next.add(id);
-        // create/update/delete → auto-enable read
-        if (['create', 'update', 'delete'].includes(action)) {
-          const readId = findPermId(category, 'read');
-          if (readId) next.add(readId);
-        }
-        // read → auto-enable access
-        if (action === 'read' || ['create', 'update', 'delete'].includes(action)) {
-          const accessId = findPermId(category, 'access');
-          if (accessId) next.add(accessId);
-        }
-      } else {
+      if (next.has(id)) {
         next.delete(id);
-        // disabling access → disable all in category
-        if (action === 'access') {
-          for (const p of grouped[category] || []) {
-            next.delete(p.id);
-          }
-        }
-        // disabling read → disable create/update/delete
-        if (action === 'read') {
-          for (const a of ['create', 'update', 'delete']) {
-            const depId = findPermId(category, a);
-            if (depId) next.delete(depId);
-          }
-        }
+      } else {
+        next.add(id);
       }
       return next;
     });
@@ -187,6 +160,7 @@ export function EditRolePermissionsModal({
                                 isSelected={allSelected}
                                 isIndeterminate={someSelected && !allSelected}
                                 onValueChange={() => toggleGroup(category)}
+                                isDisabled={readOnly}
                                 size="sm"
                               >
                                 <span className="font-medium capitalize text-sm">{category}</span>
@@ -201,6 +175,7 @@ export function EditRolePermissionsModal({
                                     size="sm"
                                     isSelected={selectedIds.has(perm.id)}
                                     onValueChange={() => togglePermission(perm.id)}
+                                    isDisabled={readOnly}
                                     aria-label={perm.key}
                                   />
                                 </td>
@@ -218,16 +193,18 @@ export function EditRolePermissionsModal({
         </ModalBody>
         <ModalFooter className="flex md:flex-row flex-col-reverse">
           <Button variant="flat" onClick={onClose} disabled={saving}>
-            {tCommon('actions.cancel')}
+            {readOnly ? tCommon('actions.close') : tCommon('actions.cancel')}
           </Button>
-          <Button
-            color="primary"
-            onClick={handleSave}
-            isLoading={saving}
-            disabled={loading}
-          >
-            {tCommon('actions.save')}
-          </Button>
+          {!readOnly && (
+            <Button
+              color="primary"
+              onClick={handleSave}
+              isLoading={saving}
+              disabled={loading}
+            >
+              {tCommon('actions.save')}
+            </Button>
+          )}
         </ModalFooter>
       </ModalContent>
     </Modal>

@@ -2,6 +2,7 @@
   "title": "Rolet",
   "subtitle": "Menaxho rolet dhe lejet e tyre",
   "noData": "Nuk u gjetën role",
+  "searchPlaceholder": "Kërko role...",
   "system": "Sistemi",
   "custom": "Custom",
   "addRole": "Shto Rol",

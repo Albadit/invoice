@@ -2,6 +2,7 @@
   "title": "Rollen",
   "subtitle": "Beheer rollen en hun machtigingen",
   "noData": "Geen rollen gevonden",
+  "searchPlaceholder": "Zoek rollen...",
   "system": "Systeem",
   "custom": "Aangepast",
   "addRole": "Rol Toevoegen",

@@ -1,0 +1,38 @@
+{
+  "title": "Machtigingen",
+  "subtitle": "Beheer systeemmachtigingen",
+  "noData": "Geen machtigingen gevonden",
+  "addPermission": "Machtiging Toevoegen",
+  "editPermission": "Machtiging Bewerken",
+  "deletePermission": "Machtiging Verwijderen",
+  "fields": {
+    "key": "Machtigingssleutel",
+    "keyRequired": "Machtigingssleutel is verplicht",
+    "keyPlaceholder": "bijv. invoices:create",
+    "keyDescription": "Formaat: categorie:actie (bijv. users:read)",
+    "description": "Beschrijving",
+    "descriptionPlaceholder": "Korte beschrijving van deze machtiging",
+    "route": "Route",
+    "routePlaceholder": "bijv. /users",
+    "routeDescription": "Optioneel routepad waartoe deze machtiging toegang verleent"
+  },
+  "columns": {
+    "key": "Sleutel",
+    "category": "Categorie",
+    "action": "Actie",
+    "description": "Beschrijving",
+    "route": "Route",
+    "actions": "Acties"
+  },
+  "messages": {
+    "success": "Succes",
+    "loadError": "Kan machtigingen niet laden. Probeer het opnieuw.",
+    "created": "Machtiging succesvol aangemaakt",
+    "createError": "Kan machtiging niet aanmaken. De sleutel bestaat mogelijk al.",
+    "updated": "Machtiging succesvol bijgewerkt",
+    "updateError": "Kan machtiging niet bijwerken. Probeer het opnieuw.",
+    "deleted": "Machtiging succesvol verwijderd",
+    "deleteError": "Kan machtiging niet verwijderen. Het is mogelijk toegewezen aan rollen.",
+    "confirmDelete": "Weet u zeker dat u de machtiging \"{{key}}\" wilt verwijderen? Dit verwijdert het uit alle rollen."
+  }
+}

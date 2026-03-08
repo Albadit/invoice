@@ -1,0 +1,38 @@
+{
+  "title": "Permissions",
+  "subtitle": "Manage system permissions",
+  "noData": "No permissions found",
+  "addPermission": "Add Permission",
+  "editPermission": "Edit Permission",
+  "deletePermission": "Delete Permission",
+  "fields": {
+    "key": "Permission Key",
+    "keyRequired": "Permission key is required",
+    "keyPlaceholder": "e.g. invoices:create",
+    "keyDescription": "Format: category:action (e.g. users:read)",
+    "description": "Description",
+    "descriptionPlaceholder": "Brief description of this permission",
+    "route": "Route",
+    "routePlaceholder": "e.g. /users",
+    "routeDescription": "Optional route path this permission grants access to"
+  },
+  "columns": {
+    "key": "Key",
+    "category": "Category",
+    "action": "Action",
+    "description": "Description",
+    "route": "Route",
+    "actions": "Actions"
+  },
+  "messages": {
+    "success": "Success",
+    "loadError": "Failed to load permissions. Please try again.",
+    "created": "Permission created successfully",
+    "createError": "Failed to create permission. The key may already exist.",
+    "updated": "Permission updated successfully",
+    "updateError": "Failed to update permission. Please try again.",
+    "deleted": "Permission deleted successfully",
+    "deleteError": "Failed to delete permission. It may be assigned to roles.",
+    "confirmDelete": "Are you sure you want to delete the permission \"{{key}}\"? This will remove it from all roles."
+  }
+}

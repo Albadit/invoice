@@ -26,6 +26,7 @@ import { Plus, Trash, Save, Settings, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
+import { Spinner } from "@heroui/spinner";
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 import { StickyHeader } from '@/components/ui';
 
@@ -359,7 +360,7 @@ export default function InvoiceEditPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-default-500">{t('messages.loading')}</p>
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -367,9 +368,9 @@ export default function InvoiceEditPage() {
   return (
     <div className="min-h-screen p-4 sm:p-8">
       {saving && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-content1 rounded-lg p-8 flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full size-12 border-b-2 border-foreground"></div>
+            <Spinner size="lg" />
             <p className="text-foreground font-semibold">{t('actions.saving')}...</p>
           </div>
         </div>

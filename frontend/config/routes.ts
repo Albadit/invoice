@@ -33,6 +33,7 @@ export const PROTECTED_ROUTES = {
   profile: '/profile',
   users: '/users',
   roles: '/roles',
+  permissions: '/permissions',
 } as const;
 
 // ─── Dynamic protected routes (parameterized) ───────────────────
@@ -60,6 +61,10 @@ export const USERS_ROUTES = {
 
 export const ROLES_ROUTES = {
   page: PROTECTED_ROUTES.roles,
+} as const;
+
+export const PERMISSIONS_ROUTES = {
+  page: PROTECTED_ROUTES.permissions,
 } as const;
 
 export const PROFILE_ROUTES = {

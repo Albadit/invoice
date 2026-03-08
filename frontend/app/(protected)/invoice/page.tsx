@@ -9,15 +9,6 @@ import { formatCurrencyAmount } from '@/config/formatting';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableColumn,
-  TableRow,
-  TableCell
-} from "@heroui/table";
-import type { SortDescriptor } from "@heroui/table";
-import {
   Dropdown,
   DropdownTrigger,
   DropdownMenu,
@@ -27,6 +18,7 @@ import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Select, SelectItem } from "@heroui/select";
 import { DateRangePicker } from "@heroui/date-picker";
+import type { SortDescriptor } from "@heroui/table";
 import type { DateValue } from "@internationalized/date";
 import { CalendarDate } from "@internationalized/date";
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -36,11 +28,13 @@ import { dateFormats } from '@/config/formatting';
 import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, handleDuplicate } from '@/features/invoice/utils/invoice-utils';
 import { getEffectiveStatus } from '@/config/formatting';
 import { InvoicePreviewModal } from '@/features/invoice/components';
-import { ConfirmModal, StickyHeader, Pagination } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination, DataTable } from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
 import { usePermissions } from '@/features/auth/components';
+import { useSessionState } from '@/lib/hooks/useSessionState';
 
 // Format large numbers compactly (e.g., 300100 -> "300.1K")
 // Map UI column keys to DB column names (constant, never changes)
@@ -60,6 +54,7 @@ export default function InvoicesPage() {
   const { t } = useTranslation('invoice');
   const { t: tCommon } = useTranslation('common');
   const { hasPermission } = usePermissions();
+  const hasUrlParams = searchParams.has('status') || searchParams.has('company') || searchParams.has('year');
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -75,10 +70,10 @@ export default function InvoicesPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', confirmColor: 'primary', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useSessionState('invoices:page', 1, { skipRestore: hasUrlParams });
+  const [rowsPerPage, setRowsPerPage] = useSessionState('invoices:rowsPerPage', 10);
   const [totalCount, setTotalCount] = useState(0);
-  const [sortDescriptors, setSortDescriptors] = useState<SortDescriptor[]>([
+  const [sortDescriptors, setSortDescriptors] = useSessionState<SortDescriptor[]>('invoices:sort', [
     { column: 'created_at', direction: 'descending' }
   ]);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -86,12 +81,12 @@ export default function InvoicesPage() {
   // Ref to hold latest filter/sort state (avoids stale closures in pagination handlers)
   const filtersRef = useRef({ currentFilters: null as typeof currentFilters | null, debouncedSearch: '', sortDescriptors: [{ column: 'created_at', direction: 'descending' as const }] as SortDescriptor[], rowsPerPage: rowsPerPage });
   
-  const [currentFilters, setCurrentFilters] = useState<{
+  const [currentFilters, setCurrentFilters] = useSessionState<{
     searchQuery: string;
     statusFilter: Set<string>;
     companyFilter: Set<string>;
     dateRange: { start: DateValue; end: DateValue } | null;
-  }>(() => {
+  }>('invoices:filters', () => {
     const statusParam = searchParams.get('status');
     const companyParam = searchParams.get('company');
     const yearParam = searchParams.get('year');
@@ -113,7 +108,7 @@ export default function InvoicesPage() {
       companyFilter: companyParam ? new Set([companyParam]) : new Set<string>(),
       dateRange,
     };
-  });
+  }, { skipRestore: hasUrlParams });
   
   // Debounced search value
   const [debouncedSearch, setDebouncedSearch] = useState(currentFilters.searchQuery);
@@ -340,26 +335,199 @@ export default function InvoicesPage() {
     });
   }
 
-  // Sort badge with arrow direction
-  function getSortBadge(columnKey: string) {
-    const index = sortDescriptors.findIndex(s => s.column === columnKey);
-    if (index < 0) return null;
-    const arrow = sortDescriptors[index].direction === 'ascending' ? '↑' : '↓';
-    return (
-      <span className="inline-flex items-center text-[10px] text-primary font-bold ml-0.5">
-        {sortDescriptors.length > 1 ? `${index + 1}` : ''}{arrow}
-      </span>
-    );
-  }
-
   const isDefaultSort = sortDescriptors.length === 1 && sortDescriptors[0].column === 'created_at' && sortDescriptors[0].direction === 'descending';
 
-  // Only pass sortDescriptor to Table when the primary sort column is visible in the table
-  // (created_at is a DB-only column, not rendered as a TableColumn, causing hydration mismatch)
   const VISIBLE_SORT_COLUMNS = new Set(['invoice_code', 'customer_name', 'issue_date', 'due_date', 'status', 'total_amount']);
-  const tableSortDescriptor = sortDescriptors[0]?.column && VISIBLE_SORT_COLUMNS.has(sortDescriptors[0].column as string)
-    ? sortDescriptors[0]
-    : undefined;
+
+  const invoiceColumns: DataTableColumn<InvoiceWithItems>[] = [
+    {
+      key: 'invoice_code',
+      label: t('table.invoice'),
+      allowsSorting: true,
+      render: (inv) => <span className="font-medium">{inv.invoice_code}</span>,
+    },
+    {
+      key: 'customer_name',
+      label: t('table.customer'),
+      allowsSorting: true,
+    },
+    {
+      key: 'issue_date',
+      label: t('table.date'),
+      allowsSorting: true,
+      render: (inv) => format(new Date(inv.issue_date || inv.created_at || ''), dateFormats.table),
+    },
+    {
+      key: 'due_date',
+      label: t('table.dueDate'),
+      allowsSorting: true,
+      render: (inv) => inv.due_date ? format(new Date(inv.due_date), dateFormats.table) : '-',
+    },
+    {
+      key: 'status',
+      label: t('table.status'),
+      allowsSorting: true,
+      render: (inv) => getStatusBadge(getEffectiveStatus(inv.status, inv.due_date), {
+        pending: t('status.pending'),
+        paid: t('status.paid'),
+        overdue: t('status.overdue'),
+        cancelled: t('status.cancelled'),
+      }),
+    },
+    {
+      key: 'total_amount',
+      label: t('table.total'),
+      allowsSorting: true,
+      className: 'font-semibold text-right',
+      render: (inv) => (
+        <span className="text-right font-semibold">
+          {formatCurrencyAmount(currencies, inv.currency_id, inv.total_amount?.toFixed(2) || '0.00')}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: t('table.action'),
+      className: 'w-25',
+      render: (invoice) => (
+        <div className="flex items-center gap-2">
+          <Button
+            color="primary"
+            variant="light"
+            size="sm"
+            onClick={() => handleViewInvoice(invoice)}
+            startContent={<Eye className="size-4" />}
+          />
+          <Dropdown>
+            <DropdownTrigger asChild>
+              <Button variant="light" size="sm" startContent={<EllipsisVertical className="size-4" />} />
+            </DropdownTrigger>
+            <DropdownMenu>
+              <DropdownItem key="download"
+                onClick={() => handleDownloadPDF(invoice.id)}
+                startContent={<Download className="size-4" />}
+              >
+                {t('actions.downloadPdf')}
+              </DropdownItem>
+              {hasPermission('invoices:update') ? (
+              <DropdownItem key="edit"
+                onClick={() => router.push(INVOICE_ROUTES.edit(invoice.id))}
+                startContent={<Edit className="size-4" />}
+              >
+                {tCommon('actions.edit')}
+              </DropdownItem>
+              ) : null}
+              {hasPermission('invoices:update') && invoice.status !== 'paid' ? (
+              <DropdownItem color="success" key="paid" 
+                onClick={() => openConfirm({
+                  title: t('confirm.markAsPaidTitle'),
+                  message: t('confirm.markAsPaid'),
+                  confirmColor: 'success',
+                  confirmLabel: t('actions.markAsPaid'),
+                  action: async () => {
+                    try {
+                      await handleMarkAsPaid(invoice.id, refreshCurrentPage);
+                      addToast({ title: t('messages.markedAsPaid'), description: t('messages.markedAsPaidDescription'), color: 'success' });
+                    } catch (error) {
+                      console.error('Failed to mark as paid:', error);
+                      addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
+                    }
+                  },
+                })}
+                className="text-success"
+                startContent={<HandCoins className="size-4" />}
+              >
+                {t('actions.markAsPaid')}
+              </DropdownItem>
+              ) : null}
+              {hasPermission('invoices:update') && invoice.status !== 'pending' ? (
+              <DropdownItem key="pending" 
+                onClick={() => openConfirm({
+                  title: t('confirm.markAsPendingTitle'),
+                  message: t('confirm.markAsPending'),
+                  confirmColor: 'primary',
+                  confirmLabel: t('actions.markAsPending'),
+                  action: async () => {
+                    try {
+                      await handleMarkAsPending(invoice.id, refreshCurrentPage);
+                      addToast({ title: t('messages.markedAsPending'), description: t('messages.markedAsPendingDescription'), color: 'success' });
+                    } catch (error) {
+                      console.error('Failed to mark as pending:', error);
+                      addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
+                    }
+                  },
+                })}
+                startContent={<Clock className="size-4" />}
+              >
+                {t('actions.markAsPending')}
+              </DropdownItem>
+              ) : null}
+              {hasPermission('invoices:create') ? (
+              <DropdownItem key="duplicate" 
+                onClick={() => openConfirm({
+                  title: t('confirm.duplicateTitle'),
+                  message: t('confirm.duplicate'),
+                  confirmColor: 'primary',
+                  confirmLabel: t('actions.duplicate'),
+                  action: async () => {
+                    try {
+                      await handleDuplicate(invoice.id, router);
+                      addToast({ title: t('messages.duplicated'), description: t('messages.duplicatedDescription'), color: 'success' });
+                    } catch (error) {
+                      console.error('Failed to duplicate invoice:', error);
+                      addToast({ title: t('messages.error'), description: t('messages.duplicateError'), color: 'danger' });
+                    }
+                  },
+                })}
+                startContent={<Copy className="size-4" />}
+              >
+                {t('actions.duplicate')}
+              </DropdownItem>
+              ) : null}
+              {hasPermission('invoices:update') && invoice.status !== 'cancelled' ? (
+              <DropdownItem color="danger" key="cancelled" 
+                onClick={() => openConfirm({
+                  title: t('confirm.cancelTitle'),
+                  message: t('confirm.cancel'),
+                  confirmColor: 'danger',
+                  confirmLabel: t('actions.cancel'),
+                  action: async () => {
+                    try {
+                      await handleVoid(invoice.id, refreshCurrentPage);
+                      addToast({ title: t('messages.cancelled'), description: t('messages.cancelledDescription'), color: 'success' });
+                    } catch (error) {
+                      console.error('Failed to void invoice:', error);
+                      addToast({ title: t('messages.error'), description: t('messages.voidError'), color: 'danger' });
+                    }
+                  },
+                })}
+                className="text-danger"
+                startContent={<Ban className="size-4" />}
+              >
+                {t('actions.cancel')}
+              </DropdownItem>
+              ) : null}
+              {hasPermission('invoices:delete') && invoice.status === 'cancelled' ? (
+              <DropdownItem color="danger" key="delete" 
+                onClick={() => openConfirm({
+                  title: t('confirm.deleteTitle'),
+                  message: t('confirm.delete'),
+                  confirmColor: 'danger',
+                  confirmLabel: tCommon('actions.delete'),
+                  action: () => handleDelete(invoice.id),
+                })}
+                className="text-danger"
+                startContent={<Trash className="size-4" />}
+              >
+                {tCommon('actions.delete')}
+              </DropdownItem>
+              ) : null}
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
@@ -485,196 +653,21 @@ export default function InvoicesPage() {
         </CardBody>
       </Card>
 
-      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', sortIcon: 'hidden', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }} sortDescriptor={tableSortDescriptor} onSortChange={handleSortChange}>
-        <TableHeader>
-          <TableColumn key="invoice_code" className="font-semibold" allowsSorting>{t('table.invoice')}{getSortBadge('invoice_code')}</TableColumn>
-          <TableColumn key="customer_name" className="font-semibold" allowsSorting>{t('table.customer')}{getSortBadge('customer_name')}</TableColumn>
-          <TableColumn key="issue_date" className="font-semibold" allowsSorting>{t('table.date')}{getSortBadge('issue_date')}</TableColumn>
-          <TableColumn key="due_date" className="font-semibold" allowsSorting>{t('table.dueDate')}{getSortBadge('due_date')}</TableColumn>
-          <TableColumn key="status" className="font-semibold" allowsSorting>{t('table.status')}{getSortBadge('status')}</TableColumn>
-          <TableColumn key="total_amount" className="font-semibold text-right" allowsSorting>{t('table.total')}{getSortBadge('total_amount')}</TableColumn>
-          <TableColumn key="actions" className="w-25">
-            <div className="flex items-center gap-1">
-              {t('table.action')}
-              {!isDefaultSort ? (
-                <button
-                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors"
-                  onClick={() => setSortDescriptors([{ column: 'created_at', direction: 'descending' }])}
-                  aria-label="Reset sort"
-                >
-                  <X className="size-3.5 text-default-400" />
-                </button>
-              ) : null}
-            </div>
-          </TableColumn>
-        </TableHeader>
-        <TableBody 
-          isLoading={loadingState === 'loading'}
-          loadingContent={<div className="flex justify-center py-12">{t('messages.loadingInvoices')}</div>}
-          emptyContent={<div className="text-center py-12">{loading ? t('messages.loadingInvoices') : t('messages.noInvoices')}</div>}
-        >
-          {filteredInvoices.map((invoice) => (
-            <TableRow key={invoice.id}>
-              <TableCell className="font-medium">{invoice.invoice_code}</TableCell>
-              <TableCell>{invoice.customer_name}</TableCell>
-              <TableCell>
-                {format(new Date(invoice.issue_date || invoice.created_at || ''), dateFormats.table)}
-              </TableCell>
-              <TableCell>
-                {invoice.due_date
-                  ? format(new Date(invoice.due_date), dateFormats.table)
-                  : '-'}
-              </TableCell>
-              <TableCell>{getStatusBadge(getEffectiveStatus(invoice.status, invoice.due_date), {
-                pending: t('status.pending'),
-                paid: t('status.paid'),
-                overdue: t('status.overdue'),
-                cancelled: t('status.cancelled')
-              })}</TableCell>
-              <TableCell className="text-right font-semibold">
-                {formatCurrencyAmount(currencies, invoice.currency_id, invoice.total_amount?.toFixed(2) || '0.00')}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Button
-                    color="primary"
-                    variant="light"
-                    size="sm"
-                    onClick={() => handleViewInvoice(invoice)}
-                    startContent={<Eye className="size-4" />}
-                  />
-                  <Dropdown>
-                    <DropdownTrigger asChild>
-                      <Button variant="light" size="sm" startContent={<EllipsisVertical className="size-4" />}/>                            
-                    </DropdownTrigger>
-                    <DropdownMenu>
-                      <DropdownItem key="download"
-                        onClick={() => handleDownloadPDF(invoice.id)}
-                        startContent={<Download className="size-4" />}
-                      >
-                        {t('actions.downloadPdf')}
-                      </DropdownItem>
-                      {hasPermission('invoices:update') ? (
-                      <DropdownItem key="edit"
-                        onClick={() => router.push(INVOICE_ROUTES.edit(invoice.id))}
-                        startContent={<Edit className="size-4" />}
-                      >
-                        {tCommon('actions.edit')}
-                      </DropdownItem>
-                      ) : null}
-                      {hasPermission('invoices:update') && invoice.status !== 'paid' ? (
-                      <DropdownItem color="success" key="paid" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.markAsPaidTitle'),
-                          message: t('confirm.markAsPaid'),
-                          confirmColor: 'success',
-                          confirmLabel: t('actions.markAsPaid'),
-                          action: async () => {
-                            try {
-                              await handleMarkAsPaid(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.markedAsPaid'), description: t('messages.markedAsPaidDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to mark as paid:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        className="text-success"
-                        startContent={<HandCoins className="size-4" />}
-                      >
-                        {t('actions.markAsPaid')}
-                      </DropdownItem>
-                      ) : null}
-                      {hasPermission('invoices:update') && invoice.status !== 'pending' ? (
-                      <DropdownItem key="pending" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.markAsPendingTitle'),
-                          message: t('confirm.markAsPending'),
-                          confirmColor: 'primary',
-                          confirmLabel: t('actions.markAsPending'),
-                          action: async () => {
-                            try {
-                              await handleMarkAsPending(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.markedAsPending'), description: t('messages.markedAsPendingDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to mark as pending:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.updateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        startContent={<Clock className="size-4" />}
-                      >
-                        {t('actions.markAsPending')}
-                      </DropdownItem>
-                      ) : null}
-                      {hasPermission('invoices:create') ? (
-                      <DropdownItem key="duplicate" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.duplicateTitle'),
-                          message: t('confirm.duplicate'),
-                          confirmColor: 'primary',
-                          confirmLabel: t('actions.duplicate'),
-                          action: async () => {
-                            try {
-                              await handleDuplicate(invoice.id, router);
-                              addToast({ title: t('messages.duplicated'), description: t('messages.duplicatedDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to duplicate invoice:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.duplicateError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        startContent={<Copy className="size-4" />}
-                      >
-                        {t('actions.duplicate')}
-                      </DropdownItem>
-                      ) : null}
-                      {hasPermission('invoices:update') && invoice.status !== 'cancelled' ? (
-                      <DropdownItem color="danger" key="cancelled" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.cancelTitle'),
-                          message: t('confirm.cancel'),
-                          confirmColor: 'danger',
-                          confirmLabel: t('actions.cancel'),
-                          action: async () => {
-                            try {
-                              await handleVoid(invoice.id, refreshCurrentPage);
-                              addToast({ title: t('messages.cancelled'), description: t('messages.cancelledDescription'), color: 'success' });
-                            } catch (error) {
-                              console.error('Failed to void invoice:', error);
-                              addToast({ title: t('messages.error'), description: t('messages.voidError'), color: 'danger' });
-                            }
-                          },
-                        })}
-                        className="text-danger"
-                        startContent={<Ban className="size-4" />}
-                      >
-                        {t('actions.cancel')}
-                      </DropdownItem>
-                      ) : null}
-                      {hasPermission('invoices:delete') && invoice.status === 'cancelled' ? (
-                      <DropdownItem color="danger" key="delete" 
-                        onClick={() => openConfirm({
-                          title: t('confirm.deleteTitle'),
-                          message: t('confirm.delete'),
-                          confirmColor: 'danger',
-                          confirmLabel: tCommon('actions.delete'),
-                          action: () => handleDelete(invoice.id),
-                        })}
-                        className="text-danger"
-                        startContent={<Trash className="size-4" />}
-                      >
-                        {tCommon('actions.delete')}
-                      </DropdownItem>
-                      ) : null}
-                    </DropdownMenu>
-                  </Dropdown>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable<InvoiceWithItems>
+        ariaLabel={t('title')}
+        columns={invoiceColumns}
+        data={filteredInvoices}
+        rowKey="id"
+        onSortChange={handleSortChange}
+        sortDescriptors={sortDescriptors}
+        visibleSortColumns={VISIBLE_SORT_COLUMNS}
+        isDefaultSort={isDefaultSort}
+        onSortReset={() => setSortDescriptors([{ column: 'created_at', direction: 'descending' }])}
+        loading={loadingState === 'loading'}
+        loadingContent={<div className="flex justify-center py-12">{t('messages.loadingInvoices')}</div>}
+        emptyContent={<div className="text-center py-12">{loading ? t('messages.loadingInvoices') : t('messages.noInvoices')}</div>}
+        classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity' }}
+      />
 
 
       <Pagination

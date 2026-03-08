@@ -1,0 +1,38 @@
+{
+  "title": "Lejet",
+  "subtitle": "Menaxho lejet e sistemit",
+  "noData": "Nuk u gjetën leje",
+  "addPermission": "Shto Leje",
+  "editPermission": "Ndrysho Leje",
+  "deletePermission": "Fshi Leje",
+  "fields": {
+    "key": "Çelësi i Lejes",
+    "keyRequired": "Çelësi i lejes është i detyrueshëm",
+    "keyPlaceholder": "p.sh. invoices:create",
+    "keyDescription": "Formati: kategori:veprim (p.sh. users:read)",
+    "description": "Përshkrimi",
+    "descriptionPlaceholder": "Përshkrim i shkurtër i kësaj leje",
+    "route": "Rruga",
+    "routePlaceholder": "p.sh. /users",
+    "routeDescription": "Rruga opsionale që kjo leje jep qasje"
+  },
+  "columns": {
+    "key": "Çelësi",
+    "category": "Kategoria",
+    "action": "Veprimi",
+    "description": "Përshkrimi",
+    "route": "Rruga",
+    "actions": "Veprimet"
+  },
+  "messages": {
+    "success": "Sukses",
+    "loadError": "Dështoi ngarkimi i lejeve. Provoni përsëri.",
+    "created": "Leja u krijua me sukses",
+    "createError": "Dështoi krijimi i lejes. Çelësi mund të ekzistojë tashmë.",
+    "updated": "Leja u përditësua me sukses",
+    "updateError": "Dështoi përditësimi i lejes. Provoni përsëri.",
+    "deleted": "Leja u fshi me sukses",
+    "deleteError": "Dështoi fshirja e lejes. Mund t'i jetë caktuar roleve.",
+    "confirmDelete": "Jeni i sigurt që doni të fshini lejen \"{{key}}\"? Kjo do ta heqë nga të gjitha rolet."
+  }
+}

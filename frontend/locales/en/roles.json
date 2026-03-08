@@ -2,6 +2,7 @@
   "title": "Roles",
   "subtitle": "Manage roles and their permissions",
   "noData": "No roles found",
+  "searchPlaceholder": "Search roles...",
   "system": "System",
   "custom": "Custom",
   "addRole": "Add Role",

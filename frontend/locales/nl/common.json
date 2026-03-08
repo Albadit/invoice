@@ -21,6 +21,7 @@
     "admin": "Admin",
     "users": "Gebruikers",
     "roles": "Rollen",
+    "permissions": "Machtigingen",
     "profile": "Profiel"
   },
   "actions": {

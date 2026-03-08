@@ -8,9 +8,12 @@ import {
   FileCog,
   Users,
   Shield,
+  KeyRound,
+  User,
+  LogOut,
   type LucideIcon,
 } from 'lucide-react';
-import { PROTECTED_ROUTES, INVOICE_ROUTES, EDITOR_ROUTES, SETTINGS_ROUTES, USERS_ROUTES, ROLES_ROUTES } from '@/config/routes';
+import { PROTECTED_ROUTES, INVOICE_ROUTES, EDITOR_ROUTES, SETTINGS_ROUTES, USERS_ROUTES, ROLES_ROUTES, PERMISSIONS_ROUTES } from '@/config/routes';
 
 export interface NavItem {
   /** Unique key, also used to resolve i18n label via `navigation.{key}` in common.json */
@@ -25,6 +28,22 @@ export interface NavItem {
   permission?: string;
 }
 
+/** A link shown in the user popover at the bottom of the sidebar */
+export interface PopoverLink {
+  /** Unique key */
+  key: string;
+  /** Translation key for the label */
+  labelKey: string;
+  /** Lucide icon component */
+  icon: LucideIcon;
+  /** Route path (omit for action-only items like logout) */
+  href?: string;
+  /** Special action identifier (e.g. 'logout') */
+  action?: string;
+  /** HeroUI button color */
+  color?: 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger';
+}
+
 export interface NavSection {
   /** Unique section key */
   key: string;
@@ -33,6 +52,14 @@ export interface NavSection {
   /** Navigation items in this section */
   items: NavItem[];
 }
+
+/**
+ * Sidebar brand (logo + name shown in the header).
+ */
+export const sidebarBrand = {
+  name: 'Invoice',
+  icon: FileText,
+} as const;
 
 /**
  * Sidebar navigation structure.
@@ -117,6 +144,32 @@ export const sidebarSections: NavSection[] = [
         href: ROLES_ROUTES.page,
         permission: 'roles:access',
       },
+      {
+        key: 'permissions',
+        labelKey: 'navigation.permissions',
+        icon: KeyRound,
+        href: PERMISSIONS_ROUTES.page,
+        permission: 'permissions:access',
+      },
     ],
+  },
+];
+
+/**
+ * Links displayed in the user popover at the bottom of the sidebar.
+ */
+export const popoverLinks: PopoverLink[] = [
+  {
+    key: 'profile',
+    labelKey: 'navigation.profile',
+    icon: User,
+    href: PROTECTED_ROUTES.profile,
+  },
+  {
+    key: 'logout',
+    labelKey: 'auth:logout',
+    icon: LogOut,
+    action: 'logout',
+    color: 'danger',
   },
 ];

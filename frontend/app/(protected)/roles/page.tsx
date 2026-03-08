@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from "@heroui/button";
+import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
-import { Plus, Edit, Trash, Lock, ShieldCheck, GripVertical } from 'lucide-react';
+import { Input } from "@heroui/input";
+import { Plus, Edit, Trash, Lock, ShieldCheck, Search } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { rolesApi } from '@/features/roles/api';
 import {
@@ -11,70 +13,14 @@ import {
   EditRoleModal,
   EditRolePermissionsModal,
 } from '@/features/roles/components';
-import { ConfirmModal, StickyHeader, Pagination, ActionDropdown } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination, ActionDropdown, DnDTable } from '@/components/ui';
+import type { DnDTableColumn } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import { useSessionState } from '@/lib/hooks/useSessionState';
 import type { DragEndEvent } from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
-
-function SortableRow({
-  role,
-  children,
-  canDrag,
-}: {
-  role: Role;
-  children: React.ReactNode;
-  canDrag: boolean;
-}) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: role.id, disabled: !canDrag });
-
-  const style = {
-    transform: CSS.Transform.toString(transform ? { ...transform, x: 0 } : null),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    position: isDragging ? 'relative' as const : undefined,
-    zIndex: isDragging ? 999 : undefined,
-  };
-
-  return (
-    <tr ref={setNodeRef} style={style} className="border-b border-divider last:border-0">
-      <td className="py-3 px-3 w-10">
-        {canDrag ? (
-          <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-default-400 hover:text-default-600 touch-none">
-            <GripVertical className="size-4" />
-          </button>
-        ) : (
-          <Lock className="size-4 text-default-300" />
-        )}
-      </td>
-      {children}
-    </tr>
-  );
-}
+import { arrayMove } from '@dnd-kit/sortable';
 
 export default function RolesPage() {
   const { t } = useTranslation('roles');
@@ -83,6 +29,7 @@ export default function RolesPage() {
 
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useSessionState('roles:search', '');
 
   // Modal state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -96,13 +43,8 @@ export default function RolesPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const [currentPage, setCurrentPage] = useSessionState('roles:page', 1);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('roles:rowsPerPage', 10);
 
   const loadRoles = useCallback(async () => {
     setLoading(true);
@@ -125,8 +67,11 @@ export default function RolesPage() {
     loadRoles();
   }, [loadRoles]);
 
-  // Pagination
-  const sortedRoles = [...roles].sort((a, b) => a.level - b.level);
+  // Filter & Pagination
+  const sortedRoles = [...roles].sort((a, b) => a.level - b.level).filter((r) =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    (r.description || '').toLowerCase().includes(search.toLowerCase())
+  );
   const totalCount = sortedRoles.length;
   const paginatedRoles = sortedRoles.slice(
     (currentPage - 1) * rowsPerPage,
@@ -168,9 +113,81 @@ export default function RolesPage() {
     }
   }
 
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     setCurrentPage(1);
-  }, [rowsPerPage]);
+  }, [search, rowsPerPage]);
+
+  const roleColumns: DnDTableColumn<Role>[] = useMemo(() => [
+    {
+      key: 'name',
+      label: t('columns.name'),
+      allowsSorting: true,
+      render: (role) => <span className="font-medium">{role.name}</span>,
+    },
+    {
+      key: 'description',
+      label: t('columns.description'),
+      allowsSorting: true,
+      render: (role) => (
+        <span className="text-sm text-default-500">{role.description || '—'}</span>
+      ),
+    },
+    {
+      key: 'type',
+      label: t('columns.type'),
+      render: (role) => role.is_system ? (
+        <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="size-3" />}>
+          {t('system')}
+        </Chip>
+      ) : (
+        <Chip size="sm" variant="flat" color="default">{t('custom')}</Chip>
+      ),
+    },
+    {
+      key: 'actions',
+      label: t('columns.actions'),
+      render: (role) => (
+        <ActionDropdown items={[
+          {
+            key: 'permissions',
+            label: t('permissions'),
+            icon: <ShieldCheck className="size-4" />,
+            color: 'primary',
+            isHidden: !hasPermission('roles:update'),
+            onClick: () => {
+              setSelectedRole(role);
+              setIsPermissionsOpen(true);
+            },
+          },
+          {
+            key: 'edit',
+            label: tCommon('actions.edit'),
+            icon: <Edit className="size-4" />,
+            color: 'primary',
+            isHidden: !hasPermission('roles:update') || role.is_system,
+            onClick: () => {
+              setSelectedRole(role);
+              setIsEditOpen(true);
+            },
+          },
+          {
+            key: 'delete',
+            label: tCommon('actions.delete'),
+            icon: <Trash className="size-4" />,
+            color: 'danger',
+            className: 'text-danger',
+            isHidden: !hasPermission('roles:delete') || role.is_system,
+            onClick: () => handleDeleteRole(role),
+          },
+        ]} />
+      ),
+    },
+  ], [t, tCommon, hasPermission]);
 
   async function handleAddRole(data: { name: string; description: string }) {
     try {
@@ -253,90 +270,28 @@ export default function RolesPage() {
         </ViewAuth>
       </StickyHeader>
 
-      <div className="w-full overflow-x-auto">
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis, restrictToParentElement]}>
-          <table className={`w-full text-sm ${loading ? 'opacity-60' : 'opacity-100'} transition-opacity`}>
-            <thead>
-              <tr className="border-b border-divider">
-                <th className="py-3 px-3 w-10" />
-                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.name')}</th>
-                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.description')}</th>
-                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.type')}</th>
-                <th className="text-left text-xs font-semibold text-default-500 py-3 px-3 whitespace-nowrap">{t('columns.actions')}</th>
-              </tr>
-            </thead>
-            <SortableContext items={paginatedRoles.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-              <tbody>
-                {paginatedRoles.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-8 text-default-400">{t('noData')}</td>
-                  </tr>
-                ) : (
-                  paginatedRoles.map((role) => (
-                    <SortableRow key={role.id} role={role} canDrag={!role.is_system && hasPermission('roles:update')}>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="font-medium">{role.name}</span>
-                      </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="text-sm text-default-500">
-                          {role.description || '—'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        {role.is_system ? (
-                          <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="size-3" />}>
-                            {t('system')}
-                          </Chip>
-                        ) : (
-                          <Chip size="sm" variant="flat" color="default">
-                            {t('custom')}
-                          </Chip>
-                        )}
-                      </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <ActionDropdown items={[
-                          {
-                            key: 'permissions',
-                            label: t('permissions'),
-                            icon: <ShieldCheck className="size-4" />,
-                            color: 'primary',
-                            isHidden: !hasPermission('roles:update'),
-                            isDisabled: role.is_system,
-                            onClick: () => {
-                              setSelectedRole(role);
-                              setIsPermissionsOpen(true);
-                            },
-                          },
-                          {
-                            key: 'edit',
-                            label: tCommon('actions.edit'),
-                            icon: <Edit className="size-4" />,
-                            color: 'primary',
-                            isHidden: !hasPermission('roles:update') || role.is_system,
-                            onClick: () => {
-                              setSelectedRole(role);
-                              setIsEditOpen(true);
-                            },
-                          },
-                          {
-                            key: 'delete',
-                            label: tCommon('actions.delete'),
-                            icon: <Trash className="size-4" />,
-                            color: 'danger',
-                            className: 'text-danger',
-                            isHidden: !hasPermission('roles:delete') || role.is_system,
-                            onClick: () => handleDeleteRole(role),
-                          },
-                        ]} />
-                      </td>
-                    </SortableRow>
-                  ))
-                )}
-              </tbody>
-            </SortableContext>
-          </table>
-        </DndContext>
-      </div>
+      <Card>
+        <CardBody>
+          <Input
+            isClearable
+            startContent={<Search className="size-4" />}
+            placeholder={t('searchPlaceholder')}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onClear={() => setSearch('')}
+          />
+        </CardBody>
+      </Card>
+
+      <DnDTable<Role>
+        columns={roleColumns}
+        data={paginatedRoles}
+        rowKey="id"
+        loading={loading}
+        emptyContent={t('noData')}
+        onDragEnd={handleDragEnd}
+        canDrag={(role) => !role.is_system && hasPermission('roles:update')}
+      />
 
       <Pagination
         currentPage={currentPage}
@@ -373,6 +328,7 @@ export default function RolesPage() {
         }}
         onSave={loadRoles}
         role={selectedRole}
+        readOnly={selectedRole?.is_system}
       />
 
       {/* Confirm Modal */}

@@ -9,6 +9,7 @@ import { addToast } from "@heroui/toast";
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { createClient } from '@/lib/supabase/client';
 import { usePageTitle } from '@/components/layout';
+import { StickyHeader } from '@/components/ui';
 
 export default function ProfilePage() {
   const { t } = useTranslation('profile');
@@ -136,7 +137,7 @@ export default function ProfilePage() {
 
   return (
     <main className="min-h-screen max-w-2xl mx-auto p-4 sm:p-8 flex flex-col gap-6 sm:gap-8">
-
+      <StickyHeader title={t('title')} subtitle={t('subtitle')}/>
       {/* User Info */}
       <Card>
         <CardBody className="flex flex-col gap-4 p-4 sm:p-6">

@@ -21,6 +21,7 @@
     "admin": "Admin",
     "users": "Users",
     "roles": "Roles",
+    "permissions": "Permissions",
     "profile": "Profile"
   },
   "actions": {

@@ -10,16 +10,14 @@ import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
-  FileText,
   LogOut,
   Menu,
-  User,
   X,
 } from 'lucide-react';
 import { Popover, PopoverTrigger, PopoverContent } from '@heroui/popover';
 import { LanguageSwitcher, ThemeSwitch } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
-import { sidebarSections } from '@/config/navigation';
+import { sidebarSections, sidebarBrand, popoverLinks } from '@/config/navigation';
 import { ROUTES, PROTECTED_ROUTES } from '@/config/routes';
 import { createClient } from '@/lib/supabase/client';
 import { usePermissions } from '@/contexts/PermissionsProvider';
@@ -262,9 +260,9 @@ export function Sidebar() {
           {!isCollapsed && (
             <div className="flex items-center gap-2">
               <div className="flex size-8 items-center justify-center rounded-lg bg-primary">
-                <FileText className="size-5 text-primary-foreground" />
+                <sidebarBrand.icon className="size-5 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold">Invoice</span>
+              <span className="text-lg font-bold">{sidebarBrand.name}</span>
             </div>
           )}
 
@@ -360,29 +358,28 @@ export function Sidebar() {
                   </div>
                 </div>
                 <div className="border-t border-divider" />
-                <Button
-                  variant="flat"
-                  size="sm"
-                  className="w-full justify-start"
-                  startContent={<User className="size-4" />}
-                  onPress={() => { setIsPopoverOpen(false); router.push(PROTECTED_ROUTES.profile); }}
-                >
-                  {tCommon('navigation.profile')}
-                </Button>
-                <Button
-                  variant="flat"
-                  color="danger"
-                  size="sm"
-                  className="w-full justify-start"
-                  startContent={<LogOut className="size-4" />}
-                  onPress={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signOut();
-                    window.location.href = ROUTES.logout;
-                  }}
-                >
-                  {t('logout')}
-                </Button>
+                {popoverLinks.map((link) => (
+                  <Button
+                    key={link.key}
+                    variant="flat"
+                    color={link.color || 'default'}
+                    size="sm"
+                    className="w-full justify-start"
+                    startContent={<link.icon className="size-4" />}
+                    onPress={async () => {
+                      setIsPopoverOpen(false);
+                      if (link.action === 'logout') {
+                        const supabase = createClient();
+                        await supabase.auth.signOut();
+                        window.location.href = ROUTES.logout;
+                      } else if (link.href) {
+                        router.push(link.href);
+                      }
+                    }}
+                  >
+                    {link.labelKey.includes(':') ? (() => { const [ns, key] = link.labelKey.split(':'); return ns === 'auth' ? t(key) : tCommon(link.labelKey); })() : tCommon(link.labelKey)}
+                  </Button>
+                ))}
               </div>
             </PopoverContent>
           </Popover>

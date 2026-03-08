@@ -21,6 +21,7 @@
     "admin": "Админ",
     "users": "Корисници",
     "roles": "Улоги",
+    "permissions": "Дозволи",
     "profile": "Профил"
   },
   "actions": {

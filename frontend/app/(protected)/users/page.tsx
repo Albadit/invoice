@@ -1,26 +1,20 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Button } from "@heroui/button";
 import { Card, CardBody } from "@heroui/card";
 import { Chip } from "@heroui/chip";
 import { Input } from "@heroui/input";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@heroui/table";
 import { Shield, KeyRound, Search, Plus, Lock, Trash2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import { usersApi } from '@/features/users/api';
 import { AddUserModal, EditUserRoleModal, ResetLinkModal } from '@/features/users/components';
-import { ConfirmModal, StickyHeader, Pagination, ActionDropdown } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Pagination, ActionDropdown, DataTable } from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { AdminUser, Role } from '@/lib/types';
+import { useSessionState } from '@/lib/hooks/useSessionState';
 
 export default function UsersPage() {
   const { t } = useTranslation('users');
@@ -30,7 +24,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useSessionState('users:search', '');
 
   // Modal state
   const [editUser, setEditUser] = useState<AdminUser | null>(null);
@@ -47,8 +41,8 @@ export default function UsersPage() {
     action: (() => Promise<void>) | null;
   }>({ isOpen: false, title: '', message: '', action: null });
   const [confirmLoading, setConfirmLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useSessionState('users:page', 1);
+  const [rowsPerPage, setRowsPerPage] = useSessionState('users:rowsPerPage', 10);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -92,7 +86,12 @@ export default function UsersPage() {
   );
 
   // Reset to page 1 when search changes
+  const isInitialMount = useRef(true);
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
     setCurrentPage(1);
   }, [search, rowsPerPage]);
 
@@ -170,6 +169,101 @@ export default function UsersPage() {
     return `${base}.${ms}${micro}`;
   }
 
+  const userColumns: DataTableColumn<AdminUser>[] = useMemo(() => [
+    {
+      key: 'email',
+      label: t('columns.email'),
+      allowsSorting: true,
+      render: (user) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{user.email}</span>
+          {user.is_system && (
+            <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="size-3" />}>
+              {t('system')}
+            </Chip>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'role_name',
+      label: t('columns.role'),
+      allowsSorting: true,
+      render: (user) => user.role_name ? (
+        <Chip size="sm" variant="flat" color="primary">{user.role_name}</Chip>
+      ) : (
+        <Chip size="sm" variant="flat" color="default">{t('noRole')}</Chip>
+      ),
+    },
+    {
+      key: 'created_at',
+      label: t('columns.created'),
+      allowsSorting: true,
+      render: (user) => formatDate(user.created_at),
+    },
+    {
+      key: 'last_sign_in_at',
+      label: t('columns.lastSignIn'),
+      allowsSorting: true,
+      render: (user) => formatDate(user.last_sign_in_at),
+    },
+    {
+      key: 'actions',
+      label: t('columns.actions'),
+      render: (user) => (
+        <ActionDropdown items={[
+          {
+            key: 'changeRole',
+            label: t('changeRole'),
+            icon: <Shield className="size-4" />,
+            color: 'primary',
+            isHidden: !hasPermission('users:update'),
+            isDisabled: user.is_system || user.id === userId,
+            onClick: () => {
+              setEditUser(user);
+              setIsEditRoleOpen(true);
+            },
+          },
+          {
+            key: 'resetPassword',
+            label: t('resetPassword'),
+            icon: <KeyRound className="size-4" />,
+            color: 'warning',
+            isHidden: !hasPermission('users:update'),
+            isDisabled: (user.is_system && !isSystemUser) || user.id === userId,
+            isLoading: generatingToken === user.id,
+            onClick: () => handleGenerateResetLink(user),
+          },
+          {
+            key: 'delete',
+            label: tCommon('actions.delete'),
+            icon: <Trash2 className="size-4" />,
+            color: 'danger',
+            className: 'text-danger',
+            isHidden: !hasPermission('users:delete'),
+            isDisabled: user.is_system || user.id === userId,
+            onClick: () => {
+              setConfirmModal({
+                isOpen: true,
+                title: t('deleteUser'),
+                message: t('messages.deleteConfirm', { email: user.email }),
+                action: async () => {
+                  await usersApi.deleteUser(user.id);
+                  await loadData();
+                  addToast({
+                    title: t('messages.success'),
+                    description: t('messages.userDeleted'),
+                    color: 'success',
+                  });
+                },
+              });
+            },
+          },
+        ]} />
+      ),
+    },
+  ], [t, tCommon, hasPermission, isSystemUser, userId, generatingToken]);
+
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
@@ -200,95 +294,14 @@ export default function UsersPage() {
         </CardBody>
       </Card>
 
-      <Table aria-label={t('title')} classNames={{ table: loading ? 'opacity-60 transition-opacity' : 'opacity-100 transition-opacity', th: 'whitespace-nowrap', td: 'whitespace-nowrap' }}>
-        <TableHeader>
-            <TableColumn>{t('columns.email')}</TableColumn>
-            <TableColumn>{t('columns.role')}</TableColumn>
-            <TableColumn>{t('columns.created')}</TableColumn>
-            <TableColumn>{t('columns.lastSignIn')}</TableColumn>
-            <TableColumn>{t('columns.actions')}</TableColumn>
-          </TableHeader>
-          <TableBody emptyContent={t('noData')}>
-            {paginatedUsers.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium">{user.email}</span>
-                    {user.is_system && (
-                      <Chip size="sm" variant="flat" color="secondary" startContent={<Lock className="size-3" />}>
-                        {t('system')}
-                      </Chip>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {user.role_name ? (
-                    <Chip size="sm" variant="flat" color="primary">
-                      {user.role_name}
-                    </Chip>
-                  ) : (
-                    <Chip size="sm" variant="flat" color="default">
-                      {t('noRole')}
-                    </Chip>
-                  )}
-                </TableCell>
-                <TableCell>{formatDate(user.created_at)}</TableCell>
-                <TableCell>{formatDate(user.last_sign_in_at)}</TableCell>
-                <TableCell>
-                  <ActionDropdown items={[
-                    {
-                      key: 'changeRole',
-                      label: t('changeRole'),
-                      icon: <Shield className="size-4" />,
-                      color: 'primary',
-                      isHidden: !hasPermission('users:update'),
-                      isDisabled: user.is_system || user.id === userId,
-                      onClick: () => {
-                        setEditUser(user);
-                        setIsEditRoleOpen(true);
-                      },
-                    },
-                    {
-                      key: 'resetPassword',
-                      label: t('resetPassword'),
-                      icon: <KeyRound className="size-4" />,
-                      color: 'warning',
-                      isHidden: !hasPermission('users:update'),
-                      isDisabled: (user.is_system && !isSystemUser) || user.id === userId,
-                      isLoading: generatingToken === user.id,
-                      onClick: () => handleGenerateResetLink(user),
-                    },
-                    {
-                      key: 'delete',
-                      label: tCommon('actions.delete'),
-                      icon: <Trash2 className="size-4" />,
-                      color: 'danger',
-                      className: 'text-danger',
-                      isHidden: !hasPermission('users:delete'),
-                      isDisabled: user.is_system || user.id === userId,
-                      onClick: () => {
-                        setConfirmModal({
-                          isOpen: true,
-                          title: t('deleteUser'),
-                          message: t('messages.deleteConfirm', { email: user.email }),
-                          action: async () => {
-                            await usersApi.deleteUser(user.id);
-                            await loadData();
-                            addToast({
-                              title: t('messages.success'),
-                              description: t('messages.userDeleted'),
-                              color: 'success',
-                            });
-                          },
-                        });
-                      },
-                    },
-                  ]} />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <DataTable<AdminUser>
+        ariaLabel={t('title')}
+        columns={userColumns}
+        data={paginatedUsers}
+        rowKey="id"
+        loading={loading}
+        emptyContent={t('noData')}
+      />
 
       <Pagination
         currentPage={currentPage}

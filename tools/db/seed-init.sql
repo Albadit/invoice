@@ -60,6 +60,12 @@ INSERT INTO permissions (key, description, route) VALUES
     ('users:create',         'Create users',            NULL),
     ('users:update',         'Update users',            NULL),
     ('users:delete',         'Delete users',            NULL),
+    -- Permission management
+    ('permissions:access',   'Access permissions page', '/permissions'),
+    ('permissions:read',     'View permissions',        NULL),
+    ('permissions:create',   'Create permissions',      NULL),
+    ('permissions:update',   'Update permissions',      NULL),
+    ('permissions:delete',   'Delete permissions',      NULL),
     -- Role permissions
     ('roles:access',         'Access roles page',       '/roles'),
     ('roles:read',           'View roles',              NULL),
@@ -126,6 +132,7 @@ FROM roles r
 CROSS JOIN permissions p
 WHERE r.name = 'Admin'
   AND p.key NOT LIKE 'roles:%'
+  AND p.key NOT LIKE 'permissions:%'
 ON CONFLICT (role_id, permission_id) DO NOTHING;
 
 -- Member: everything except role and user permissions

@@ -1050,6 +1050,65 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+-- Admin: Create a new permission
+CREATE OR REPLACE FUNCTION admin_create_permission(p_key text, p_description text DEFAULT NULL, p_route text DEFAULT NULL)
+RETURNS uuid AS $$
+DECLARE
+    v_id uuid;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN role_permissions rp ON ur.role_id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = auth.uid() AND p.key = 'permissions:create'
+    ) THEN
+        RAISE EXCEPTION 'Permission denied';
+    END IF;
+
+    INSERT INTO permissions (key, description, route)
+    VALUES (p_key, p_description, p_route)
+    RETURNING id INTO v_id;
+
+    RETURN v_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Admin: Update a permission
+CREATE OR REPLACE FUNCTION admin_update_permission(p_id uuid, p_key text, p_description text DEFAULT NULL, p_route text DEFAULT NULL)
+RETURNS void AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN role_permissions rp ON ur.role_id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = auth.uid() AND p.key = 'permissions:update'
+    ) THEN
+        RAISE EXCEPTION 'Permission denied';
+    END IF;
+
+    UPDATE permissions SET key = p_key, description = p_description, route = p_route
+    WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Admin: Delete a permission
+CREATE OR REPLACE FUNCTION admin_delete_permission(p_id uuid)
+RETURNS void AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM user_roles ur
+        JOIN role_permissions rp ON ur.role_id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = auth.uid() AND p.key = 'permissions:delete'
+    ) THEN
+        RAISE EXCEPTION 'Permission denied';
+    END IF;
+
+    DELETE FROM role_permissions WHERE permission_id = p_id;
+    DELETE FROM permissions WHERE id = p_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- Grant execute to anon for public reset functions
 GRANT EXECUTE ON FUNCTION validate_reset_token(uuid) TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION reset_password_with_token(uuid, text) TO anon, authenticated;
