@@ -90,6 +90,12 @@ export const sidebarSections: NavSection[] = [
         href: INVOICE_ROUTES.new,
         permission: 'invoices:create',
       },
+    ],
+  },
+  {
+    key: 'settings',
+    titleKey: 'navigation.settings',
+    items: [
       {
         key: 'editor',
         labelKey: 'navigation.templateEditor',
@@ -97,12 +103,6 @@ export const sidebarSections: NavSection[] = [
         href: EDITOR_ROUTES.page,
         permission: 'templates:access',
       },
-    ],
-  },
-  {
-    key: 'settings',
-    titleKey: 'navigation.settings',
-    items: [
       {
         key: 'settings',
         labelKey: 'navigation.settings',
