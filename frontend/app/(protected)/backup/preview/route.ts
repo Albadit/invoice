@@ -170,25 +170,52 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Parse invoices from SQL ───────────────────────────────────
-    // Invoice VALUES columns: company_name, currency_code, template_name, client_name, status, customer_name, ...
-    // We extract from every WITH inv AS or INSERT INTO invoices block.
-    // Use `company_name,\s*currency_code` to avoid matching the client VALUES block (which also starts with `company_name`).
-    const invoicePattern = /FROM \(VALUES\s*\n\s*\(([^)]*'[^)]*)\ )\s*\n\s*\)\s*AS\s+v\(company_name,\s*currency_code/g;
+    // Each invoice block has a VALUES section followed by AS v(company_name, ...).
+    // Two column layouts exist:
+    //   Standard (28 cols): company_name(0), currency_code(1), template_name(2), client_name(3), status(4), customer_name(5), ..., total_amount(25), created_at(26)
+    //   With invoice_code (29 cols): ..., invoice_code(4), status(5), customer_name(6), ..., total_amount(26), created_at(27)
+    const invoiceBlocksPattern = /FROM\s+\(VALUES\s*\n([\s\S]*?)\n\s*\)\s*AS\s+v\((company_name[^)]+)\)/g;
     const parsedInvoices: BackupInvoice[] = [];
     let invMatch;
-    while ((invMatch = invoicePattern.exec(sql)) !== null) {
-      const rowStr = invMatch[1];
-      const vals = parseValuesRow(`(${rowStr})`);
-      parsedInvoices.push({
-        company_name: unesc(vals[0]),
-        customer_name: unesc(vals[5]) ?? '',
-        status: unesc(vals[4]),
-        issue_date: unesc(vals[10]),
-        due_date: unesc(vals[11]),
-        total_amount: unesc(vals[25]),
-        created_at: unesc(vals[26]),
-      });
+    while ((invMatch = invoiceBlocksPattern.exec(sql)) !== null) {
+      const rows = extractValueRows(`(VALUES\n${invMatch[1]}\n) AS v(`);
+      const header = invMatch[2];
+      const hasInvoiceCode = header.includes('invoice_code');
+      const offset = hasInvoiceCode ? 1 : 0;
+      for (const vals of rows) {
+        if (vals.length < 27 + offset) continue; // skip malformed rows
+        parsedInvoices.push({
+          company_name: unesc(vals[0]),
+          customer_name: unesc(vals[5 + offset]) ?? '',
+          status: unesc(vals[4 + offset]),
+          issue_date: unesc(vals[10 + offset]),
+          due_date: unesc(vals[11 + offset]),
+          total_amount: unesc(vals[25 + offset]),
+          created_at: unesc(vals[26 + offset]),
+        });
+      }
     }
+
+    // ── Deduplicate within the SQL file ─────────────────────────
+    const seenCoNames = new Set<string>();
+    const dedupCompanies = parsedCompanies.filter(co => {
+      if (seenCoNames.has(co.name)) return false;
+      seenCoNames.add(co.name);
+      return true;
+    });
+    const seenClNames = new Set<string>();
+    const dedupClients = parsedClients.filter(cl => {
+      if (seenClNames.has(cl.name)) return false;
+      seenClNames.add(cl.name);
+      return true;
+    });
+    const seenInvKeys = new Set<string>();
+    const dedupInvoices = parsedInvoices.filter(inv => {
+      const k = `${inv.customer_name}||${inv.created_at}`;
+      if (seenInvKeys.has(k)) return false;
+      seenInvKeys.add(k);
+      return true;
+    });
 
     // ── Fetch existing data ───────────────────────────────────────
     const [existingCompanies, existingClients, existingInvoices] = await Promise.all([
@@ -214,7 +241,7 @@ export async function POST(request: NextRequest) {
       invoices: { new: [], conflicts: [] },
     };
 
-    for (const co of parsedCompanies) {
+    for (const co of dedupCompanies) {
       const existing = existingCompanyMap.get(co.name);
       if (existing) {
         result.companies.conflicts.push({
@@ -234,7 +261,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    for (const cl of parsedClients) {
+    for (const cl of dedupClients) {
       const existing = existingClientMap.get(cl.name) as Row | undefined;
       if (existing) {
         const coData = existing.companies as Row | null;
@@ -254,11 +281,8 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const seenInvoiceKeys = new Set<string>();
-    for (const inv of parsedInvoices) {
+    for (const inv of dedupInvoices) {
       const key = `${inv.customer_name}||${inv.created_at}`;
-      if (seenInvoiceKeys.has(key)) continue;
-      seenInvoiceKeys.add(key);
       const existing = existingInvoiceMap.get(key);
       if (existing) {
         const coData = existing.companies as Row | null;

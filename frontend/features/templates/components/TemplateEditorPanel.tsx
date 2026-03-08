@@ -1,10 +1,14 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import Editor, { type OnMount, type BeforeMount } from '@monaco-editor/react';
+import Editor, { loader, type OnMount, type BeforeMount } from '@monaco-editor/react';
 import { useTheme } from 'next-themes';
 import { registerTemplateProviders } from '../utils/monacoSetup';
 import type { TemplateEditorState } from '../hooks/useTemplateEditor';
+
+// Load Monaco from local node_modules instead of CDN to avoid tracking prevention warnings
+import * as monaco from 'monaco-editor';
+loader.config({ monaco });
 
 interface TemplateEditorPanelProps {
   editor: TemplateEditorState;

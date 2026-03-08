@@ -110,6 +110,7 @@ export default function DashboardBar({
           className="[&_.recharts-surface]:outline-hidden"
           height="100%"
           width="100%"
+          minWidth={0}
         >
           <BarChart
             accessibilityLayer

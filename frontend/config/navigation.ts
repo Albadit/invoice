@@ -129,7 +129,7 @@ export const sidebarSections: NavSection[] = [
         key: 'backup',
         labelKey: 'navigation.backup',
         icon: DatabaseBackup,
-        href: SETTINGS_ROUTES.backup,
+        href: PROTECTED_ROUTES.backup,
         permission: 'settings:access',
       },
     ],

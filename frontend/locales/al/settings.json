@@ -206,6 +206,9 @@
     "exportSuccess": "Kopja e sigurisë u eksportua me sukses.",
     "exportError": "Eksportimi i kopjes dështoi. Provo përsëri.",
     "importSuccess": "Kopja u importua me sukses. Të dhënat u rikthyen.",
+    "importAll": "Të gjitha {{count}} të dhënat u importuan me sukses.",
+    "importPartial": "{{imported}} nga {{total}} të dhënat u importuan. {{skipped}} ekzistojnë tashmë në bazën tuaj.",
+    "importAlreadyExists": "Të gjitha të dhënat në këtë kopje ekzistojnë tashmë në bazën tuaj. Asgjë nuk u importua.",
     "importError": "Importimi i kopjes dështoi. Skedari mund të jetë i pavlefshëm.",
     "importConfirmTitle": "Importo Kopjen",
     "importConfirmMessage": "Importimi i kopjes do të bashkojë të dhënat në llogarinë tënde. Rekordet ekzistuese me të njëjtin emër do të anashkalohen. Je i sigurt që dëshiron të vazhdosh?",
@@ -225,6 +228,8 @@
     "compareIncoming": "E re",
     "importAndOverwrite": "Importo & Mbishkruaj {{count}} rekord(e)",
     "importSkipExisting": "Importo (anashkalo ekzistuesit)",
+    "selectAll": "Zgjidh të gjitha",
+    "backToBackup": "Kthehu",
     "diffEmail": "Email",
     "diffPhone": "Telefoni",
     "diffCity": "Qyteti",
@@ -233,6 +238,25 @@
     "diffStatus": "Statusi",
     "diffTotal": "Totali",
     "diffDueDate": "Data e Afatit",
-    "diffCompany": "Kompania"
+    "diffCompany": "Kompania",
+    "duplicates": {
+      "title": "Kontrolli i Dublikatave",
+      "subtitle": "Gjej dhe fshi rekordet e dyfishta në të dhënat tuaja",
+      "check": "Kontrollo Dublikatat",
+      "checkError": "Dështoi kontrolli i dublikatave. Provo përsëri.",
+      "noDuplicates": "Nuk u Gjetën Dublikata",
+      "allClean": "Të dhënat tuaja janë të pastra — nuk u zbuluan rekorde të dyfishta.",
+      "done": "Përfundo",
+      "delete": "Fshi",
+      "deleted": "Rekordi u fshi me sukses.",
+      "deletedAll": "{{count}} dublikata u fshinë me sukses.",
+      "deleteAll": "Fshi Të Gjitha ({{count}})",
+      "deleteError": "Dështoi fshirja e rekordit. Provo përsëri.",
+      "groupLabel": "\"{{name}}\"",
+      "instruction": "{{count}} rekorde të dyfishta u gjetën. Zgjidh cilën/cilat të fshish.",
+      "prev": "Mbrapa",
+      "next": "Para",
+      "created": "Krijuar"
+    }
   }
 }

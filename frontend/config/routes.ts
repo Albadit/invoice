@@ -30,6 +30,7 @@ export const PROTECTED_ROUTES = {
   invoice: '/invoice',
   editor: '/editor',
   settings: '/settings',
+  backup: '/backup',
   profile: '/profile',
   users: '/users',
   roles: '/roles',
@@ -51,7 +52,6 @@ export const EDITOR_ROUTES = {
 
 export const SETTINGS_ROUTES = {
   page: PROTECTED_ROUTES.settings,
-  backup: `${PROTECTED_ROUTES.settings}/backup`,
   templates: `${PROTECTED_ROUTES.settings}?tab=templates`,
   currencies: `${PROTECTED_ROUTES.settings}?tab=currencies`,
 } as const;

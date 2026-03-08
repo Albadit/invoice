@@ -57,6 +57,27 @@ export async function POST(request: NextRequest) {
       sql = sql.replaceAll(match[1], user.id);
     }
 
+    // ── Deduplicate records within the SQL ────────────────────────
+    // Companies / clients: DISTINCT ON prevents duplicate VALUES rows
+    sql = sql.replace(
+      /(-- Companies\nINSERT INTO companies [^\n]*\n)SELECT\n/,
+      '$1SELECT DISTINCT ON (v.name)\n',
+    );
+    sql = sql.replace(
+      /(-- Clients\nINSERT INTO clients [^\n]*\n)SELECT\n/,
+      '$1SELECT DISTINCT ON (v.name)\n',
+    );
+    // Invoices: add WHERE NOT EXISTS so duplicate CTEs are skipped
+    const invoiceExistsCheck = `WHERE NOT EXISTS (SELECT 1 FROM invoices WHERE customer_name = v.customer_name AND created_at = v.created_at::timestamptz AND user_id = current_setting('backup.user_id')::uuid)`;
+    sql = sql.replaceAll(
+      ') cl ON true\n  RETURNING id',
+      `) cl ON true\n  ${invoiceExistsCheck}\n  RETURNING id`,
+    );
+    sql = sql.replaceAll(
+      ') cl ON true;\n',
+      `) cl ON true\n${invoiceExistsCheck};\n`,
+    );
+
     // Build pre-delete statements for records the user chose to overwrite.
     // Executed inside the same transaction (injected right after BEGIN).
     const deleteStatements: string[] = [];

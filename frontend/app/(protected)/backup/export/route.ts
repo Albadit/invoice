@@ -71,6 +71,29 @@ export async function GET() {
       return { ...rest, _items: items } as Row & { _items: Row[] };
     });
 
+    // Deduplicate records (keep first/oldest occurrence)
+    const seenCoNames = new Set<string>();
+    const dedupCompanies = (companies as Row[]).filter(co => {
+      const n = co.name as string;
+      if (seenCoNames.has(n)) return false;
+      seenCoNames.add(n);
+      return true;
+    });
+    const seenClNames = new Set<string>();
+    const dedupClients = (clients as Row[]).filter(cl => {
+      const n = cl.name as string;
+      if (seenClNames.has(n)) return false;
+      seenClNames.add(n);
+      return true;
+    });
+    const seenInvKeys = new Set<string>();
+    const dedupInvoices = cleanInvoices.filter(inv => {
+      const k = `${inv.customer_name}||${inv.created_at}`;
+      if (seenInvKeys.has(k)) return false;
+      seenInvKeys.add(k);
+      return true;
+    });
+
     const uid = user.id;
     const lines: string[] = [
       `-- Invoice backup exported at ${new Date().toISOString()}`,
@@ -113,8 +136,8 @@ WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = v.name AND user_id = curr
     }
 
     // ── Companies ────────────────────────────────────────────────
-    if (companies.length) {
-      const rows = (companies as Row[]).map(co => {
+    if (dedupCompanies.length) {
+      const rows = dedupCompanies.map(co => {
         const cur = co.currency_id ? curById.get(co.currency_id as string) : null;
         const tmpl = co.template_id ? tmplById.get(co.template_id as string) : null;
         return `    (${esc(co.name)}, ${esc(co.email)}, ${esc(co.phone)}, ${esc(co.street)}, ${esc(co.city)}, ${esc(co.zip_code)}, ${esc(co.country)}, ${esc(co.vat_number)}, ${esc(co.coc_number)}, ${esc(co.logo_url)}, ${esc(cur?.code ?? null)}, ${esc(tmpl?.name ?? null)}, ${esc(co.tax_percent)}, ${esc(co.terms)}, ${esc(co.language)}, ${esc(co.created_at)}, ${esc(co.updated_at)})`;
@@ -139,8 +162,8 @@ WHERE NOT EXISTS (SELECT 1 FROM companies WHERE name = v.name AND user_id = curr
     }
 
     // ── Clients ──────────────────────────────────────────────────
-    if (clients.length) {
-      const rows = (clients as Row[]).map(cl => {
+    if (dedupClients.length) {
+      const rows = dedupClients.map(cl => {
         const co = cl.company_id ? coById.get(cl.company_id as string) : null;
         return `    (${esc(co?.name ?? null)}, ${esc(cl.name)}, ${esc(cl.email)}, ${esc(cl.phone)}, ${esc(cl.street)}, ${esc(cl.city)}, ${esc(cl.zip_code)}, ${esc(cl.country)}, ${esc(cl.tax_id)}, ${esc(cl.notes)}, ${esc(cl.created_at)}, ${esc(cl.updated_at)})`;
       }).join(',\n');
@@ -201,7 +224,7 @@ LEFT JOIN LATERAL (
     LIMIT 1
 ) cl ON true`;
 
-    for (const inv of cleanInvoices) {
+    for (const inv of dedupInvoices) {
       const co = inv.company_id ? coById.get(inv.company_id as string) : null;
       const cur = inv.currency_id ? curById.get(inv.currency_id as string) : null;
       const tmpl = inv.template_id ? tmplById.get(inv.template_id as string) : null;

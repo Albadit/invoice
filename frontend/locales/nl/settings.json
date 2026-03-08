@@ -206,6 +206,9 @@
     "exportSuccess": "Back-up succesvol geëxporteerd.",
     "exportError": "Exporteren van back-up mislukt. Probeer het opnieuw.",
     "importSuccess": "Back-up succesvol geïmporteerd. Je gegevens zijn hersteld.",
+    "importAll": "Alle {{count}} gegevens zijn succesvol geïmporteerd.",
+    "importPartial": "{{imported}} van {{total}} gegevens geïmporteerd. {{skipped}} bestonden al in je database.",
+    "importAlreadyExists": "Alle gegevens in deze back-up bestaan al in je database. Er is niets geïmporteerd.",
     "importError": "Importeren van back-up mislukt. Het bestand is mogelijk ongeldig.",
     "importConfirmTitle": "Importeer Back-up",
     "importConfirmMessage": "Het importeren van een back-up zal gegevens samenvoegen in je account. Bestaande records met dezelfde naam worden overgeslagen. Weet je zeker dat je wilt doorgaan?",
@@ -225,6 +228,8 @@
     "compareIncoming": "Inkomend",
     "importAndOverwrite": "Importeer & Overschrijf {{count}} record(s)",
     "importSkipExisting": "Importeer (bestaande overslaan)",
+    "selectAll": "Alles selecteren",
+    "backToBackup": "Terug",
     "diffEmail": "E-mail",
     "diffPhone": "Telefoon",
     "diffCity": "Stad",
@@ -233,6 +238,25 @@
     "diffStatus": "Status",
     "diffTotal": "Totaal",
     "diffDueDate": "Vervaldatum",
-    "diffCompany": "Bedrijf"
+    "diffCompany": "Bedrijf",
+    "duplicates": {
+      "title": "Duplicaatcontrole",
+      "subtitle": "Zoek en verwijder dubbele records in je gegevens",
+      "check": "Controleer Duplicaten",
+      "checkError": "Duplicaatcontrole mislukt. Probeer het opnieuw.",
+      "noDuplicates": "Geen Duplicaten Gevonden",
+      "allClean": "Je gegevens zijn schoon — er zijn geen dubbele records gevonden.",
+      "done": "Klaar",
+      "delete": "Verwijderen",
+      "deleted": "Record succesvol verwijderd.",
+      "deletedAll": "{{count}} duplica(a)t(en) succesvol verwijderd.",
+      "deleteAll": "Alles Verwijderen ({{count}})",
+      "deleteError": "Verwijderen mislukt. Probeer het opnieuw.",
+      "groupLabel": "\"{{name}}\"",
+      "instruction": "{{count}} dubbele records gevonden. Kies welke je wilt verwijderen.",
+      "prev": "Vorige",
+      "next": "Volgende",
+      "created": "Aangemaakt"
+    }
   }
 }

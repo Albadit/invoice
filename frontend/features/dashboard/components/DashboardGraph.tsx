@@ -439,6 +439,7 @@ export default function DashboardGraph({
           className="min-h-75 [&_.recharts-surface]:outline-hidden"
           height="100%"
           width="100%"
+          minWidth={0}
         >
           {activeChart !== null ? (
             /* ── Single series ─────────────────────────────────── */

@@ -206,6 +206,9 @@
     "exportSuccess": "Backup exported successfully.",
     "exportError": "Failed to export backup. Please try again.",
     "importSuccess": "Backup imported successfully. Your data has been restored.",
+    "importAll": "All {{count}} records imported successfully.",
+    "importPartial": "{{imported}} of {{total}} records imported. {{skipped}} already existed in your database.",
+    "importAlreadyExists": "All records in this backup already exist in your database. Nothing was imported.",
     "importError": "Failed to import backup. The file may be invalid or corrupted.",
     "importConfirmTitle": "Import Backup",
     "importConfirmMessage": "Importing a backup will merge data into your account. Existing records with the same name will be skipped. Are you sure you want to continue?",
@@ -225,6 +228,8 @@
     "compareIncoming": "Incoming",
     "importAndOverwrite": "Import & Overwrite {{count}} record(s)",
     "importSkipExisting": "Import (skip existing)",
+    "selectAll": "Select all",
+    "backToBackup": "Back",
     "diffEmail": "Email",
     "diffPhone": "Phone",
     "diffCity": "City",
@@ -233,6 +238,25 @@
     "diffStatus": "Status",
     "diffTotal": "Total",
     "diffDueDate": "Due Date",
-    "diffCompany": "Company"
+    "diffCompany": "Company",
+    "duplicates": {
+      "title": "Duplicate Check",
+      "subtitle": "Find and remove duplicate records in your data",
+      "check": "Check Duplicates",
+      "checkError": "Failed to check for duplicates. Please try again.",
+      "noDuplicates": "No Duplicates Found",
+      "allClean": "Your data is clean — no duplicate records were detected.",
+      "done": "Done",
+      "delete": "Delete",
+      "deleted": "Record deleted successfully.",
+      "deletedAll": "{{count}} duplicate(s) deleted successfully.",
+      "deleteAll": "Delete All ({{count}})",
+      "deleteError": "Failed to delete record. Please try again.",
+      "groupLabel": "\"{{name}}\"",
+      "instruction": "{{count}} duplicate records found. Choose which one(s) to delete.",
+      "prev": "Previous",
+      "next": "Next",
+      "created": "Created"
+    }
   }
 }

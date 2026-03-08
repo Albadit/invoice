@@ -14,4 +14,6 @@ export type { DnDTableColumn, DnDTableProps } from './DnDTable';
 export { ImportConflictModal } from './ImportConflictModal';
 export type { ImportConflictModalProps, PreviewData, OverwriteSelection } from './ImportConflictModal';
 export { ImportPreviewPanel } from './ImportPreviewPanel';
-export type { ImportPreviewPanelProps } from './ImportPreviewPanel';
+export type { ImportPreviewPanelProps, ImportPreviewPanelHandle } from './ImportPreviewPanel';
+export { DuplicateChecker } from './DuplicateChecker';
+export type { DuplicateCheckerProps } from './DuplicateChecker';
