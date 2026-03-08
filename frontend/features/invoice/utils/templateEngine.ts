@@ -235,13 +235,14 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
   const previewScript = options?.preview ? `
     <script>
     (function(){
-      var A4=1123,GAP=16,done=false;
+      var A4=1123,W=794,M=60,CH=A4-2*M,CW=W-2*M,GAP=16,done=false;
       function paginate(){
         if(done)return;
-        var h=document.body.scrollHeight;
-        if(h<10)return;
-        var pages=Math.max(1,Math.ceil(h/A4));
+        var sh=document.body.scrollHeight;
+        if(sh<10)return;
         done=true;
+        var contentH=sh-2*M;
+        var pages=Math.max(1,Math.ceil(contentH/CH));
         if(pages<=1){
           document.body.style.minHeight=A4+'px';
           window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
@@ -260,11 +261,14 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
         document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent;';
         for(var i=0;i<pages;i++){
           var page=document.createElement('div');
-          page.style.cssText='width:794px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px;';
-          var inner=document.createElement('div');
-          inner.innerHTML=html;
-          inner.style.cssText='position:absolute;top:'+(-i*A4)+'px;left:0;width:794px;padding:16mm;';
-          page.appendChild(inner);
+          page.style.cssText='width:'+W+'px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px;';
+          var vp=document.createElement('div');
+          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+CH+'px;overflow:hidden;';
+          var ct=document.createElement('div');
+          ct.innerHTML=html;
+          ct.style.cssText='position:absolute;top:'+(-i*CH)+'px;left:0;width:'+CW+'px;';
+          vp.appendChild(ct);
+          page.appendChild(vp);
           document.body.appendChild(page);
         }
         var totalH=pages*A4+(pages+1)*GAP;
@@ -311,7 +315,7 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
  * Exported so the test page editor can use it as a starting point.
  */
 export const DEFAULT_TEMPLATE_STYLING = `
-<div class="w-full h-full bg-white flex flex-col gap-8">
+<div class="w-full h-full bg-transparent flex flex-col gap-8">
   <!-- Header -->
   <div class="flex flex-col gap-4">
     <div class="flex justify-between">
