@@ -235,38 +235,57 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
   const previewScript = options?.preview ? `
     <script>
     (function(){
-      var A4=1123,W=794,M=60,CH=A4-2*M,CW=W-2*M,GAP=16,done=false;
+      var A4=1123,W=794,GAP=16,done=false;
       function paginate(){
         if(done)return;
-        var sh=document.body.scrollHeight;
-        if(sh<10)return;
         done=true;
-        var contentH=sh-2*M;
-        var pages=Math.max(1,Math.ceil(contentH/CH));
-        if(pages<=1){
+        var cs=getComputedStyle(document.body);
+        var M=Math.round(parseFloat(cs.paddingTop));
+        var CH=A4-2*M,CW=W-2*M;
+        var root=null;
+        for(var c=document.body.firstElementChild;c;c=c.nextElementSibling){
+          if(c.tagName!=='SCRIPT'&&c.tagName!=='STYLE'){root=c;break;}
+        }
+        if(!root){done=false;return;}
+        var rr=root.getBoundingClientRect();
+        var contentH=Math.round(rr.height);
+        if(contentH<10){done=false;return;}
+        if(contentH<=CH){
           document.body.style.minHeight=A4+'px';
           window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
           return;
         }
-        var children=[];
-        Array.from(document.body.childNodes).forEach(function(n){
-          if(n.nodeType===1&&n.tagName==='SCRIPT')return;
-          children.push(n);
+        var bounds=[];
+        Array.from(root.children).forEach(function(el){
+          bounds.push(Math.round(el.getBoundingClientRect().top-rr.top));
         });
-        var tmp=document.createElement('div');
-        children.forEach(function(n){tmp.appendChild(n.cloneNode(true))});
-        var html=tmp.innerHTML;
-        children.forEach(function(n){n.remove()});
+        bounds.push(contentH);
+        var breaks=[0],pos=0;
+        while(pos+CH<contentH){
+          var target=pos+CH,best=target;
+          for(var k=bounds.length-1;k>=0;k--){
+            if(bounds[k]<=target&&bounds[k]>pos){best=bounds[k];break;}
+          }
+          breaks.push(best);
+          pos=best;
+        }
+        var pages=breaks.length;
+        var html=root.outerHTML;
+        Array.from(document.body.childNodes).forEach(function(n){
+          if(n.nodeType===1&&(n.tagName==='SCRIPT'||n.tagName==='STYLE'))return;
+          n.remove();
+        });
         document.documentElement.style.background='transparent';
         document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent;';
         for(var i=0;i<pages;i++){
+          var vpH=(i<pages-1)?(breaks[i+1]-breaks[i]):Math.min(CH,contentH-breaks[i]);
           var page=document.createElement('div');
           page.style.cssText='width:'+W+'px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px;';
           var vp=document.createElement('div');
-          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+CH+'px;overflow:hidden;';
+          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+vpH+'px;overflow:hidden;';
           var ct=document.createElement('div');
           ct.innerHTML=html;
-          ct.style.cssText='position:absolute;top:'+(-i*CH)+'px;left:0;width:'+CW+'px;';
+          ct.style.cssText='position:absolute;top:'+(-breaks[i])+'px;left:0;width:'+CW+'px;';
           vp.appendChild(ct);
           page.appendChild(vp);
           document.body.appendChild(page);
@@ -275,7 +294,9 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
         window.parent.postMessage({type:'previewSize',height:totalH,pages:pages},'*');
       }
       function run(){setTimeout(paginate,150)}
-      if(document.readyState==='complete'){run()}
+      if(document.fonts&&document.fonts.ready){
+        document.fonts.ready.then(run);
+      }else if(document.readyState==='complete'){run()}
       else{window.addEventListener('load',run)}
     })();
     </script>` : '';
@@ -298,6 +319,10 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
         body {
           font-family: Inter, sans-serif;
           ${previewCss}
+        }
+        body > div > div:last-child {
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
       </style>
     </head>
