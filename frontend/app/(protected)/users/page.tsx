@@ -10,7 +10,7 @@ import { addToast } from "@heroui/toast";
 import { usersApi } from '@/features/users/api';
 import { AddUserModal, EditUserRoleModal, ResetLinkModal } from '@/features/users/components';
 import { ConfirmModal, StickyHeader, Pagination, ActionDropdown, DataTable } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+import type { DataTableColumn, BulkAction } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { AdminUser, Role } from '@/lib/types';
@@ -69,10 +69,19 @@ export default function UsersPage() {
     loadData();
   }, [loadData]);
 
-  const filteredUsers = users.filter((u) =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    (u.role_name || '').toLowerCase().includes(search.toLowerCase())
-  ).sort((a, b) => {
+  // Current user's role level (used to filter visible users by hierarchy)
+  const currentUserLevel = useMemo(() => {
+    const me = users.find(u => u.id === userId);
+    return me?.role_level ?? 0;
+  }, [users, userId]);
+
+  const filteredUsers = users.filter((u) => {
+    // Hide users with a higher privilege (lower level number) than the current user
+    // System users always see everyone
+    if (!isSystemUser && (u.role_level ?? 0) < currentUserLevel) return false;
+    return u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.role_name || '').toLowerCase().includes(search.toLowerCase());
+  }).sort((a, b) => {
     const dateCompare = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
     if (dateCompare !== 0) return dateCompare;
     return (a.role_level || 0) - (b.role_level || 0);
@@ -210,7 +219,9 @@ export default function UsersPage() {
     {
       key: 'actions',
       label: t('columns.actions'),
-      render: (user) => (
+      render: (user) => {
+        if (user.is_system || user.id === userId) return null;
+        return (
         <ActionDropdown items={[
           {
             key: 'changeRole',
@@ -260,9 +271,44 @@ export default function UsersPage() {
             },
           },
         ]} />
-      ),
+      );
+      },
     },
   ], [t, tCommon, hasPermission, isSystemUser, userId, generatingToken]);
+
+  // Disable selection for system users and the current user
+  const disabledKeys = useMemo(() =>
+    paginatedUsers
+      .filter(u => u.is_system || u.id === userId)
+      .map(u => u.id),
+    [paginatedUsers, userId]
+  );
+
+  const bulkActions: BulkAction[] = [
+    {
+      key: 'delete',
+      label: t('deleteUser'),
+      icon: <Trash2 className="size-4" />,
+      color: 'danger',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys).filter(id => {
+          const user = users.find(u => u.id === id);
+          return user && !user.is_system && user.id !== userId;
+        });
+        if (!ids.length) return;
+        setConfirmModal({
+          isOpen: true,
+          title: t('deleteUser'),
+          message: t('bulk.deleteConfirm', { count: ids.length }),
+          action: async () => {
+            await usersApi.deleteMany(ids);
+            await loadData();
+            addToast({ title: t('messages.success'), description: t('bulk.deletedDescription', { count: ids.length }), color: 'success' });
+          },
+        });
+      },
+    },
+  ];
 
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
@@ -301,6 +347,10 @@ export default function UsersPage() {
         rowKey="id"
         loading={loading}
         emptyContent={t('noData')}
+        selectionMode="multiple"
+        bulkActions={bulkActions}
+        selectedLabel={tCommon('common.selected')}
+        disabledKeys={disabledKeys}
       />
 
       <Pagination

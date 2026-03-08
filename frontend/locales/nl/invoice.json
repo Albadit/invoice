@@ -166,5 +166,15 @@
     "duplicateTitle": "Factuur Dupliceren",
     "delete": "Weet je zeker dat je deze factuur permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "deleteTitle": "Factuur Verwijderen"
+  },
+  "bulk": {
+    "markAsPaidConfirm": "{{count}} factu(u)r(en) als betaald markeren?",
+    "markedAsPaidDescription": "{{count}} factu(u)r(en) zijn als betaald gemarkeerd.",
+    "markAsPendingConfirm": "{{count}} factu(u)r(en) als in behandeling markeren?",
+    "markedAsPendingDescription": "{{count}} factu(u)r(en) zijn als in behandeling gemarkeerd.",
+    "cancelConfirm": "Weet je zeker dat je {{count}} factu(u)r(en) wilt annuleren?",
+    "cancelledDescription": "{{count}} factu(u)r(en) zijn geannuleerd.",
+    "deleteConfirm": "Weet je zeker dat je {{count}} factu(u)r(en) permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "deletedDescription": "{{count}} factu(u)r(en) zijn permanent verwijderd."
   }
 }

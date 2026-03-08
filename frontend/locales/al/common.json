@@ -46,7 +46,8 @@
     "search": "Kërko",
     "filter": "Filtro",
     "sort": "Rendit",
-    "language": "Gjuha"
+    "language": "Gjuha",
+    "selected": "{{count}} të zgjedhura"
   },
   "pagination": {
     "previous": "E mëparshme",

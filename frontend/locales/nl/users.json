@@ -39,6 +39,10 @@
     "userDeleted": "Gebruiker succesvol verwijderd",
     "userDeleteError": "Kan de gebruiker niet verwijderen. Probeer het opnieuw."
   },
+  "bulk": {
+    "deleteConfirm": "Weet u zeker dat u {{count}} gebruiker(s) wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt.",
+    "deletedDescription": "{{count}} gebruiker(s) zijn verwijderd."
+  },
   "fields": {
     "email": "E-mail",
     "emailPlaceholder": "gebruiker@voorbeeld.com",

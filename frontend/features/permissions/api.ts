@@ -45,4 +45,11 @@ export const permissionsApi = {
       p_id: id,
     });
   },
+
+  /**
+   * Delete multiple permissions via RPC
+   */
+  async deleteMany(ids: string[]): Promise<void> {
+    await Promise.all(ids.map(id => api.post<void>(`${API_URL}/rpc/admin_delete_permission`, { p_id: id })));
+  },
 };

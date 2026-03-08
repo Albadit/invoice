@@ -29,6 +29,11 @@
   }
 }
 
+/* Hide checkbox for disabled table rows */
+tr[data-disabled="true"] td:first-child {
+  visibility: hidden;
+}
+
 /* Print styles for PDF generation */
 @media print {
   /* Hide everything by default */

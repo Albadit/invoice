@@ -1129,7 +1129,7 @@ export default function SettingsPage() {
       </div>
 
       {/* ---- Backup section ---- */}
-      <Card>
+      <Card className="max-w-6xl">
         <CardBody className="flex flex-col gap-4 p-4 sm:p-6">
           <h2 className="text-2xl font-bold">{t('backup.title')}</h2>
           <p className="text-sm text-default-500">{t('backup.description')}</p>

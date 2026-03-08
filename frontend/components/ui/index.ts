@@ -8,6 +8,6 @@ export type { PaginationProps } from './Pagination';
 export { ActionDropdown } from './ActionDropdown';
 export type { ActionDropdownProps, ActionItem } from './ActionDropdown';
 export { DataTable } from './DataTable';
-export type { DataTableColumn, DataTableProps } from './DataTable';
+export type { DataTableColumn, DataTableProps, BulkAction } from './DataTable';
 export { DnDTable } from './DnDTable';
 export type { DnDTableColumn, DnDTableProps } from './DnDTable';

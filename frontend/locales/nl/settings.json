@@ -196,7 +196,7 @@
   },
   "backup": {
     "title": "Back-up & Herstel",
-    "description": "Exporteer je gegevens als JSON back-upbestand of herstel vanuit een eerdere back-up.",
+    "description": "Exporteer je gegevens als SQL back-upbestand of herstel vanuit een eerdere back-up.",
     "export": "Exporteer Back-up",
     "import": "Importeer Back-up",
     "exportSuccess": "Back-up succesvol geëxporteerd.",
@@ -204,8 +204,8 @@
     "importSuccess": "Back-up succesvol geïmporteerd. Je gegevens zijn hersteld.",
     "importError": "Importeren van back-up mislukt. Het bestand is mogelijk ongeldig.",
     "importConfirmTitle": "Importeer Back-up",
-    "importConfirmMessage": "Het importeren van een back-up zal gegevens samenvoegen in je account. Bestaande records met dezelfde ID worden overschreven. Weet je zeker dat je wilt doorgaan?",
+    "importConfirmMessage": "Het importeren van een back-up zal gegevens samenvoegen in je account. Bestaande records met dezelfde naam worden overgeslagen. Weet je zeker dat je wilt doorgaan?",
     "warning": "Waarschuwing",
-    "warningText": "Het importeren van een back-up overschrijft bestaande records met dezelfde ID's. Deze actie kan niet ongedaan worden gemaakt."
+    "warningText": "Het importeren van een back-up voegt nieuwe records toe en slaat bestaande over. Zorg ervoor dat je een recente export hebt voordat je verdergaat."
   }
 }

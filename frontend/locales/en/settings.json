@@ -196,7 +196,7 @@
   },
   "backup": {
     "title": "Backup & Restore",
-    "description": "Export your data as a JSON backup file or restore from a previous backup.",
+    "description": "Export your data as an SQL backup file or restore from a previous backup.",
     "export": "Export Backup",
     "import": "Import Backup",
     "exportSuccess": "Backup exported successfully.",
@@ -204,8 +204,8 @@
     "importSuccess": "Backup imported successfully. Your data has been restored.",
     "importError": "Failed to import backup. The file may be invalid or corrupted.",
     "importConfirmTitle": "Import Backup",
-    "importConfirmMessage": "Importing a backup will merge data into your account. Existing records with the same ID will be overwritten. Are you sure you want to continue?",
+    "importConfirmMessage": "Importing a backup will merge data into your account. Existing records with the same name will be skipped. Are you sure you want to continue?",
     "warning": "Warning",
-    "warningText": "Importing a backup will overwrite existing records that share the same IDs. This action cannot be undone."
+    "warningText": "Importing a backup will add new records and skip any that already exist. Make sure you have a recent export before proceeding."
   }
 }

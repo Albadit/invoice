@@ -34,5 +34,9 @@
     "deleted": "Permission deleted successfully",
     "deleteError": "Failed to delete permission. It may be assigned to roles.",
     "confirmDelete": "Are you sure you want to delete the permission \"{{key}}\"? This will remove it from all roles."
+  },
+  "bulk": {
+    "deleteConfirm": "Are you sure you want to delete {{count}} permission(s)? This will remove them from all roles.",
+    "deletedDescription": "{{count}} permission(s) have been deleted."
   }
 }

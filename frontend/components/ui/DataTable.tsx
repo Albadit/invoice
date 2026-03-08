@@ -9,8 +9,10 @@ import {
   TableRow,
   TableCell,
 } from '@heroui/table';
-import type { SortDescriptor } from '@heroui/table';
+import type { SortDescriptor, Selection } from '@heroui/table';
+import { Button } from '@heroui/button';
 import { X, ArrowUpDown } from 'lucide-react';
+import type { ActionItem } from './ActionDropdown';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -30,6 +32,17 @@ export interface DataTableColumn<T> {
   render?: (item: T) => ReactNode;
 }
 
+export interface BulkAction {
+  key: string;
+  label: string;
+  icon?: ReactNode;
+  color?: ActionItem['color'];
+  className?: string;
+  isDisabled?: boolean;
+  isLoading?: boolean;
+  onClick: (selectedKeys: Set<string>) => void;
+}
+
 export interface DataTableProps<T> {
   /** Accessible label for the table */
   ariaLabel: string;
@@ -47,6 +60,20 @@ export interface DataTableProps<T> {
   loadingContent?: ReactNode;
   /** Whether the TableBody is in a loading state (shows loadingContent) */
   isLoading?: boolean;
+
+  // ── Selection ────────────────────────────────────────────────
+  /** Enable row selection. Defaults to 'none'. */
+  selectionMode?: 'none' | 'single' | 'multiple';
+  /** Controlled selected keys. */
+  selectedKeys?: Selection;
+  /** Called when selection changes. */
+  onSelectionChange?: (keys: Selection) => void;
+  /** Bulk actions shown in the floating bar when rows are selected. */
+  bulkActions?: BulkAction[];
+  /** Label for selected count, e.g. "{{count}} selected". Use {{count}} placeholder. */
+  selectedLabel?: string;
+  /** Row keys that cannot be selected when selectionMode is enabled. */
+  disabledKeys?: Iterable<string>;
 
   // ── Sorting ──────────────────────────────────────────────────
   /**
@@ -80,6 +107,12 @@ export function DataTable<T extends object>({
   emptyContent = 'No data',
   loadingContent,
   isLoading = false,
+  selectionMode = 'none',
+  selectedKeys: externalSelectedKeys,
+  onSelectionChange: externalOnSelectionChange,
+  bulkActions,
+  selectedLabel = '{{count}} selected',
+  disabledKeys,
   sortDescriptors: externalSortDescriptors,
   onSortChange: externalOnSortChange,
   visibleSortColumns,
@@ -130,6 +163,23 @@ export function DataTable<T extends object>({
     }
   }
 
+  // ── Internal selection state (uncontrolled mode) ──
+  const [internalSelectedKeys, setInternalSelectedKeys] = useState<Selection>(new Set<string>());
+  const isSelectionControlled = !!externalOnSelectionChange;
+  const selectedKeysValue = isSelectionControlled ? (externalSelectedKeys ?? new Set<string>()) : internalSelectedKeys;
+
+  const handleSelectionChange = useCallback((keys: Selection) => {
+    if (isSelectionControlled) {
+      externalOnSelectionChange!(keys);
+    } else {
+      setInternalSelectedKeys(keys);
+    }
+  }, [isSelectionControlled, externalOnSelectionChange]);
+
+  const clearSelection = useCallback(() => {
+    handleSelectionChange(new Set<string>());
+  }, [handleSelectionChange]);
+
   // Client-side multi-sort
   const sortedData = useMemo(() => {
     if (isControlled || !sortDescriptors.length) return data;
@@ -153,6 +203,18 @@ export function DataTable<T extends object>({
       return 0;
     });
   }, [data, isControlled, sortDescriptors]);
+
+  // ── Selection derived values ──
+  const selectedCount = selectedKeysValue === 'all'
+    ? sortedData.length
+    : (selectedKeysValue as Set<string>).size;
+
+  const resolvedSelectedKeys = useMemo((): Set<string> => {
+    if (selectedKeysValue === 'all') {
+      return new Set(sortedData.map(getKey));
+    }
+    return selectedKeysValue as Set<string>;
+  }, [selectedKeysValue, sortedData, getKey]);
 
   // Resolve which sortDescriptor to pass to HeroUI's Table (it only supports single)
   const resolvedSortDescriptor = (() => {
@@ -189,12 +251,54 @@ export function DataTable<T extends object>({
 
   const mergedClassNames = { ...defaultClassNames, ...extraClassNames };
 
+  const showBulkBar = selectionMode !== 'none' && selectedCount > 0 && bulkActions?.length;
+
+  const bulkActionBar = showBulkBar ? (
+    <div className="flex items-center gap-3 px-4 py-2 bg-primary-50 dark:bg-primary-950/30 rounded-lg">
+      <span className="text-sm font-medium text-primary">
+        {selectedLabel.replace('{{count}}', String(selectedCount))}
+      </span>
+      <div className="flex items-center gap-2">
+        {bulkActions!.map((action) => (
+          <Button
+            key={action.key}
+            size="sm"
+            variant="flat"
+            color={action.color ?? 'default'}
+            className={action.className}
+            startContent={action.icon}
+            isDisabled={action.isDisabled}
+            isLoading={action.isLoading}
+            onPress={() => action.onClick(resolvedSelectedKeys)}
+          >
+            {action.label}
+          </Button>
+        ))}
+      </div>
+      <Button
+        size="sm"
+        variant="light"
+        isIconOnly
+        className="ml-auto"
+        onPress={clearSelection}
+      >
+        <X className="size-4" />
+      </Button>
+    </div>
+  ) : null;
+
   return (
     <Table
       aria-label={ariaLabel}
       classNames={mergedClassNames}
       sortDescriptor={resolvedSortDescriptor}
       onSortChange={handleMultiSortChange}
+      selectionMode={selectionMode}
+      selectedKeys={selectionMode !== 'none' ? selectedKeysValue : undefined}
+      onSelectionChange={selectionMode !== 'none' ? handleSelectionChange : undefined}
+      disabledKeys={selectionMode !== 'none' ? disabledKeys : undefined}
+      topContent={bulkActionBar}
+      topContentPlacement="outside"
     >
       <TableHeader>
         {columns.map((col, idx) => {

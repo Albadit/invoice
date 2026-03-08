@@ -46,7 +46,8 @@
     "search": "Пребарај",
     "filter": "Филтрирај",
     "sort": "Сортирај",
-    "language": "Јазик"
+    "language": "Јазик",
+    "selected": "{{count}} избрани"
   },
   "pagination": {
     "previous": "Претходна",

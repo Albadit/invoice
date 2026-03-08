@@ -54,6 +54,13 @@ export const usersApi = {
   },
 
   /**
+   * Delete multiple user accounts
+   */
+  async deleteMany(userIds: string[]): Promise<void> {
+    await Promise.all(userIds.map(id => api.post<void>(`${API_URL}/rpc/admin_delete_user`, { p_user_id: id })));
+  },
+
+  /**
    * Get all available roles (for the role dropdown)
    */
   async getRoles(): Promise<Role[]> {

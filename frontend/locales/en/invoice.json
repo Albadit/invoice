@@ -166,5 +166,15 @@
     "duplicateTitle": "Duplicate Invoice",
     "delete": "Are you sure you want to permanently delete this invoice? This action cannot be undone.",
     "deleteTitle": "Delete Invoice"
+  },
+  "bulk": {
+    "markAsPaidConfirm": "Mark {{count}} invoice(s) as paid?",
+    "markedAsPaidDescription": "{{count}} invoice(s) have been marked as paid.",
+    "markAsPendingConfirm": "Mark {{count}} invoice(s) as pending?",
+    "markedAsPendingDescription": "{{count}} invoice(s) have been marked as pending.",
+    "cancelConfirm": "Are you sure you want to cancel {{count}} invoice(s)?",
+    "cancelledDescription": "{{count}} invoice(s) have been cancelled.",
+    "deleteConfirm": "Are you sure you want to permanently delete {{count}} invoice(s)? This action cannot be undone.",
+    "deletedDescription": "{{count}} invoice(s) have been permanently deleted."
   }
 }

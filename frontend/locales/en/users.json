@@ -39,6 +39,10 @@
     "userDeleted": "User deleted successfully",
     "userDeleteError": "Failed to delete user. Please try again."
   },
+  "bulk": {
+    "deleteConfirm": "Are you sure you want to delete {{count}} user(s)? This action cannot be undone.",
+    "deletedDescription": "{{count}} user(s) have been deleted."
+  },
   "fields": {
     "email": "Email",
     "emailPlaceholder": "user@example.com",

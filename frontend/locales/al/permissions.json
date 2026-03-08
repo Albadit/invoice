@@ -34,5 +34,9 @@
     "deleted": "Leja u fshi me sukses",
     "deleteError": "Dështoi fshirja e lejes. Mund t'i jetë caktuar roleve.",
     "confirmDelete": "Jeni i sigurt që doni të fshini lejen \"{{key}}\"? Kjo do ta heqë nga të gjitha rolet."
+  },
+  "bulk": {
+    "deleteConfirm": "Jeni i sigurt që dëshironi të fshini {{count}} leje? Kjo do t'i heqë nga të gjitha rolet.",
+    "deletedDescription": "{{count}} leje janë fshirë."
   }
 }

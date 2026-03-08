@@ -29,7 +29,7 @@ import { getStatusBadge, handleMarkAsPaid, handleMarkAsPending, handleVoid, hand
 import { getEffectiveStatus } from '@/config/formatting';
 import { InvoicePreviewModal } from '@/features/invoice/components';
 import { ConfirmModal, StickyHeader, Pagination, DataTable } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+import type { DataTableColumn, BulkAction } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import { INVOICE_ROUTES } from '@/config/routes';
 import { addToast } from "@heroui/toast";
@@ -309,6 +309,86 @@ export default function InvoicesPage() {
   const refreshCurrentPage = useCallback(async () => {
     await loadInvoices(currentPage);
   }, [currentPage]);
+
+  // ── Bulk actions ──
+  const bulkActions: BulkAction[] = [
+    {
+      key: 'markAsPaid',
+      label: t('confirm.markAsPaidTitle'),
+      icon: <HandCoins className="size-4" />,
+      color: 'success',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        openConfirm({
+          title: t('confirm.markAsPaidTitle'),
+          message: t('bulk.markAsPaidConfirm', { count: ids.length }),
+          confirmColor: 'success',
+          action: async () => {
+            await invoicesApi.updateStatusMany(ids, 'paid');
+            addToast({ title: t('messages.markedAsPaid'), description: t('bulk.markedAsPaidDescription', { count: ids.length }), color: 'success' });
+            await refreshCurrentPage();
+          },
+        });
+      },
+    },
+    {
+      key: 'markAsPending',
+      label: t('confirm.markAsPendingTitle'),
+      icon: <Clock className="size-4" />,
+      color: 'warning',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        openConfirm({
+          title: t('confirm.markAsPendingTitle'),
+          message: t('bulk.markAsPendingConfirm', { count: ids.length }),
+          confirmColor: 'warning',
+          action: async () => {
+            await invoicesApi.updateStatusMany(ids, 'pending');
+            addToast({ title: t('messages.markedAsPending'), description: t('bulk.markedAsPendingDescription', { count: ids.length }), color: 'success' });
+            await refreshCurrentPage();
+          },
+        });
+      },
+    },
+    {
+      key: 'cancel',
+      label: t('confirm.cancelTitle'),
+      icon: <Ban className="size-4" />,
+      color: 'default',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        openConfirm({
+          title: t('confirm.cancelTitle'),
+          message: t('bulk.cancelConfirm', { count: ids.length }),
+          confirmColor: 'warning',
+          action: async () => {
+            await invoicesApi.updateStatusMany(ids, 'cancelled');
+            addToast({ title: t('messages.cancelled'), description: t('bulk.cancelledDescription', { count: ids.length }), color: 'success' });
+            await refreshCurrentPage();
+          },
+        });
+      },
+    },
+    {
+      key: 'delete',
+      label: t('confirm.deleteTitle'),
+      icon: <Trash className="size-4" />,
+      color: 'danger',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        openConfirm({
+          title: t('confirm.deleteTitle'),
+          message: t('bulk.deleteConfirm', { count: ids.length }),
+          confirmColor: 'danger',
+          action: async () => {
+            await invoicesApi.deleteMany(ids);
+            addToast({ title: t('messages.deleted'), description: t('bulk.deletedDescription', { count: ids.length }), color: 'success' });
+            await refreshCurrentPage();
+          },
+        });
+      },
+    },
+  ];
 
   // Multi-column sort handler: click to add, click again to toggle direction, click again to remove
   function handleSortChange(descriptor: SortDescriptor) {
@@ -658,6 +738,9 @@ export default function InvoicesPage() {
         columns={invoiceColumns}
         data={filteredInvoices}
         rowKey="id"
+        selectionMode="multiple"
+        bulkActions={bulkActions}
+        selectedLabel={tCommon('common.selected')}
         onSortChange={handleSortChange}
         sortDescriptors={sortDescriptors}
         visibleSortColumns={VISIBLE_SORT_COLUMNS}

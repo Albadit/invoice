@@ -20,6 +20,21 @@ function esc(v: unknown): string {
   return `'${s}'`;
 }
 
+/** Collapse redundant whitespace, strip SQL comments, and trim blank lines. */
+function minifySql(sql: string): string {
+  return sql
+    .replace(/--[^\n]*/g, '')        // strip single-line comments
+    .replace(/\n\s*\n/g, '\n')       // collapse blank lines
+    .replace(/^\s+/gm, '')           // strip leading indentation
+    .replace(/\n/g, ' ')             // join lines
+    .replace(/ {2,}/g, ' ')          // collapse spaces
+    .replace(/; /g, ';\n')           // re-break after semicolons
+    .trim();
+}
+
+/** Set to true to strip comments and whitespace from the exported SQL. */
+const MINIFY = false;
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -231,7 +246,7 @@ ${fkJoins};\n`);
     }
 
     lines.push('COMMIT;\n');
-    const sql = lines.join('\n');
+    const sql = MINIFY ? minifySql(lines.join('\n')) : lines.join('\n');
 
     return new NextResponse(sql, {
       status: 200,

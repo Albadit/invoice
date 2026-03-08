@@ -46,7 +46,8 @@
     "search": "Zoeken",
     "filter": "Filteren",
     "sort": "Sorteren",
-    "language": "Taal"
+    "language": "Taal",
+    "selected": "{{count}} geselecteerd"
   },
   "pagination": {
     "previous": "Vorige",

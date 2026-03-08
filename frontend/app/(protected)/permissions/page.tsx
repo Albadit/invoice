@@ -10,7 +10,7 @@ import { addToast } from "@heroui/toast";
 import { permissionsApi } from '@/features/permissions/api';
 import { PermissionModal } from '@/features/permissions/components';
 import { ConfirmModal, StickyHeader, Pagination, ActionDropdown, DataTable } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+import type { DataTableColumn, BulkAction } from '@/components/ui';
 import { ViewAuth, usePermissions } from '@/features/auth/components';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Permission } from '@/lib/types';
@@ -223,6 +223,29 @@ export default function PermissionsPage() {
     },
   ], [t, tCommon, hasPermission]);
 
+  const bulkActions: BulkAction[] = [
+    {
+      key: 'delete',
+      label: t('deletePermission'),
+      icon: <Trash className="size-4" />,
+      color: 'danger',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        if (!ids.length) return;
+        setConfirmModal({
+          isOpen: true,
+          title: t('deletePermission'),
+          message: t('bulk.deleteConfirm', { count: ids.length }),
+          action: async () => {
+            await permissionsApi.deleteMany(ids);
+            await loadPermissions();
+            addToast({ title: t('messages.success'), description: t('bulk.deletedDescription', { count: ids.length }), color: 'success' });
+          },
+        });
+      },
+    },
+  ];
+
   return (
     <main className="max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5 p-4 sm:p-8">
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
@@ -262,6 +285,9 @@ export default function PermissionsPage() {
         rowKey={(perm) => perm.id}
         loading={loading}
         emptyContent={t('noData')}
+        selectionMode="multiple"
+        bulkActions={bulkActions}
+        selectedLabel={tCommon('common.selected')}
       />
 
       <Pagination

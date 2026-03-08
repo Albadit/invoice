@@ -33,6 +33,8 @@
     "updateError": "Kan machtiging niet bijwerken. Probeer het opnieuw.",
     "deleted": "Machtiging succesvol verwijderd",
     "deleteError": "Kan machtiging niet verwijderen. Het is mogelijk toegewezen aan rollen.",
-    "confirmDelete": "Weet u zeker dat u de machtiging \"{{key}}\" wilt verwijderen? Dit verwijdert het uit alle rollen."
-  }
+    "confirmDelete": "Weet u zeker dat u de machtiging \"{{key}}\" wilt verwijderen? Dit verwijdert het uit alle rollen."  },
+  "bulk": {
+    "deleteConfirm": "Weet u zeker dat u {{count}} machtiging(en) wilt verwijderen? Dit verwijdert ze uit alle rollen.",
+    "deletedDescription": "{{count}} machtiging(en) zijn verwijderd."  }
 }

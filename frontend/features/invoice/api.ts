@@ -277,6 +277,25 @@ export const invoicesApi = {
   },
 
   /**
+   * Delete multiple invoices by IDs
+   */
+  async deleteMany(ids: string[]): Promise<void> {
+    if (!ids.length) return;
+    const list = ids.map(id => encodeURIComponent(id)).join(',');
+    await api.delete<void>(`${API_URL}/invoice_items?invoice_id=in.(${list})`);
+    await api.delete<void>(`${API_URL}/invoices?id=in.(${list})`);
+  },
+
+  /**
+   * Update status for multiple invoices
+   */
+  async updateStatusMany(ids: string[], status: string): Promise<void> {
+    if (!ids.length) return;
+    const list = ids.map(id => encodeURIComponent(id)).join(',');
+    await api.patch<void>(`${API_URL}/invoices?id=in.(${list})`, { status }, { prefer: 'return=minimal' });
+  },
+
+  /**
    * Update invoice status
    */
   async updateStatus(id: string, status: string): Promise<void> {

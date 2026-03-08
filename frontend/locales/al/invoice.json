@@ -166,5 +166,15 @@
     "duplicateTitle": "Dyfisho Faturën",
     "delete": "Je i sigurt që dëshiron të fshish përgjithmonë këtë faturë? Ky veprim nuk mund të kthehet.",
     "deleteTitle": "Fshi Faturën"
+  },
+  "bulk": {
+    "markAsPaidConfirm": "Shëno {{count}} fatura si të paguara?",
+    "markedAsPaidDescription": "{{count}} fatura janë shënuar si të paguara.",
+    "markAsPendingConfirm": "Shëno {{count}} fatura si në pritje?",
+    "markedAsPendingDescription": "{{count}} fatura janë shënuar si në pritje.",
+    "cancelConfirm": "Je i sigurt që dëshiron të anulosh {{count}} fatura?",
+    "cancelledDescription": "{{count}} fatura janë anuluar.",
+    "deleteConfirm": "Je i sigurt që dëshiron të fshish përgjithmonë {{count}} fatura? Ky veprim nuk mund të kthehet.",
+    "deletedDescription": "{{count}} fatura janë fshirë përgjithmonë."
   }
 }

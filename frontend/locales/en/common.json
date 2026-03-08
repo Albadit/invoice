@@ -46,7 +46,8 @@
     "search": "Search",
     "filter": "Filter",
     "sort": "Sort",
-    "language": "Language"
+    "language": "Language",
+    "selected": "{{count}} selected"
   },
   "pagination": {
     "previous": "Previous",
