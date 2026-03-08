@@ -172,7 +172,8 @@ export async function POST(request: NextRequest) {
     // ── Parse invoices from SQL ───────────────────────────────────
     // Invoice VALUES columns: company_name, currency_code, template_name, client_name, status, customer_name, ...
     // We extract from every WITH inv AS or INSERT INTO invoices block.
-    const invoicePattern = /FROM \(VALUES\s*\n\s*\(([^)]*'[^)]*)\)\s*\n\s*\)\s*AS\s+v\(company_name/g;
+    // Use `company_name,\s*currency_code` to avoid matching the client VALUES block (which also starts with `company_name`).
+    const invoicePattern = /FROM \(VALUES\s*\n\s*\(([^)]*'[^)]*)\ )\s*\n\s*\)\s*AS\s+v\(company_name,\s*currency_code/g;
     const parsedInvoices: BackupInvoice[] = [];
     let invMatch;
     while ((invMatch = invoicePattern.exec(sql)) !== null) {
@@ -253,8 +254,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const seenInvoiceKeys = new Set<string>();
     for (const inv of parsedInvoices) {
       const key = `${inv.customer_name}||${inv.created_at}`;
+      if (seenInvoiceKeys.has(key)) continue;
+      seenInvoiceKeys.add(key);
       const existing = existingInvoiceMap.get(key);
       if (existing) {
         const coData = existing.companies as Row | null;
