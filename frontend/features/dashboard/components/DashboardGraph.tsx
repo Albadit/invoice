@@ -437,7 +437,7 @@ export default function DashboardGraph({
         </div>
         <ResponsiveContainer
           className="min-h-75 [&_.recharts-surface]:outline-hidden"
-          height="100%"
+          height={300}
           width="100%"
           minWidth={0}
         >

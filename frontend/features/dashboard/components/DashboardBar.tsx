@@ -108,7 +108,7 @@ export default function DashboardBar({
       ) : (
         <ResponsiveContainer
           className="[&_.recharts-surface]:outline-hidden"
-          height="100%"
+          height={300}
           width="100%"
           minWidth={0}
         >
