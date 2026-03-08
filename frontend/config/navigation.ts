@@ -11,6 +11,7 @@ import {
   KeyRound,
   User,
   LogOut,
+  DatabaseBackup,
   type LucideIcon,
 } from 'lucide-react';
 import { PROTECTED_ROUTES, INVOICE_ROUTES, EDITOR_ROUTES, SETTINGS_ROUTES, USERS_ROUTES, ROLES_ROUTES, PERMISSIONS_ROUTES } from '@/config/routes';
@@ -123,6 +124,13 @@ export const sidebarSections: NavSection[] = [
         icon: Coins,
         href: SETTINGS_ROUTES.currencies,
         permission: 'currencies:access',
+      },
+      {
+        key: 'backup',
+        labelKey: 'navigation.backup',
+        icon: DatabaseBackup,
+        href: SETTINGS_ROUTES.backup,
+        permission: 'settings:access',
       },
     ],
   },

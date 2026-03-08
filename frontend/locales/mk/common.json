@@ -22,7 +22,8 @@
     "users": "Корисници",
     "roles": "Улоги",
     "permissions": "Дозволи",
-    "profile": "Профил"
+    "profile": "Профил",
+    "backup": "Резервна Копија"
   },
   "actions": {
     "save": "Зачувај",

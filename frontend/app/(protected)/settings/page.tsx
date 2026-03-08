@@ -12,7 +12,7 @@ import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
 import { Select, SelectItem } from "@heroui/select";
 import Image from 'next/image';
-import { Save, Edit, Building2, Download, Upload } from 'lucide-react';
+import { Save, Edit, Building2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
 import {
   AddCompanyModal,
@@ -95,9 +95,7 @@ export default function SettingsPage() {
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ template?: boolean; currency?: boolean; tax?: boolean }>({});
 
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Refs for scrolling to sections
   const companiesRef = useRef<HTMLDivElement>(null);
@@ -1128,96 +1126,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* ---- Backup section ---- */}
-      <Card className="max-w-6xl">
-        <CardBody className="flex flex-col gap-4 p-4 sm:p-6">
-          <h2 className="text-2xl font-bold">{t('backup.title')}</h2>
-          <p className="text-sm text-default-500">{t('backup.description')}</p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              color="primary"
-              variant="flat"
-              startContent={<Download className="size-4" />}
-              isLoading={exporting}
-              onPress={async () => {
-                setExporting(true);
-                try {
-                  const res = await fetch('/settings/backup/export');
-                  if (!res.ok) throw new Error('Export failed');
-                  const blob = await res.blob();
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `invoice-backup-${new Date().toISOString().slice(0, 10)}.sql`;
-                  a.click();
-                  URL.revokeObjectURL(url);
-                  addToast({ title: t('messages.success'), description: t('backup.exportSuccess'), color: 'success' });
-                } catch {
-                  addToast({ title: t('messages.error'), description: t('backup.exportError'), color: 'danger' });
-                } finally {
-                  setExporting(false);
-                }
-              }}
-            >
-              {t('backup.export')}
-            </Button>
-            <Button
-              color="warning"
-              variant="flat"
-              startContent={<Upload className="size-4" />}
-              isLoading={importing}
-              onPress={() => fileInputRef.current?.click()}
-            >
-              {t('backup.import')}
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".sql"
-              className="hidden"
-              onChange={async (e) => {
-                const file = e.target.files?.[0];
-                if (!file) return;
-                // Reset the input so the same file can be re-selected
-                e.target.value = '';
-                setConfirmModal({
-                  isOpen: true,
-                  title: t('backup.importConfirmTitle'),
-                  message: t('backup.importConfirmMessage'),
-                  action: async () => {
-                    setImporting(true);
-                    try {
-                      const sql = await file.text();
-                      const res = await fetch('/settings/backup/import', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'text/plain' },
-                        body: sql,
-                      });
-                      if (!res.ok) {
-                        const err = await res.json().catch(() => ({}));
-                        throw new Error(err.error || 'Import failed');
-                      }
-                      addToast({ title: t('messages.success'), description: t('backup.importSuccess'), color: 'success' });
-                      // Reload settings to reflect imported data
-                      await loadSettings();
-                      await loadClients();
-                    } catch {
-                      addToast({ title: t('messages.error'), description: t('backup.importError'), color: 'danger' });
-                    } finally {
-                      setImporting(false);
-                    }
-                  },
-                });
-              }}
-            />
-          </div>
-          <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg">
-            <p className="text-sm text-foreground">
-              <strong>{t('backup.warning')}:</strong> {t('backup.warningText')}
-            </p>
-          </div>
-        </CardBody>
-      </Card>
+
 
       <ManageCompaniesModal
         isOpen={isManageCompaniesModalOpen}
@@ -1401,6 +1310,8 @@ export default function SettingsPage() {
         confirmColor="danger"
         isLoading={confirmLoading}
       />
+
+
     </main>
   );
 }

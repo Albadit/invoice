@@ -22,7 +22,8 @@
     "users": "Përdoruesit",
     "roles": "Rolet",
     "permissions": "Lejet",
-    "profile": "Profili"
+    "profile": "Profili",
+    "backup": "Kopje Sigurie"
   },
   "actions": {
     "save": "Ruaj",

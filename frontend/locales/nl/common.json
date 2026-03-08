@@ -22,7 +22,8 @@
     "users": "Gebruikers",
     "roles": "Rollen",
     "permissions": "Machtigingen",
-    "profile": "Profiel"
+    "profile": "Profiel",
+    "backup": "Back-up"
   },
   "actions": {
     "save": "Opslaan",

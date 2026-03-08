@@ -22,7 +22,8 @@
     "users": "Users",
     "roles": "Roles",
     "permissions": "Permissions",
-    "profile": "Profile"
+    "profile": "Profile",
+    "backup": "Backup"
   },
   "actions": {
     "save": "Save",

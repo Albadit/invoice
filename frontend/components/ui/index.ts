@@ -11,3 +11,7 @@ export { DataTable } from './DataTable';
 export type { DataTableColumn, DataTableProps, BulkAction } from './DataTable';
 export { DnDTable } from './DnDTable';
 export type { DnDTableColumn, DnDTableProps } from './DnDTable';
+export { ImportConflictModal } from './ImportConflictModal';
+export type { ImportConflictModalProps, PreviewData, OverwriteSelection } from './ImportConflictModal';
+export { ImportPreviewPanel } from './ImportPreviewPanel';
+export type { ImportPreviewPanelProps } from './ImportPreviewPanel';
