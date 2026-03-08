@@ -38,6 +38,8 @@ export function useTemplateEditor() {
   const [editorWidth, setEditorWidth] = useState(65);
   const [previewScale, setPreviewScale] = useState(0);
   const [previewFullscreen, setPreviewFullscreen] = useState(false);
+  const [previewTotalHeight, setPreviewTotalHeight] = useState(1123);
+  const [previewPageCount, setPreviewPageCount] = useState(1);
 
   // ── Refs ──────────────────────────────────────────────────────────
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -127,16 +129,26 @@ export function useTemplateEditor() {
   // ── A4 scale logic ───────────────────────────────────────────────
 
   const A4_WIDTH_PX = 794;
-  const A4_HEIGHT_PX = 1123;
+
+  // Listen for preview size messages from iframe
+  useEffect(() => {
+    function handleMessage(e: MessageEvent) {
+      if (e.data?.type === 'previewSize') {
+        setPreviewTotalHeight(e.data.height);
+        setPreviewPageCount(e.data.pages);
+      }
+    }
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   const updatePreviewScale = useCallback(() => {
     if (!showPreview) return;
     const container = previewContainerRef.current;
     if (!container) return;
-    const { clientWidth, clientHeight } = container;
+    const { clientWidth } = container;
     const scaleX = (clientWidth - 32) / A4_WIDTH_PX;
-    const scaleY = (clientHeight - 32) / A4_HEIGHT_PX;
-    setPreviewScale(Math.min(scaleX, scaleY));
+    setPreviewScale(Math.min(scaleX, 1));
   }, [showPreview]);
 
   useEffect(() => {
@@ -319,6 +331,8 @@ export function useTemplateEditor() {
     editorWidth,
     previewScale,
     previewFullscreen,
+    previewTotalHeight,
+    previewPageCount,
 
     // Refs
     iframeRef,

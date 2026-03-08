@@ -10,6 +10,8 @@ export function TemplatePreviewPanel({ editor }: TemplatePreviewPanelProps) {
   const {
     previewScale,
     previewFullscreen,
+    previewTotalHeight,
+    previewPageCount,
     iframeRef,
     previewContainerRef,
     previewPanelRef,
@@ -23,6 +25,11 @@ export function TemplatePreviewPanel({ editor }: TemplatePreviewPanelProps) {
           Preview
         </span>
         <div className="ml-auto flex items-center gap-2">
+          {previewPageCount > 1 && (
+            <span className="text-[11px] text-default-300">
+              {previewPageCount} pages
+            </span>
+          )}
           <span className="text-[11px] text-default-300">
             {Math.round(previewScale * 100)}%
           </span>
@@ -54,19 +61,35 @@ export function TemplatePreviewPanel({ editor }: TemplatePreviewPanelProps) {
       </div>
       <div
         ref={previewContainerRef}
-        className="flex-1 bg-content2 flex items-center justify-center overflow-hidden"
+        className="flex-1 bg-content2 overflow-auto"
       >
-        <iframe
-          ref={iframeRef}
-          className="bg-white shadow-2xl border-none origin-center shrink-0"
+        <div
           style={{
-            width: 794,
-            height: 1123,
-            transform: `scale(${previewScale})`,
-            opacity: previewScale > 0 ? 1 : 0,
+            width: Math.ceil(794 * previewScale),
+            height: Math.ceil(previewTotalHeight * previewScale),
+            margin: '16px auto',
+            position: 'relative',
+            flexShrink: 0,
           }}
-          title="Invoice preview"
-        />
+        >
+          <iframe
+            ref={iframeRef}
+            className="border-none"
+            style={{
+              width: 794,
+              height: previewTotalHeight,
+              transform: `scale(${previewScale})`,
+              transformOrigin: 'top left',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              opacity: previewScale > 0 ? 1 : 0,
+              background: previewPageCount > 1 ? 'transparent' : 'white',
+              boxShadow: previewPageCount > 1 ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.25)',
+            }}
+            title="Invoice preview"
+          />
+        </div>
       </div>
     </div>
   );

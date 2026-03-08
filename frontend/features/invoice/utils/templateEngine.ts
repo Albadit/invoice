@@ -231,7 +231,50 @@ export function translateCustomHtml(html: string, labels: Translations): string 
  * Used for custom templates that only provide body content.
  */
 export function customInvoiceHtml(bodyContent: string, options?: { preview?: boolean }): string {
-  const padding = options?.preview ? 'padding: 16mm;' : '';
+  const previewCss = options?.preview ? 'padding: 16mm;' : '';
+  const previewScript = options?.preview ? `
+    <script>
+    (function(){
+      var A4=1123,GAP=16,done=false;
+      function paginate(){
+        if(done)return;
+        var h=document.body.scrollHeight;
+        if(h<10)return;
+        var pages=Math.max(1,Math.ceil(h/A4));
+        done=true;
+        if(pages<=1){
+          document.body.style.minHeight=A4+'px';
+          window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
+          return;
+        }
+        var children=[];
+        Array.from(document.body.childNodes).forEach(function(n){
+          if(n.nodeType===1&&n.tagName==='SCRIPT')return;
+          children.push(n);
+        });
+        var tmp=document.createElement('div');
+        children.forEach(function(n){tmp.appendChild(n.cloneNode(true))});
+        var html=tmp.innerHTML;
+        children.forEach(function(n){n.remove()});
+        document.documentElement.style.background='transparent';
+        document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent;';
+        for(var i=0;i<pages;i++){
+          var page=document.createElement('div');
+          page.style.cssText='width:794px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px;';
+          var inner=document.createElement('div');
+          inner.innerHTML=html;
+          inner.style.cssText='position:absolute;top:'+(-i*A4)+'px;left:0;width:794px;padding:16mm;';
+          page.appendChild(inner);
+          document.body.appendChild(page);
+        }
+        var totalH=pages*A4+(pages+1)*GAP;
+        window.parent.postMessage({type:'previewSize',height:totalH,pages:pages},'*');
+      }
+      function run(){setTimeout(paginate,150)}
+      if(document.readyState==='complete'){run()}
+      else{window.addEventListener('load',run)}
+    })();
+    </script>` : '';
   return `
     <!DOCTYPE html>
     <html>
@@ -250,12 +293,13 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
         }
         body {
           font-family: Inter, sans-serif;
-          ${padding}
+          ${previewCss}
         }
       </style>
     </head>
     <body>
       ${bodyContent}
+      ${previewScript}
     </body>
     </html>
   `;

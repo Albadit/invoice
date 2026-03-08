@@ -172,7 +172,7 @@ ON CONFLICT (code) DO UPDATE SET is_system = true;
 
 -- Insert system templates (is_system = true, no user_id)
 INSERT INTO templates (name, styling, is_system)
-SELECT 'Classic', $TEMPLATE$<div class="w-full h-full bg-white flex flex-col gap-8">
+SELECT 'Classic', $TEMPLATE$<div class="w-full h-full bg-transparent flex flex-col gap-8">
   <div class="flex flex-col gap-4">
     <div class="flex justify-between">
       {{#if company.logo_url}}
