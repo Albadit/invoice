@@ -43,6 +43,7 @@ export const DUMMY_INVOICE: InvoiceWithItems = {
   shipping_amount: 100,
   shipping_total_amount: 100.00,
   total_amount: 2705.68,
+  exchange_rate: 1.0,
 
   // ── Notes / Terms ────────────────────────────────────────────────
   notes: 'Thank you for your business!',
@@ -124,6 +125,7 @@ export const DUMMY_INVOICE: InvoiceWithItems = {
     symbol: '€',
     symbol_position: 'right',
     symbol_space: true,
+    exchange_rate: 1.0,
     is_system: true,
     created_at: null,
     updated_at: null,
