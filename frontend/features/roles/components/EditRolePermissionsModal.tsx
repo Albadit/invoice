@@ -55,20 +55,44 @@ export function EditRolePermissionsModal({
     }
   }, [isOpen, role, loadPermissions]);
 
-  // Group permissions by category (prefix before ':')
-  const grouped = useMemo(() => {
+  // Group permissions by category (prefix before ':') and derive sections dynamically
+  const { grouped, dynamicSections, actions } = useMemo(() => {
     const groups: Record<string, Permission[]> = {};
+    const actionSet = new Set<string>();
     for (const p of allPermissions) {
-      const category = p.key.split(':')[0];
+      const [category, action] = p.key.split(':');
       if (!groups[category]) groups[category] = [];
       groups[category].push(p);
+      if (action) actionSet.add(action);
     }
-    return groups;
-  }, [allPermissions]);
 
-  function findPermId(category: string, action: string): string | undefined {
-    return allPermissions.find((p) => p.key === `${category}:${action}`)?.id;
-  }
+    // Build sections: use known sections as ordering hints, then add "other" for the rest
+    const assignedCategories = new Set<string>();
+    const sections: { key: string; categories: string[] }[] = [];
+
+    for (const section of permissionSections) {
+      const cats = section.categories.filter((c) => groups[c]);
+      for (const c of cats) assignedCategories.add(c);
+      if (cats.length > 0) sections.push({ key: section.key, categories: cats });
+    }
+
+    // Collect any categories not in the predefined sections
+    const otherCategories = Object.keys(groups)
+      .filter((c) => !assignedCategories.has(c))
+      .sort();
+    if (otherCategories.length > 0) {
+      sections.push({ key: 'other', categories: otherCategories });
+    }
+
+    // Derive action columns: prefer known order, append any new ones
+    const knownActions = ['access', 'read', 'create', 'update', 'delete'];
+    const orderedActions = knownActions.filter((a) => actionSet.has(a));
+    for (const a of actionSet) {
+      if (!orderedActions.includes(a)) orderedActions.push(a);
+    }
+
+    return { grouped: groups, dynamicSections: sections, actions: orderedActions };
+  }, [allPermissions]);
 
   function togglePermission(id: string) {
     setSelectedIds((prev) => {
@@ -112,9 +136,6 @@ export function EditRolePermissionsModal({
     }
   };
 
-  // Ordered actions for column headers
-  const actions = ['access', 'read', 'create', 'update', 'delete'];
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
       <ModalContent>
@@ -137,9 +158,7 @@ export function EditRolePermissionsModal({
                 </tr>
               </thead>
               <tbody>
-                {permissionSections.map((section) => {
-                  const sectionCategories = section.categories.filter((c) => grouped[c]);
-                  if (sectionCategories.length === 0) return null;
+                {dynamicSections.map((section) => {
                   return (
                     <Fragment key={section.key}>
                       <tr>
@@ -149,7 +168,7 @@ export function EditRolePermissionsModal({
                           </span>
                         </td>
                       </tr>
-                      {sectionCategories.map((category) => {
+                      {section.categories.map((category) => {
                         const perms = grouped[category];
                         const allSelected = perms.every((p) => selectedIds.has(p.id));
                         const someSelected = perms.some((p) => selectedIds.has(p.id));

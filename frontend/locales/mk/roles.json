@@ -12,7 +12,8 @@
   "managePermissions": "Управувај со Дозволи",
   "sections": {
     "invoice": "Фактура",
-    "admin": "Админ"
+    "admin": "Админ",
+    "other": "Друго"
   },
   "fields": {
     "name": "Име на Улога",

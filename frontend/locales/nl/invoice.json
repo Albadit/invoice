@@ -127,7 +127,8 @@
     "selectCurrency": "Selecteer valuta",
     "selectClient": "Selecteer klant",
     "language": "Taal",
-    "selectLanguage": "Selecteer taal"
+    "selectLanguage": "Selecteer taal",
+    "exchangeRate": "Wisselkoers"
   },
   "messages": {
     "created": "Factuur Aangemaakt",

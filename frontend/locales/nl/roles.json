@@ -12,7 +12,8 @@
   "managePermissions": "Machtigingen Beheren",
   "sections": {
     "invoice": "Factuur",
-    "admin": "Admin"
+    "admin": "Admin",
+    "other": "Overig"
   },
   "fields": {
     "name": "Rolnaam",

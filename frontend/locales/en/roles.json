@@ -12,7 +12,8 @@
   "managePermissions": "Manage Permissions",
   "sections": {
     "invoice": "Invoice",
-    "admin": "Admin"
+    "admin": "Admin",
+    "other": "Other"
   },
   "fields": {
     "name": "Role Name",

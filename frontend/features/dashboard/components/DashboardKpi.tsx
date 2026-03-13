@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Card, Chip, cn } from "@heroui/react";
+import { Button, Card, Chip, cn, Tooltip } from "@heroui/react";
 import { Icon } from "@iconify/react";
 
 // ── Types ────────────────────────────────────────────────────────
@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 export interface KpiItem {
   title: string;
   value: string;
+  fullValue?: string;
   subtitle?: string;
   change?: string;
   changeType: "positive" | "negative" | "neutral" | "info" | "default";
@@ -23,6 +24,7 @@ export type DashboardKpiProps = KpiItem;
 export default function DashboardKpi({
   title,
   value,
+  fullValue,
   subtitle,
   change,
   changeType,
@@ -63,7 +65,11 @@ export default function DashboardKpi({
             {title}
           </dt>
           <dd className="text-default-700 px-4 text-2xl font-semibold whitespace-nowrap">
-            {value}
+            {fullValue ? (
+              <Tooltip content={fullValue} delay={0} closeDelay={0}>
+                <span>{value}</span>
+              </Tooltip>
+            ) : value}
           </dd>
           {subtitle && (
             <dd className="text-default-400 px-4 text-xs whitespace-nowrap">{subtitle}</dd>

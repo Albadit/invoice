@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
+import { Select, SelectItem } from '@/components/ui';
 import { useTranslation } from '@/contexts/LocaleProvider';
 import type { Role } from '@/lib/types';
 
@@ -83,15 +83,16 @@ export function AddUserModal({ isOpen, onClose, onSave, roles, isSystemUser }: A
               label={t('fields.role')}
               placeholder={t('fields.rolePlaceholder')}
               selectedKeys={roleId ? [roleId] : []}
-              onSelectionChange={(keys) => setRoleId(Array.from(keys)[0] as string || '')}
+              onSelectionChange={(keys) => {
+                const selected = Array.from(keys)[0];
+                setRoleId(selected ? String(selected) : '');
+              }}
               isRequired
               isInvalid={submitted && !roleId}
               errorMessage={submitted && !roleId ? t('validation.roleRequired') : undefined}
             >
               {availableRoles.map((role) => (
-                <SelectItem key={role.id} textValue={role.name}>
-                  {role.name}
-                </SelectItem>
+                <SelectItem key={role.id} textValue={role.name}>{role.name}</SelectItem>
               ))}
             </Select>
           </div>

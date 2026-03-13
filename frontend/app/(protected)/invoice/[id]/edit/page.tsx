@@ -20,7 +20,6 @@ import {
 } from '@/features/invoice/utils/calculations';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
 import { DatePicker } from "@heroui/date-picker";
 import { Plus, Trash, Save, Settings, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
@@ -28,7 +27,7 @@ import { parseDate, CalendarDate } from '@internationalized/date';
 import { addToast } from "@heroui/toast";
 import { Spinner } from "@heroui/spinner";
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
-import { StickyHeader } from '@/components/ui';
+import { StickyHeader, Select, SelectItem } from '@/components/ui';
 
 export default function InvoiceEditPage() {
   const { t } = useTranslation('invoice');
@@ -59,6 +58,7 @@ export default function InvoiceEditPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [clientId, setClientId] = useState<string | null>(null);
   const [language, setLanguage] = useState<string>('en');
+  const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [items, setItems] = useState<Partial<InvoiceItem>[]>([
     { name: '', quantity: 1, unit_price: 0 },
   ]);
@@ -118,6 +118,7 @@ export default function InvoiceEditPage() {
           const templateExists = invoice.template_id ? templatesData.some(t => t.id === invoice.template_id) : true;
           
           setCurrencyId(currencyExists ? invoice.currency_id : (currenciesData[0]?.id || null));
+          setExchangeRate(invoice.exchange_rate ?? 1.0);
           setCompanyId(companyExists ? invoice.company_id : (companiesData[0]?.id || ''));
           setTemplateId(templateExists ? (invoice.template_id || null) : (templatesData[0]?.id || null));
           setLanguage(invoice.language || 'en');
@@ -180,6 +181,7 @@ export default function InvoiceEditPage() {
       setTerms(company.terms || '');
       setTemplateId(company.template_id);
       setCurrencyId(company.currency_id);
+      setExchangeRate(currencies.find(c => c.id === company.currency_id)?.exchange_rate ?? 1.0);
       setLanguage(company.language || 'en');
       
       // Update tax settings from company
@@ -305,6 +307,7 @@ export default function InvoiceEditPage() {
         due_date: dueDate ? dueDate.toString() : null,
         status: 'pending',
         currency_id: currencyId!,
+        exchange_rate: exchangeRate,
         discount_type: showDiscount ? discountType : null,
         discount_amount: showDiscount ? discountAmount : null,
         discount_total_amount: showDiscount ? getDiscountAmount() : null,
@@ -413,17 +416,15 @@ export default function InvoiceEditPage() {
                     <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
                     <Select
                       aria-label={t('settings.company')}
-                      selectionMode="single"
-                      selectedKeys={companyId ? new Set([companyId]) : new Set()}
+                      selectedKeys={companyId ? [companyId] : []}
                       onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0];
                         if (selected) setCompanyId(String(selected));
                       }}
                       placeholder={t('settings.selectCompany')}
-                      classNames={{ trigger: "font-semibold" }}
                     >
-                      {companies.map((company) => (
-                        <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
+                      {companies.map((c) => (
+                        <SelectItem key={c.id} textValue={c.name}>{c.name}</SelectItem>
                       ))}
                     </Select>
                   </div>
@@ -431,17 +432,16 @@ export default function InvoiceEditPage() {
                     <h3 className="text-lg font-semibold text-foreground">{t('settings.client')}</h3>
                     <Select
                       aria-label={t('settings.client')}
-                      selectionMode="single"
-                      selectedKeys={clientId ? new Set([clientId]) : new Set()}
+                      selectedKeys={clientId ? [clientId] : []}
                       onSelectionChange={(keys) => {
                         const selected = Array.from(keys)[0];
                         setClientId(selected ? String(selected) : null);
                       }}
                       placeholder={t('settings.selectClient')}
-                      classNames={{ trigger: "font-semibold" }}
+                      isClearable
                     >
-                      {clients.map((client) => (
-                        <SelectItem key={client.id} textValue={client.name}>{client.name}</SelectItem>
+                      {clients.map((c) => (
+                        <SelectItem key={c.id} textValue={c.name}>{c.name}</SelectItem>
                       ))}
                     </Select>
                   </div>
@@ -450,69 +450,61 @@ export default function InvoiceEditPage() {
                       <label className="text-sm font-medium text-default-600">{t('settings.template')}</label>
                       <Select
                         aria-label={t('settings.template')}
-                        selectionMode="single"
-                        selectedKeys={templateId ? new Set([templateId]) : new Set()}
+                        selectedKeys={templateId ? [templateId] : []}
                         onSelectionChange={(keys) => {
                           const selected = Array.from(keys)[0];
                           if (selected) setTemplateId(String(selected));
                         }}
                         placeholder={t('settings.selectTemplate')}
-                        classNames={{ trigger: "font-semibold" }}
                       >
-                        {templates.map((template) => (
-                          <SelectItem key={template.id} textValue={template.name}>{template.name}</SelectItem>
+                        {templates.map((t) => (
+                          <SelectItem key={t.id} textValue={t.name}>{t.name}</SelectItem>
                         ))}
                       </Select>
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium text-default-600">{t('settings.currency')}</label>
                       <Select
+                        search
                         aria-label={t('settings.currency')}
-                        selectionMode="single"
-                        selectedKeys={currencyId ? new Set([currencyId]) : new Set()}
+                        selectedKeys={currencyId ? [currencyId] : []}
                         onSelectionChange={(keys) => {
                           const selected = Array.from(keys)[0];
-                          if (selected) setCurrencyId(String(selected));
+                          if (selected) {
+                            setCurrencyId(String(selected));
+                            setExchangeRate(currencies.find(c => c.id === String(selected))?.exchange_rate ?? 1.0);
+                          }
                         }}
                         placeholder={t('settings.selectCurrency')}
-                        classNames={{ trigger: "font-semibold" }}
                       >
-                        {currencies.map((currency) => (
-                          <SelectItem key={currency.id} textValue={`${currency.code} - ${currency.symbol}`}>{currency.code} - {currency.symbol}</SelectItem>
+                        {currencies.map((c) => (
+                          <SelectItem key={c.id} textValue={`${c.code} - ${c.symbol}`}>{c.code} - {c.symbol}</SelectItem>
                         ))}
                       </Select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-default-600">{t('settings.exchangeRate')}</label>
+                      <Input
+                        type="number"
+                        value={String(exchangeRate)}
+                        onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 0)}
+                        min="0"
+                        step="0.00000001"
+                      />
                     </div>
                     <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium text-default-600">{t('settings.language')}</label>
                       <Select
                         aria-label={t('settings.language')}
-                        selectionMode="single"
-                        selectedKeys={new Set([language])}
+                        selectedKeys={language ? [language] : []}
                         onSelectionChange={(keys) => {
                           const selected = Array.from(keys)[0];
                           if (selected) setLanguage(String(selected));
                         }}
                         placeholder={t('settings.selectLanguage')}
-                        classNames={{ trigger: "font-semibold" }}
-                        renderValue={() => {
-                          const selected = languageConfig.find(l => l.key === language);
-                          if (!selected) return null;
-                          return (
-                            <div className="flex items-center gap-2">
-                              <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
-                              <span>{selected.name}</span>
-                            </div>
-                          );
-                        }}
                       >
                         {languageConfig.map((lang) => (
-                          <SelectItem
-                            key={lang.key}
-                            textValue={lang.name}
-                            startContent={<Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />}
-                          >
-                            {lang.name}
-                          </SelectItem>
+                          <SelectItem key={lang.key} textValue={lang.name}>{lang.name}</SelectItem>
                         ))}
                       </Select>
                     </div>
@@ -860,50 +852,33 @@ export default function InvoiceEditPage() {
                 <h3 className="text-lg font-semibold text-foreground">{t('settings.company')}</h3>
                 <Select
                   aria-label={t('settings.company')}
-                  selectionMode="single"
-                  selectedKeys={companyId ? new Set([companyId]) : new Set()}
+                  selectedKeys={companyId ? [companyId] : []}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     if (selected) setCompanyId(String(selected));
                   }}
                   placeholder={t('settings.selectCompany')}
-                  classNames={{
-                    trigger: "font-semibold"
-                  }}
                 >
-                {companies.map((company) => (
-                  <SelectItem 
-                    key={company.id} 
-                    textValue={company.name}
-                  >
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </Select>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} textValue={c.name}>{c.name}</SelectItem>
+                  ))}
+                </Select>
               </div>
 
               <div className="flex flex-col gap-4">
                 <h3 className="text-lg font-semibold text-foreground">{t('settings.client')}</h3>
                 <Select
                   aria-label={t('settings.client')}
-                  selectionMode="single"
-                  selectedKeys={clientId ? new Set([clientId]) : new Set()}
+                  selectedKeys={clientId ? [clientId] : []}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     setClientId(selected ? String(selected) : null);
                   }}
                   placeholder={t('settings.selectClient')}
-                  classNames={{
-                    trigger: "font-semibold"
-                  }}
+                  isClearable
                 >
-                  {clients.map((client) => (
-                    <SelectItem 
-                      key={client.id} 
-                      textValue={client.name}
-                    >
-                      {client.name}
-                    </SelectItem>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} textValue={c.name}>{c.name}</SelectItem>
                   ))}
                 </Select>
               </div>
@@ -914,24 +889,15 @@ export default function InvoiceEditPage() {
                 <label className="text-sm font-medium text-default-600">{t('settings.template')}</label>
                 <Select
                   aria-label={t('settings.template')}
-                  selectionMode="single"
-                  selectedKeys={templateId ? new Set([templateId]) : new Set()}
+                  selectedKeys={templateId ? [templateId] : []}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     if (selected) setTemplateId(String(selected));
                   }}
                   placeholder={t('settings.selectTemplate')}
-                  classNames={{
-                    trigger: "font-semibold"
-                  }}
                 >
-                  {templates.map((template) => (
-                    <SelectItem 
-                      key={template.id} 
-                      textValue={template.name}
-                    >
-                      {template.name}
-                    </SelectItem>
+                  {templates.map((t) => (
+                    <SelectItem key={t.id} textValue={t.name}>{t.name}</SelectItem>
                   ))}
                 </Select>
               </div>
@@ -939,64 +905,48 @@ export default function InvoiceEditPage() {
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-default-600">{t('settings.currency')}</label>
                 <Select
+                  search
                   aria-label={t('settings.currency')}
-                  selectionMode="single"
-                  selectedKeys={currencyId ? new Set([currencyId]) : new Set()}
+                  selectedKeys={currencyId ? [currencyId] : []}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
-                    if (selected) setCurrencyId(String(selected));
+                    if (selected) {
+                      setCurrencyId(String(selected));
+                      setExchangeRate(currencies.find(c => c.id === String(selected))?.exchange_rate ?? 1.0);
+                    }
                   }}
                   placeholder={t('settings.selectCurrency')}
-                  classNames={{
-                    trigger: "font-semibold"
-                  }}
                 >
-                  {currencies.map((currency) => (
-                    <SelectItem 
-                      key={currency.id} 
-                      textValue={`${currency.code} - ${currency.symbol}`}
-                    >
-                      {currency.code} - {currency.symbol}
-                    </SelectItem>
+                  {currencies.map((c) => (
+                    <SelectItem key={c.id} textValue={`${c.code} - ${c.symbol}`}>{c.code} - {c.symbol}</SelectItem>
                   ))}
                 </Select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-default-600">{t('settings.exchangeRate')}</label>
+                <Input
+                  type="number"
+                  value={String(exchangeRate)}
+                  onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 0)}
+                  min="0"
+                  step="0.00000001"
+                />
               </div>
 
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-default-600">{t('settings.language')}</label>
                 <Select
                   aria-label={t('settings.language')}
-                  selectionMode="single"
-                  selectedKeys={new Set([language])}
+                  selectedKeys={language ? [language] : []}
                   onSelectionChange={(keys) => {
                     const selected = Array.from(keys)[0];
                     if (selected) setLanguage(String(selected));
                   }}
                   placeholder={t('settings.selectLanguage')}
-                  classNames={{
-                    trigger: "font-semibold"
-                  }}
-                  renderValue={() => {
-                    const selected = languageConfig.find(l => l.key === language);
-                    if (!selected) return null;
-                    return (
-                      <div className="flex items-center gap-2">
-                        <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
-                        <span>{selected.name}</span>
-                      </div>
-                    );
-                  }}
                 >
                   {languageConfig.map((lang) => (
-                    <SelectItem 
-                      key={lang.key} 
-                      textValue={lang.name}
-                      startContent={
-                        <Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
-                      }
-                    >
-                      {lang.name}
-                    </SelectItem>
+                    <SelectItem key={lang.key} textValue={lang.name}>{lang.name}</SelectItem>
                   ))}
                 </Select>
               </div>

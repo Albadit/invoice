@@ -311,10 +311,12 @@ export const invoicesApi = {
     status: string;
     total_amount: number | null;
     currency_id: string;
+    exchange_rate: number;
     issue_date: string | null;
     due_date: string | null;
+    company_id: string;
   }[]> {
-    let url = `${API_URL}/invoices?select=status,total_amount,currency_id,issue_date,due_date`;
+    let url = `${API_URL}/invoices?select=status,total_amount,currency_id,exchange_rate,issue_date,due_date,company_id`;
     if (companyId) url += `&company_id=eq.${companyId}`;
     return api.get(url);
   },

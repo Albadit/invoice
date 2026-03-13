@@ -90,6 +90,7 @@ CREATE TABLE IF NOT EXISTS currencies (
     symbol TEXT NOT NULL,
     symbol_position symbol_position_type NOT NULL DEFAULT 'left',
     symbol_space BOOLEAN NOT NULL DEFAULT false,
+    exchange_rate DECIMAL(18, 8) NOT NULL DEFAULT 1.0,
     is_system BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -178,6 +179,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     language TEXT DEFAULT 'en',
     subtotal_amount DECIMAL(12, 2),
     total_amount DECIMAL(12, 2),
+    exchange_rate DECIMAL(18, 8) NOT NULL DEFAULT 1.0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     -- Full-text search vector (generated, for fast FTS queries)
@@ -263,6 +265,16 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User settings table (one row per user)
+CREATE TABLE IF NOT EXISTS settings (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE DEFAULT auth.uid(),
+    dashboard_currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,
+    custom_exchange_rates JSONB NOT NULL DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- =============================================
 -- Indexes
 -- =============================================
@@ -302,6 +314,7 @@ CREATE INDEX IF NOT EXISTS idx_user_roles_role_id ON user_roles(role_id);
 -- Password reset tokens indexes
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token ON password_reset_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_settings_user_id ON settings(user_id);
 
 -- Composite indexes for fast cursor-based (keyset) pagination
 -- These enable O(1) pagination instead of O(n) offset on 10M+ rows
@@ -507,6 +520,19 @@ CREATE OR REPLACE TRIGGER update_clients_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- Trigger for settings updated_at
+DO $$ BEGIN
+    DROP TRIGGER IF EXISTS update_settings_updated_at ON settings;
+EXCEPTION
+    WHEN undefined_table THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+CREATE OR REPLACE TRIGGER update_settings_updated_at
+    BEFORE UPDATE ON settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 DO $$ BEGIN
     DROP TRIGGER IF EXISTS update_templates_updated_at ON templates;
 EXCEPTION
@@ -581,6 +607,7 @@ ALTER TABLE companies     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoices      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE settings      ENABLE ROW LEVEL SECURITY;
 
 -- Currencies: read system + own; write own non-system only
 CREATE POLICY currencies_select ON currencies FOR SELECT
@@ -622,6 +649,16 @@ CREATE POLICY clients_insert ON clients FOR INSERT
 CREATE POLICY clients_update ON clients FOR UPDATE
     USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 CREATE POLICY clients_delete ON clients FOR DELETE
+    USING (user_id = auth.uid());
+
+-- Settings: own row only
+CREATE POLICY settings_select ON settings FOR SELECT
+    USING (user_id = auth.uid());
+CREATE POLICY settings_insert ON settings FOR INSERT
+    WITH CHECK (user_id = auth.uid());
+CREATE POLICY settings_update ON settings FOR UPDATE
+    USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY settings_delete ON settings FOR DELETE
     USING (user_id = auth.uid());
 
 -- Invoices: own rows only

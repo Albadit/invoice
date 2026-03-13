@@ -78,6 +78,16 @@ export async function POST(request: NextRequest) {
       `) cl ON true\n${invoiceExistsCheck};\n`,
     );
 
+    // Settings: if backup contains settings, delete existing row first
+    // so the INSERT succeeds (unique constraint on user_id).
+    // This means imported settings always replace existing ones.
+    if (sql.includes('-- Settings')) {
+      sql = sql.replace(
+        /-- Settings\n/,
+        `-- Settings (delete existing before restore)\nDELETE FROM settings WHERE user_id = current_setting('backup.user_id')::uuid;\n-- Settings\n`,
+      );
+    }
+
     // Build pre-delete statements for records the user chose to overwrite.
     // Executed inside the same transaction (injected right after BEGIN).
     const deleteStatements: string[] = [];

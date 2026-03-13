@@ -15,19 +15,19 @@ import { STATUS_THEME } from '@/config/constants';
 export const STATUS_THEME_MAP = STATUS_THEME;
 
 /**
- * Format a numeric value for display based on its type.
- * - "number": abbreviates large values (1M, 10k) or uses locale string
- * - "percentage": appends %
- * - other / undefined: returns value as-is
+ * Format a numeric value as a compact string with locale-aware abbreviations.
+ * Uses Intl.NumberFormat with notation: 'compact' so abbreviations
+ * (K, M, B, etc.) adapt to the user's locale automatically.
  */
-export function formatValue(value: number, type?: string): string | number {
+export function formatValue(value: number, type?: string, locale?: string): string {
   if (type === 'number') {
-    if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
-    if (value >= 1_000) return (value / 1_000).toFixed(2) + 'k';
-    return value.toLocaleString();
+    return new Intl.NumberFormat(locale, {
+      notation: 'compact',
+      maximumFractionDigits: 2,
+    }).format(value);
   }
   if (type === 'percentage') return `${value}%`;
-  return value;
+  return value.toLocaleString(locale);
 }
 
 /**

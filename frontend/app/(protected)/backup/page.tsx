@@ -226,6 +226,7 @@ export default function BackupPage() {
               <Chip size="sm" variant="flat" color="primary">{t('backup.companies')}</Chip>
               <Chip size="sm" variant="flat" color="primary">{t('backup.clients')}</Chip>
               <Chip size="sm" variant="flat" color="primary">{t('backup.invoices')}</Chip>
+              <Chip size="sm" variant="flat" color="primary">{t('backup.settings')}</Chip>
             </div>
             <Button
               color="primary"

@@ -2,7 +2,7 @@
 
 import { Button } from '@heroui/button';
 import { Switch } from '@heroui/switch';
-import { Select, SelectItem } from '@heroui/select';
+import { Select, SelectItem } from '@/components/ui';
 import { Chip } from '@heroui/chip';
 import type { TemplateEditorState } from '../hooks/useTemplateEditor';
 
@@ -40,20 +40,15 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
         aria-label="Template"
         size="sm"
         className="w-56"
-        selectedKeys={selectedTemplateId ? new Set([selectedTemplateId]) : new Set()}
+        selectedKeys={selectedTemplateId ? [selectedTemplateId] : []}
         onSelectionChange={(keys) => {
-          const id = Array.from(keys)[0] as string;
-          if (id) handleSelectTemplate(id);
+          const selected = Array.from(keys)[0];
+          if (selected) handleSelectTemplate(String(selected));
         }}
       >
         {templates.map((tpl) => (
           <SelectItem key={tpl.id} textValue={`${tpl.name}${tpl.is_system ? ' (System)' : ''}`}>
-            <div className="flex items-center gap-2">
-              <span>{tpl.name}</span>
-              {tpl.is_system && (
-                <Chip size="sm" variant="flat" color="warning" className="h-5 text-[10px]">System</Chip>
-              )}
-            </div>
+            {tpl.name}{tpl.is_system ? ' (System)' : ''}
           </SelectItem>
         ))}
       </Select>
@@ -64,16 +59,15 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
         size="sm"
         className="w-56"
         placeholder="Dummy Company"
-        selectedKeys={selectedCompanyId ? new Set([selectedCompanyId]) : new Set()}
+        selectedKeys={selectedCompanyId ? [selectedCompanyId] : []}
         onSelectionChange={(keys) => {
-          const arr = Array.from(keys);
-          handleSelectCompany(arr.length > 0 ? (arr[0] as string) : '');
+          const selected = Array.from(keys)[0];
+          handleSelectCompany(selected ? String(selected) : '');
         }}
+        isClearable
       >
-        {companies.map((company) => (
-          <SelectItem key={company.id} textValue={company.name}>
-            {company.name}
-          </SelectItem>
+        {companies.map((c) => (
+          <SelectItem key={c.id} textValue={c.name}>{c.name}</SelectItem>
         ))}
       </Select>
 
@@ -84,21 +78,14 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
         className="w-40"
         selectedKeys={new Set([previewLanguage])}
         onSelectionChange={(keys) => {
-          const val = Array.from(keys)[0] as string;
-          if (val) handleSelectLanguage(val);
+          const selected = Array.from(keys)[0];
+          if (selected) handleSelectLanguage(String(selected));
         }}
       >
         {languageConfig.map((lang) => (
-          <SelectItem key={lang.key} textValue={lang.name}>
-            <span className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={lang.flag} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
-              {lang.name}
-            </span>
-          </SelectItem>
+          <SelectItem key={lang.key} textValue={lang.name}>{lang.name}</SelectItem>
         ))}
       </Select>
-
       <div className="w-px h-5 bg-default-300" />
 
       {/* Download */}

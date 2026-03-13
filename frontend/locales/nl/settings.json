@@ -20,6 +20,9 @@
     "selectDescription": "Bedrijf",
     "selectPlaceholder": "Selecteer een bedrijf",
     "editingCompany": "Momenteel instellingen bewerken voor",
+    "dashboardCurrency": "Dashboard Valuta",
+    "dashboardCurrencyDescription": "Standaard valuta op het dashboard",
+    "dashboardCurrencyPlaceholder": "Selecteer valuta",
     "fields": {
       "name": "Bedrijfsnaam",
       "street": "Straat",
@@ -123,6 +126,8 @@
       "positionLeft": "Links (bijv. $100)",
       "positionRight": "Rechts (bijv. 100$)",
       "symbolSpace": "Spatie tussen symbool en bedrag",
+      "exchangeRate": "Wisselkoers",
+      "exchangeRateDescription": "Koers ten opzichte van uw basisvaluta (basis = 1.0)",
       "preview": "Voorbeeld"
     },
     "noData": "Geen valuta's beschikbaar",
@@ -199,7 +204,7 @@
     "description": "Exporteer je gegevens als SQL back-upbestand of herstel vanuit een eerdere back-up.",
     "export": "Exporteer Back-up",
     "import": "Importeer Back-up",
-    "exportDescription": "Download een volledige SQL back-up van je bedrijven, klanten en facturen.",
+    "exportDescription": "Download een volledige SQL back-up van je bedrijven, klanten, facturen en instellingen.",
     "importDescription": "Upload een eerder geëxporteerd .sql bestand om je gegevens te herstellen.",
     "exportIncludes": "Bevat al je gegevens",
     "importNote": "Duplicaten worden gedetecteerd voor het importeren",
@@ -222,6 +227,7 @@
     "companies": "Bedrijven",
     "clients": "Klanten",
     "invoices": "Facturen",
+    "settings": "Instellingen",
     "overwrite": "overschrijven",
     "compareField": "Veld",
     "compareCurrent": "Huidig",
@@ -258,5 +264,12 @@
       "next": "Volgende",
       "created": "Aangemaakt"
     }
+  },
+  "exchangeRates": {
+    "title": "Wisselkoersen",
+    "subtitle": "Pas wisselkoersen aan voor uw dashboard. Wijzigingen hebben alleen invloed op uw weergave, niet op de systeemvaluta's.",
+    "search": "Zoek valuta...",
+    "reset": "Herstel naar systeemkoers",
+    "customNote": "U heeft {{count}} aangepaste koers(en). Deze worden opgeslagen met uw instellingen en hebben alleen invloed op uw dashboard."
   }
 }

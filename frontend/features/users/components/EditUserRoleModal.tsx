@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
-import { Select, SelectItem } from "@heroui/select";
+import { Select, SelectItem } from '@/components/ui';
 import type { AdminUser, Role } from '@/lib/types';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
@@ -64,14 +64,12 @@ export function EditUserRoleModal({
             selectedKeys={selectedRoleId ? [selectedRoleId] : []}
             onSelectionChange={(keys) => {
               const selected = Array.from(keys)[0];
-              if (selected) {
-                setSelectedRoleId(String(selected));
-              }
+              if (selected) setSelectedRoleId(String(selected));
             }}
             isRequired
           >
             {availableRoles.map((role) => (
-              <SelectItem key={role.id}>{role.name}</SelectItem>
+              <SelectItem key={role.id} textValue={role.name}>{role.name}</SelectItem>
             ))}
           </Select>
         </ModalBody>

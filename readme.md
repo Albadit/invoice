@@ -182,3 +182,5 @@ Translation files are located in `frontend/locales/`.
 ## 📖 Architecture
 
 This project follows a **feature-first** architecture with strict dependency rules enforced by `eslint-plugin-boundaries`. See [ARCHITECTURE.md](./ARCHITECTURE.md) for details.
+
+- add invoice Currency rate

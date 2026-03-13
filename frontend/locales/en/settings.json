@@ -20,6 +20,9 @@
     "selectDescription": "Company",
     "selectPlaceholder": "Select a company",
     "editingCompany": "Currently editing settings for",
+    "dashboardCurrency": "Dashboard Currency",
+    "dashboardCurrencyDescription": "Default currency shown on the dashboard",
+    "dashboardCurrencyPlaceholder": "Select currency",
     "fields": {
       "name": "Company Name",
       "street": "Street Address",
@@ -123,6 +126,8 @@
       "positionLeft": "Left (e.g. $100)",
       "positionRight": "Right (e.g. 100$)",
       "symbolSpace": "Space between symbol and amount",
+      "exchangeRate": "Exchange Rate",
+      "exchangeRateDescription": "Rate relative to your base currency (base = 1.0)",
       "preview": "Preview"
     },
     "noData": "No currencies available",
@@ -199,7 +204,7 @@
     "description": "Export your data as an SQL backup file or restore from a previous backup.",
     "export": "Export Backup",
     "import": "Import Backup",
-    "exportDescription": "Download a full SQL backup of your companies, clients, and invoices.",
+    "exportDescription": "Download a full SQL backup of your companies, clients, invoices, and settings.",
     "importDescription": "Upload a previously exported .sql file to restore your data.",
     "exportIncludes": "Includes all your data",
     "importNote": "Duplicates will be detected before importing",
@@ -222,6 +227,7 @@
     "companies": "Companies",
     "clients": "Clients",
     "invoices": "Invoices",
+    "settings": "Settings",
     "overwrite": "overwrite",
     "compareField": "Field",
     "compareCurrent": "Current",
@@ -258,5 +264,12 @@
       "next": "Next",
       "created": "Created"
     }
+  },
+  "exchangeRates": {
+    "title": "Exchange Rates",
+    "subtitle": "Customize exchange rates for your dashboard. Changes only affect your view, not the system currencies.",
+    "search": "Search currencies...",
+    "reset": "Reset to system rate",
+    "customNote": "You have {{count}} custom rate(s). These are saved with your settings and only affect your dashboard."
   }
 }

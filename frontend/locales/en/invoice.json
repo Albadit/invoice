@@ -127,7 +127,8 @@
     "selectCurrency": "Select currency",
     "selectClient": "Select client",
     "language": "Language",
-    "selectLanguage": "Select language"
+    "selectLanguage": "Select language",
+    "exchangeRate": "Exchange Rate"
   },
   "messages": {
     "created": "Invoice Created",

@@ -127,7 +127,8 @@
     "selectCurrency": "Zgjidh valutën",
     "selectClient": "Zgjidh klientin",
     "language": "Gjuha",
-    "selectLanguage": "Zgjidh gjuhën"
+    "selectLanguage": "Zgjidh gjuhën",
+    "exchangeRate": "Kursi i këmbimit"
   },
   "messages": {
     "created": "Fatura u Krijua",

@@ -127,7 +127,8 @@
     "selectCurrency": "Избери валута",
     "selectClient": "Избери клиент",
     "language": "Јазик",
-    "selectLanguage": "Избери јазик"
+    "selectLanguage": "Избери јазик",
+    "exchangeRate": "Курс на размена"
   },
   "messages": {
     "created": "Фактурата е Креирана",

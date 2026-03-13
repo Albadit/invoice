@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Select, SelectItem } from '@heroui/select';
+import { useState, useEffect, useMemo } from 'react';
 import { Spinner } from '@heroui/spinner';
-import { useTranslation } from '@/contexts/LocaleProvider';
+import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 import { useRouter } from 'next/navigation';
 
 import type { Company, Currency, InvoiceStat } from '@/lib/types';
 
-import { pctOfTotal } from '@/features/dashboard/utils';
+import { pctOfTotal, formatValue } from '@/features/dashboard/utils';
 import { invoicesApi } from '@/features/invoice/api';
 import { companiesApi } from '@/features/companies/api';
 import { currenciesApi } from '@/features/currencies/api';
+import { settingsApi } from '@/features/settings/api';
 import { useDashboardComputed } from '@/features/dashboard/hooks/useDashboardStats';
 import {
   DashboardGraph,
@@ -20,13 +20,14 @@ import {
   DashboardBar,
   type KpiItem,
 } from '@/features/dashboard/components';
-import { StickyHeader } from '@/components/ui';
+import { StickyHeader, Select, SelectItem } from '@/components/ui';
 import { INVOICE_ROUTES } from '@/config/routes';
 
 // ===================================================================
 export default function DashboardPage() {
   const { t } = useTranslation('dashboard');
   const { t: tInvoice } = useTranslation('invoice');
+  const { locale } = useLocale();
   const router = useRouter();
 
   // ── Data fetching (app layer responsibility) ────────────────────
@@ -34,16 +35,32 @@ export default function DashboardPage() {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [stats, setStats] = useState<InvoiceStat[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCompany, setSelectedCompany] = useState<string>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedCompanies, setSelectedCompanies] = useState<Set<string>>(new Set(['all']));
+  const [selectedYears, setSelectedYears] = useState<Set<string>>(new Set(['all']));
+  const [displayCurrencyId, setDisplayCurrencyId] = useState<string | null>(null);
+  const [customRates, setCustomRates] = useState<Record<string, number>>({});
 
 
   useEffect(() => {
     async function load() {
       try {
-        const [c, cu] = await Promise.all([companiesApi.getAll(), currenciesApi.getAll()]);
+        const [c, cu, userSettings] = await Promise.all([
+          companiesApi.getAll(),
+          currenciesApi.getAll(),
+          settingsApi.get().catch(() => null),
+        ]);
         setCompanies(c);
         setCurrencies(cu);
+        // Load user's custom exchange rate overrides
+        if (userSettings?.custom_exchange_rates) {
+          setCustomRates(userSettings.custom_exchange_rates as Record<string, number>);
+        }
+        // Default display currency: user setting → USD → first company's currency → first available
+        const saved = userSettings?.dashboard_currency_id;
+        const valid = saved && cu.some((cur: Currency) => cur.id === saved) ? saved : null;
+        const usdId = cu.find((cur: Currency) => cur.code === 'USD')?.id ?? null;
+        const fallback = valid ?? usdId ?? (c.length > 0 ? c[0].currency_id : null) ?? (cu.length > 0 ? cu[0].id : null);
+        if (fallback) setDisplayCurrencyId(fallback);
       } catch { /* ignore */ }
     }
     load();
@@ -53,19 +70,26 @@ export default function DashboardPage() {
     async function loadStats() {
       setLoading(true);
       try {
-        const companyId = selectedCompany === 'all' ? undefined : selectedCompany;
-        setStats(await invoicesApi.getStats(companyId));
+        setStats(await invoicesApi.getStats());
       } catch { /* ignore */ }
       finally { setLoading(false); }
     }
     loadStats();
-  }, [selectedCompany]);
+  }, []);
+
+  // Filter stats by selected companies (client-side)
+  const isAllCompanies = selectedCompanies.has('all');
+  const isAllYears = selectedYears.has('all');
+  const filteredStats = useMemo(() => {
+    if (isAllCompanies) return stats;
+    return stats.filter((s) => selectedCompanies.has(s.company_id));
+  }, [stats, selectedCompanies, isAllCompanies]);
 
   // ── Pure computation (feature hook) ─────────────────────────────
   const {
     availableYears,
-    computed, fmt, monthlyData, overduePct,
-  } = useDashboardComputed(stats, currencies, selectedYear);
+    computed, fmt, fmtCompact, monthlyData, overduePct,
+  } = useDashboardComputed(filteredStats, currencies, selectedYears, displayCurrencyId, customRates);
 
   // Pie data (non-zero slices only)
   return (
@@ -74,30 +98,70 @@ export default function DashboardPage() {
       <StickyHeader title={t('title')} subtitle={t('subtitle')}>
         <div className="sm:ml-auto shrink-0 flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
           <Select
+            search
+            label={t('filterCurrency')}
+            labelPlacement="inside"
+            selectedKeys={displayCurrencyId ? [displayCurrencyId] : []}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0];
+              if (selected) setDisplayCurrencyId(String(selected));
+            }}
+            className="w-full sm:w-44"
+            size="sm"
+          >
+            {currencies.map((c) => (
+              <SelectItem key={c.id} textValue={`${c.code} (${c.symbol})`}>
+                {c.code} ({c.symbol})
+              </SelectItem>
+            ))}
+          </Select>
+          <Select
             label={t('filterYear')}
             labelPlacement="inside"
-            selectedKeys={[selectedYear]}
-            onChange={(e) => setSelectedYear(e.target.value || 'all')}
+            selectionMode="multiple"
+            selectedKeys={selectedYears}
+            onSelectionChange={(keys) => {
+              const selected = new Set(Array.from(keys).map(String));
+              if (selected.size === 0) {
+                setSelectedYears(new Set(['all']));
+              } else if (selected.has('all') && !selectedYears.has('all')) {
+                setSelectedYears(new Set(['all']));
+              } else {
+                selected.delete('all');
+                setSelectedYears(selected);
+              }
+            }}
             className="w-full sm:w-36"
             size="sm"
           >
-            {[
-              <SelectItem key="all">{t('allYears')}</SelectItem>,
-              ...availableYears.map((y) => <SelectItem key={String(y)}>{String(y)}</SelectItem>),
-            ]}
+            {[{ key: 'all', label: t('allYears') }, ...availableYears.map((y) => ({ key: String(y), label: String(y) }))].map((item) => (
+              <SelectItem key={item.key}>{item.label}</SelectItem>
+            ))}
           </Select>
           <Select
             label={t('filterCompany')}
             labelPlacement="inside"
-            selectedKeys={[selectedCompany]}
-            onChange={(e) => setSelectedCompany(e.target.value || 'all')}
+            selectionMode="multiple"
+            selectedKeys={selectedCompanies}
+            onSelectionChange={(keys) => {
+              const selected = new Set(Array.from(keys).map(String));
+              if (selected.size === 0) {
+                setSelectedCompanies(new Set(['all']));
+              } else if (selected.has('all') && !selectedCompanies.has('all')) {
+                // User clicked "All" — reset to all
+                setSelectedCompanies(new Set(['all']));
+              } else {
+                // User picked specific companies — remove "all"
+                selected.delete('all');
+                setSelectedCompanies(selected);
+              }
+            }}
             className="w-full sm:w-64"
             size="sm"
           >
-            {[
-              <SelectItem key="all">{t('allCompanies')}</SelectItem>,
-              ...companies.map((c) => <SelectItem key={c.id}>{c.name}</SelectItem>),
-            ]}
+            {[{key: 'all', name: t('allCompanies')}, ...companies.map((c) => ({key: c.id, name: c.name}))].map((item) => (
+              <SelectItem key={item.key} textValue={item.name}>{item.name}</SelectItem>
+            ))}
           </Select>
         </div>
       </StickyHeader>
@@ -110,8 +174,14 @@ export default function DashboardPage() {
           {(() => {
             // Build query string based on selected company/year
             const params = new URLSearchParams();
-            if (selectedCompany !== 'all') params.set('company', selectedCompany);
-            if (selectedYear !== 'all') params.set('year', selectedYear);
+            if (!isAllCompanies) {
+              const companyArr = Array.from(selectedCompanies);
+              if (companyArr.length === 1) params.set('company', companyArr[0]);
+            }
+            if (!isAllYears) {
+              const yearArr = Array.from(selectedYears);
+              if (yearArr.length === 1) params.set('year', yearArr[0]);
+            }
             const qs = (status?: string) => {
               const p = new URLSearchParams(params);
               if (status) p.set('status', status);
@@ -122,7 +192,8 @@ export default function DashboardPage() {
             const kpiItems: KpiItem[] = [
               {
                 title: t('totalInvoices'),
-                value: computed.total.toLocaleString(),
+                value: formatValue(computed.total, 'number', locale),
+                fullValue: computed.total.toLocaleString(),
                 changeType: 'info',
                 iconName: 'solar:document-text-linear',
                 onViewAll: () => router.push(qs()),
@@ -130,7 +201,8 @@ export default function DashboardPage() {
               },
               {
                 title: t('totalRevenue'),
-                value: fmt(computed.paid.amount),
+                value: fmtCompact(computed.paid.amount, locale),
+                fullValue: fmt(computed.paid.amount),
                 subtitle: `${computed.paid.count} ${tInvoice('status.paid').toLowerCase()}`,
                 change: pctOfTotal(computed.paid.count, computed.total),
                 changeType: 'positive',
@@ -140,7 +212,8 @@ export default function DashboardPage() {
               },
               {
                 title: t('outstanding'),
-                value: fmt(computed.pending.amount + computed.overdue.amount),
+                value: fmtCompact(computed.pending.amount + computed.overdue.amount, locale),
+                fullValue: fmt(computed.pending.amount + computed.overdue.amount),
                 subtitle: `${computed.pending.count + computed.overdue.count} ${tInvoice('status.pending').toLowerCase()} / ${tInvoice('status.overdue').toLowerCase()}`,
                 change: pctOfTotal(computed.pending.count + computed.overdue.count, computed.total),
                 changeType: overduePct > 20 ? 'negative' : overduePct > 0 ? 'neutral' : 'negative',
@@ -150,7 +223,8 @@ export default function DashboardPage() {
               },
               {
                 title: tInvoice('status.cancelled'),
-                value: fmt(computed.cancelled.amount),
+                value: fmtCompact(computed.cancelled.amount, locale),
+                fullValue: fmt(computed.cancelled.amount),
                 subtitle: `${computed.cancelled.count} ${tInvoice('status.cancelled').toLowerCase()}`,
                 change: computed.total ? pctOfTotal(computed.cancelled.count, computed.total) : undefined,
                 changeType: 'default',
@@ -172,15 +246,22 @@ export default function DashboardPage() {
           {/* ---- Analytics Card (DashboardGraph) ----------------------- */}
           <DashboardGraph
             monthlyData={monthlyData}
-            stats={stats}
+            stats={filteredStats}
             fmt={fmt}
+            fmtCompact={fmtCompact}
+            convertAmount={(() => {
+              const displayRate = currencies.find(c => c.id === displayCurrencyId)?.exchange_rate ?? 1;
+              return (amount: number, invoiceRate: number) =>
+                amount * (displayRate / (invoiceRate || 1));
+            })()}
             statusLabels={{
               paid: tInvoice('status.paid'),
               pending: tInvoice('status.pending'),
               overdue: tInvoice('status.overdue'),
+              cancelled: tInvoice('status.cancelled'),
             }}
             title={t('monthlyTrend')}
-            isAllYears={selectedYear === 'all'}
+            isAllYears={!selectedYears.has('all') && selectedYears.size === 1 ? false : true}
           />
 
           {/* ---- Bottom Row: Donut + Bar -------------------------*/}

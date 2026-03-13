@@ -12,7 +12,8 @@
   "managePermissions": "Menaxho Lejet",
   "sections": {
     "invoice": "Faturë",
-    "admin": "Admin"
+    "admin": "Admin",
+    "other": "Tjetër"
   },
   "fields": {
     "name": "Emri i Rolit",

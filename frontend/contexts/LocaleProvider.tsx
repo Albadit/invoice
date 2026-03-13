@@ -86,15 +86,17 @@ export function LocaleProvider({ children, languageConfig, initialLocale, namesp
     }
   }, [locale, i18n]);
 
+  // Keep <html lang> attribute in sync
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const setLocale = useCallback((newLocale: Locale) => {
     if (!languages.includes(newLocale)) return;
     
     // Set cookie
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}`;
     setLocaleState(newLocale);
-    
-    // Reload to apply new language
-    window.location.reload();
   }, [languages]);
 
   const changeNamespace = useCallback((ns: string | string[]) => {

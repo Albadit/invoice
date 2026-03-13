@@ -20,6 +20,9 @@
     "selectDescription": "Kompania",
     "selectPlaceholder": "Zgjidh një kompani",
     "editingCompany": "Aktualisht duke ndryshuar cilësimet për",
+    "dashboardCurrency": "Valuta e Panelit",
+    "dashboardCurrencyDescription": "Valuta e parazgjedhur në panel",
+    "dashboardCurrencyPlaceholder": "Zgjidh valutën",
     "fields": {
       "name": "Emri i Kompanisë",
       "street": "Rruga",
@@ -123,6 +126,8 @@
       "positionLeft": "Majtas (p.sh. $100)",
       "positionRight": "Djathtas (p.sh. 100$)",
       "symbolSpace": "Hapësirë midis simbolit dhe çmimit",
+      "exchangeRate": "Kursi i Këmbimit",
+      "exchangeRateDescription": "Kursi relativ me valutën tuaj bazë (baza = 1.0)",
       "preview": "Parashikimi"
     },
     "noData": "Nuk ka valuta të disponueshme",
@@ -199,7 +204,7 @@
     "description": "Eksporto të dhënat si skedar kopje sigurie SQL ose rikthe nga një kopje e mëparshme.",
     "export": "Eksporto Kopjen",
     "import": "Importo Kopjen",
-    "exportDescription": "Shkarko nj\u00eb kopje t\u00eb plot\u00eb SQL t\u00eb kompanive, klient\u00ebve dhe faturave.",
+    "exportDescription": "Shkarko nj\u00eb kopje t\u00eb plot\u00eb SQL t\u00eb kompanive, klient\u00ebve, faturave dhe cilësimeve.",
     "importDescription": "Ngarko nj\u00eb skedar .sql t\u00eb eksportuar m\u00eb par\u00eb p\u00ebr t\u00eb rikthyer t\u00eb dh\u00ebnat.",
     "exportIncludes": "P\u00ebrfshin t\u00eb gjitha t\u00eb dh\u00ebnat",
     "importNote": "Duplikatet do t\u00eb zbulohen para importimit",
@@ -222,6 +227,7 @@
     "companies": "Kompanitë",
     "clients": "Klientët",
     "invoices": "Faturat",
+    "settings": "Cilësimet",
     "overwrite": "mbishkruaj",
     "compareField": "Fusha",
     "compareCurrent": "Aktuale",
@@ -258,5 +264,12 @@
       "next": "Para",
       "created": "Krijuar"
     }
+  },
+  "exchangeRates": {
+    "title": "Kurset e Këmbimit",
+    "subtitle": "Personalizoni kurset e këmbimit për panelin tuaj. Ndryshimet ndikojnë vetëm pamjen tuaj, jo valutat e sistemit.",
+    "search": "Kërko valuta...",
+    "reset": "Kthe në kursin e sistemit",
+    "customNote": "Keni {{count}} kurs(e) të personalizuar. Këto ruhen me cilësimet tuaja dhe ndikojnë vetëm panelin tuaj."
   }
 }

@@ -62,6 +62,7 @@ export interface Currencies {
   symbol: string
   symbol_position: SymbolPositionType
   symbol_space: boolean
+  exchange_rate: number
   is_system: boolean
   created_at: string | null
   updated_at: string | null
@@ -109,6 +110,7 @@ export interface Invoices {
   language: string | null
   subtotal_amount: number | null
   total_amount: number | null
+  exchange_rate: number
   created_at: string | null
   updated_at: string | null
   search_tsv: unknown | null
@@ -238,6 +240,17 @@ export type UserRolesDelete = Pick<UserRoles, 'id'>
 
 export type PasswordResetTokensGet = PasswordResetTokens
 
+export interface Settings {
+  id: string
+  user_id: string
+  dashboard_currency_id: string | null
+  custom_exchange_rates: Record<string, number>
+  created_at: string | null
+  updated_at: string | null
+}
+
+export type SettingsPatch = Partial<Omit<Settings, 'id' | 'created_at' | 'updated_at' | 'user_id'>>
+
 export interface Database {
   public: {
     Tables: {
@@ -320,6 +333,10 @@ export interface Database {
       password_reset_tokens: {
         Row: PasswordResetTokens
         Get: PasswordResetTokensGet
+      }
+      settings: {
+        Row: Settings
+        Patch: SettingsPatch
       }
     }
   }

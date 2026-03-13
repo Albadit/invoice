@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
+import { Select, SelectItem } from '@/components/ui';
 import { Switch } from "@heroui/switch";
 import { useTranslation } from '@/contexts/LocaleProvider';
 
@@ -17,6 +17,7 @@ interface AddCurrencyModalProps {
     symbol: string;
     symbol_position: 'left' | 'right';
     symbol_space: boolean;
+    exchange_rate: number;
   }) => Promise<void>;
 }
 
@@ -28,6 +29,7 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
   const [symbol, setSymbol] = useState('');
   const [symbolPosition, setSymbolPosition] = useState<'left' | 'right'>('left');
   const [symbolSpace, setSymbolSpace] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState<number>(1.0);
   const [saving, setSaving] = useState(false);
   const [attempted, setAttempted] = useState(false);
 
@@ -37,6 +39,7 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
     setSymbol('');
     setSymbolPosition('left');
     setSymbolSpace(false);
+    setExchangeRate(1.0);
     setAttempted(false);
     onClose();
   };
@@ -55,6 +58,7 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
         symbol,
         symbol_position: symbolPosition,
         symbol_space: symbolSpace,
+        exchange_rate: exchangeRate,
       });
       handleClose();
     } catch (error) {
@@ -100,10 +104,10 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
             />
             <Select
               label={t('currencies.fields.symbolPosition')}
-              selectedKeys={[symbolPosition]}
+              selectedKeys={new Set([symbolPosition])}
               onSelectionChange={(keys) => {
-                const value = Array.from(keys)[0] as string;
-                if (value === 'left' || value === 'right') setSymbolPosition(value);
+                const selected = Array.from(keys)[0];
+                if (selected === 'left' || selected === 'right') setSymbolPosition(selected);
               }}
             >
               <SelectItem key="left">{t('currencies.fields.positionLeft')}</SelectItem>
@@ -117,6 +121,15 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
                 size="sm"
               />
             </div>
+            <Input
+              label={t('currencies.fields.exchangeRate')}
+              type="number"
+              value={String(exchangeRate)}
+              onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 0)}
+              min="0"
+              step="0.00000001"
+              description={t('currencies.fields.exchangeRateDescription')}
+            />
             <div className="text-sm text-default-500">
               {t('currencies.fields.preview')}: <strong>{symbolPosition === 'left' ? `${symbol}${symbolSpace ? ' ' : ''}100.00` : `100.00${symbolSpace ? ' ' : ''}${symbol}`}</strong>
             </div>

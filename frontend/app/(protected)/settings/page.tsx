@@ -6,11 +6,11 @@ import { currenciesApi } from '@/features/currencies/api';
 import { templatesApi } from '@/features/templates/api';
 import { companiesApi, storageApi } from '@/features/companies/api';
 import { clientsApi } from '@/features/clients/api';
+import { settingsApi } from '@/features/settings/api';
 import type { Currency, Template, Company, Client } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
-import { Select, SelectItem } from "@heroui/select";
 import Image from 'next/image';
 import { Save, Edit, Building2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
@@ -35,7 +35,7 @@ import {
   EditClientModal,
   ManageClientsModal,
 } from '@/features/clients/components';
-import { ConfirmModal, StickyHeader } from '@/components/ui';
+import { ConfirmModal, StickyHeader, Select, SelectItem } from '@/components/ui';
 import { useTranslation, useLocale } from '@/contexts/LocaleProvider';
 import { usePermissions } from '@/features/auth/components';
 
@@ -54,6 +54,9 @@ export default function SettingsPage() {
   const [terms, setTerms] = useState('');
   const [tax, setTax] = useState<number | null>(null);
   const [currencyId, setCurrencyId] = useState<string | null>(null);
+  const [dashboardCurrencyId, setDashboardCurrencyId] = useState<string | null>(null);
+  const [customRates, setCustomRates] = useState<Record<string, number>>({});
+  const [rateSearch, setRateSearch] = useState('');
   const [language, setLanguage] = useState<string>('en');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -478,6 +481,7 @@ export default function SettingsPage() {
     symbol: string;
     symbol_position: 'left' | 'right';
     symbol_space: boolean;
+    exchange_rate: number;
   }) {
     try {
       await currenciesApi.create({
@@ -514,6 +518,7 @@ export default function SettingsPage() {
     symbol: string;
     symbol_position: 'left' | 'right';
     symbol_space: boolean;
+    exchange_rate: number;
   }) {
     if (!selectedCurrency) return;
 
@@ -728,6 +733,20 @@ export default function SettingsPage() {
       setTemplates(templatesData);
       setCurrencies(currenciesData);
 
+      // Load user settings (dashboard currency + custom rates) — default to USD if unset
+      try {
+        const userSettings = await settingsApi.get();
+        if (userSettings?.dashboard_currency_id) {
+          setDashboardCurrencyId(userSettings.dashboard_currency_id);
+        } else {
+          const usd = currenciesData.find(c => c.code === 'USD');
+          if (usd) setDashboardCurrencyId(usd.id);
+        }
+        if (userSettings?.custom_exchange_rates) {
+          setCustomRates(userSettings.custom_exchange_rates as Record<string, number>);
+        }
+      } catch { /* ignore */ }
+
       if (companiesData.length > 0) {
         const firstCompany = companiesData[0];
         setCompanyId(firstCompany.id);
@@ -809,6 +828,10 @@ export default function SettingsPage() {
         currency_id: currencyId,
         language: language,
       });
+
+      // Save dashboard currency preference + custom exchange rates
+      await settingsApi.upsert({ dashboard_currency_id: dashboardCurrencyId, custom_exchange_rates: customRates });
+
       addToast({
         title: t('messages.settingsSaved'),
         description: t('messages.settingsSavedDescription'),
@@ -949,6 +972,7 @@ export default function SettingsPage() {
                 </Button>
               </div>
               <Select
+                search
                 label={t('invoiceSettings.currencyDescription')}
                 selectedKeys={currencyId ? [String(currencyId)] : []}
                 onSelectionChange={(keys) => {
@@ -963,10 +987,7 @@ export default function SettingsPage() {
                 isInvalid={!!validationErrors.currency}
               >
                 {currencies.map((currency) => (
-                  <SelectItem 
-                    key={String(currency.id)} 
-                    textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}
-                  >
+                  <SelectItem key={String(currency.id)} textValue={`${currency.code} - ${currency.name} (${currency.symbol})`}>
                     {currency.code} - {currency.name} ({currency.symbol})
                   </SelectItem>
                 ))}
@@ -1006,23 +1027,9 @@ export default function SettingsPage() {
                 }}
                 labelPlacement="outside"
                 isRequired
-                renderValue={() => {
-                  const selected = languageConfig.find(l => l.key === language);
-                  if (!selected) return null;
-                  return (
-                    <div className="flex items-center gap-2">
-                      <Image src={selected.flag} alt={selected.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />
-                      <span>{selected.name}</span>
-                    </div>
-                  );
-                }}
               >
                 {languageConfig.map((lang) => (
-                  <SelectItem
-                    key={lang.key}
-                    textValue={lang.name}
-                    startContent={<Image src={lang.flag} alt={lang.name} width={20} height={16} unoptimized className="w-5 h-4 object-cover rounded-sm" />}
-                  >
+                  <SelectItem key={lang.key} textValue={lang.name}>
                     {lang.name}
                   </SelectItem>
                 ))}
@@ -1056,6 +1063,101 @@ export default function SettingsPage() {
         </CardFooter>
       </Card>
       )}
+
+      {/* Exchange Rates Card – always visible (not tied to any company) */}
+      <Card>
+        <CardBody className="flex flex-col gap-4 p-4 sm:p-6">
+          <section className="flex flex-col gap-2">
+            <h2 className="text-2xl font-bold">{t('exchangeRates.title')}</h2>
+            <p className="text-sm text-default-500">{t('exchangeRates.subtitle')}</p>
+          </section>
+
+          <Input
+            placeholder={t('exchangeRates.search')}
+            value={rateSearch}
+            onChange={(e) => setRateSearch(e.target.value)}
+            size="sm"
+            isClearable
+            onClear={() => setRateSearch('')}
+          />
+
+          <div className="max-h-96 overflow-y-auto flex flex-col gap-2">
+            {currencies
+              .filter((c) => {
+                if (!rateSearch) return true;
+                const q = rateSearch.toLowerCase();
+                return c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
+              })
+              .map((currency) => {
+                const hasCustom = customRates[currency.id] != null;
+                const displayRate = hasCustom ? customRates[currency.id] : currency.exchange_rate;
+                return (
+                  <div key={currency.id} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-default-50 hover:bg-default-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate">
+                        {currency.code}
+                        <span className="font-normal text-default-500 ml-1">({currency.symbol})</span>
+                      </p>
+                      <p className="text-xs text-default-400 truncate">{currency.name}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        size="sm"
+                        className="w-32"
+                        value={String(displayRate)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const num = parseFloat(val);
+                          if (val === '' || isNaN(num)) {
+                            // Remove custom override, revert to system rate
+                            setCustomRates((prev) => {
+                              const next = { ...prev };
+                              delete next[currency.id];
+                              return next;
+                            });
+                          } else {
+                            setCustomRates((prev) => ({ ...prev, [currency.id]: num }));
+                          }
+                        }}
+                        step="0.0001"
+                        min="0"
+                        aria-label={`${currency.code} rate`}
+                      />
+                      {hasCustom && (
+                        <Button
+                          size="sm"
+                          variant="light"
+                          color="warning"
+                          isIconOnly
+                          onClick={() => {
+                            setCustomRates((prev) => {
+                              const next = { ...prev };
+                              delete next[currency.id];
+                              return next;
+                            });
+                          }}
+                          aria-label={t('exchangeRates.reset')}
+                          title={t('exchangeRates.reset')}
+                        >
+                          ↺
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+
+          {Object.keys(customRates).length > 0 && (
+            <div className="p-3 bg-warning-50 dark:bg-warning-50/10 border border-warning-200 dark:border-warning-200/20 rounded-lg">
+              <p className="text-xs text-warning-700 dark:text-warning-400">
+                {t('exchangeRates.customNote', { count: String(Object.keys(customRates).length) })}
+              </p>
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
         </div>
 
@@ -1095,6 +1197,37 @@ export default function SettingsPage() {
                     {companies.map((company) => (
                       <SelectItem key={String(company.id)} textValue={company.name}>
                         {company.name}
+                      </SelectItem>
+                    ))}
+                  </Select>
+                </section>
+
+                <div className="border-t border-divider" />
+
+                <section className="flex flex-col gap-2">
+                  <span className="text-sm font-semibold">
+                    {t('companies.dashboardCurrency')}
+                  </span>
+                  <p className="text-xs text-default-500">{t('companies.dashboardCurrencyDescription')}</p>
+                  <Select
+                    search
+                    label={t('invoiceSettings.currencyDescription')}
+                    selectedKeys={dashboardCurrencyId ? [String(dashboardCurrencyId)] : []}
+                    onSelectionChange={(keys) => {
+                      const selected = Array.from(keys)[0];
+                      if (selected) {
+                        const val = String(selected);
+                        setDashboardCurrencyId(val);
+                        settingsApi.upsert({ dashboard_currency_id: val }).catch(() => {});
+                      }
+                    }}
+                    placeholder={t('companies.dashboardCurrencyPlaceholder')}
+                    labelPlacement="outside"
+                    size="sm"
+                  >
+                    {currencies.map((currency) => (
+                      <SelectItem key={String(currency.id)} textValue={`${currency.code} (${currency.symbol})`}>
+                        {currency.code} ({currency.symbol})
                       </SelectItem>
                     ))}
                   </Select>

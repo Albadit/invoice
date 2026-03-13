@@ -45,12 +45,13 @@ export async function GET() {
 
     // Fetch all visible data (system + user) for FK lookups;
     // only non-system currencies/templates are actually exported.
-    const [allCurrencies, allTemplates, companies, clients, invoices] = await Promise.all([
+    const [allCurrencies, allTemplates, companies, clients, invoices, settingsRows] = await Promise.all([
       supabase.from('currencies').select('*').order('created_at', { ascending: true }).then(r => r.data ?? []),
       supabase.from('templates').select('*').order('created_at', { ascending: true }).then(r => r.data ?? []),
       supabase.from('companies').select('*').order('created_at', { ascending: true }).then(r => r.data ?? []),
       supabase.from('clients').select('*').order('created_at', { ascending: true }).then(r => r.data ?? []),
       supabase.from('invoices').select('*, invoice_items(*)').order('created_at', { ascending: true }).then(r => r.data ?? []),
+      supabase.from('settings').select('*').limit(1).then(r => r.data ?? []),
     ]);
 
     const userCurrencies = (allCurrencies as Row[]).filter(c => !c.is_system);
@@ -192,7 +193,7 @@ WHERE NOT EXISTS (SELECT 1 FROM clients WHERE name = v.name AND user_id = curren
     discount_type, discount_amount, discount_total_amount,
     tax_type, tax_amount, tax_total_amount,
     shipping_type, shipping_amount, shipping_total_amount,
-    notes, terms, language, subtotal_amount, total_amount,
+    notes, terms, language, subtotal_amount, total_amount, exchange_rate,
     created_at, updated_at`;
 
     const selectCols = `current_setting('backup.user_id')::uuid,
@@ -202,10 +203,10 @@ WHERE NOT EXISTS (SELECT 1 FROM clients WHERE name = v.name AND user_id = curren
     v.discount_type::amount_type, v.discount_amount::decimal, v.discount_total_amount::decimal,
     v.tax_type::amount_type, v.tax_amount::decimal, v.tax_total_amount::decimal,
     v.shipping_type::amount_type, v.shipping_amount::decimal, v.shipping_total_amount::decimal,
-    v.notes, v.terms, v.language, v.subtotal_amount::decimal, v.total_amount::decimal,
+    v.notes, v.terms, v.language, v.subtotal_amount::decimal, v.total_amount::decimal, v.exchange_rate::decimal,
     v.created_at::timestamptz, v.updated_at::timestamptz`;
 
-    const vCols = 'company_name, currency_code, template_name, client_name, status, customer_name, customer_street, customer_city, customer_zip_code, customer_country, issue_date, due_date, discount_type, discount_amount, discount_total_amount, tax_type, tax_amount, tax_total_amount, shipping_type, shipping_amount, shipping_total_amount, notes, terms, language, subtotal_amount, total_amount, created_at, updated_at';
+    const vCols = 'company_name, currency_code, template_name, client_name, status, customer_name, customer_street, customer_city, customer_zip_code, customer_country, issue_date, due_date, discount_type, discount_amount, discount_total_amount, tax_type, tax_amount, tax_total_amount, shipping_type, shipping_amount, shipping_total_amount, notes, terms, language, subtotal_amount, total_amount, exchange_rate, created_at, updated_at';
 
     const fkJoins = `JOIN LATERAL (
     SELECT id FROM companies
@@ -231,7 +232,7 @@ LEFT JOIN LATERAL (
       const cl = inv.client_id ? clById.get(inv.client_id as string) : null;
       const items = inv._items as Row[];
 
-      const val = `    (${esc(co?.name ?? null)}, ${esc(cur?.code ?? null)}, ${esc(tmpl?.name ?? null)}, ${esc(cl?.name ?? null)}, ${esc(inv.status)}, ${esc(inv.customer_name)}, ${esc(inv.customer_street)}, ${esc(inv.customer_city)}, ${esc(inv.customer_zip_code)}, ${esc(inv.customer_country)}, ${esc(inv.issue_date)}, ${esc(inv.due_date)}, ${esc(inv.discount_type)}, ${esc(inv.discount_amount)}, ${esc(inv.discount_total_amount)}, ${esc(inv.tax_type)}, ${esc(inv.tax_amount)}, ${esc(inv.tax_total_amount)}, ${esc(inv.shipping_type)}, ${esc(inv.shipping_amount)}, ${esc(inv.shipping_total_amount)}, ${esc(inv.notes)}, ${esc(inv.terms)}, ${esc(inv.language)}, ${esc(inv.subtotal_amount)}, ${esc(inv.total_amount)}, ${esc(inv.created_at)}, ${esc(inv.updated_at)})`;
+      const val = `    (${esc(co?.name ?? null)}, ${esc(cur?.code ?? null)}, ${esc(tmpl?.name ?? null)}, ${esc(cl?.name ?? null)}, ${esc(inv.status)}, ${esc(inv.customer_name)}, ${esc(inv.customer_street)}, ${esc(inv.customer_city)}, ${esc(inv.customer_zip_code)}, ${esc(inv.customer_country)}, ${esc(inv.issue_date)}, ${esc(inv.due_date)}, ${esc(inv.discount_type)}, ${esc(inv.discount_amount)}, ${esc(inv.discount_total_amount)}, ${esc(inv.tax_type)}, ${esc(inv.tax_amount)}, ${esc(inv.tax_total_amount)}, ${esc(inv.shipping_type)}, ${esc(inv.shipping_amount)}, ${esc(inv.shipping_total_amount)}, ${esc(inv.notes)}, ${esc(inv.terms)}, ${esc(inv.language)}, ${esc(inv.subtotal_amount)}, ${esc(inv.total_amount)}, ${esc(inv.exchange_rate)}, ${esc(inv.created_at)}, ${esc(inv.updated_at)})`;
 
       if (items.length) {
         const itemRows = items.map(it =>
@@ -266,6 +267,22 @@ ${val}
 ) AS v(${vCols})
 ${fkJoins};\n`);
       }
+    }
+
+    // ── Settings (user preferences) ──────────────────────────────
+    const userSettings = settingsRows[0] as Row | undefined;
+    if (userSettings) {
+      const curRow = userSettings.dashboard_currency_id ? curById.get(userSettings.dashboard_currency_id as string) : null;
+      const customRates = userSettings.custom_exchange_rates ?? {};
+      lines.push(`-- Settings
+INSERT INTO settings (user_id, dashboard_currency_id, custom_exchange_rates)
+SELECT
+    current_setting('backup.user_id')::uuid,
+    cur.id,
+    ${esc(JSON.stringify(customRates))}::jsonb
+FROM (VALUES (${esc(curRow?.code ?? null)})) AS v(currency_code)
+LEFT JOIN currencies cur ON cur.code = v.currency_code
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE user_id = current_setting('backup.user_id')::uuid);\n`);
     }
 
     lines.push('COMMIT;\n');
