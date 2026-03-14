@@ -5,7 +5,7 @@
   "scripts": {
     "compile:frontend": "docker compose -f frontend/docker-compose.yml up -d --build",
     "compile:backend": "docker compose -f supabase/docker-compose.yml up -d --build",
-    "predev:frontend": "npm --prefix frontend install",
+    "install:frontend": "npm --prefix frontend install",
     "dev:frontend": "npm --prefix frontend run dev",
     "db:gen": "tsx ./tools/supabase/generate-types.ts",
     "db:migrate": "tsx ./tools/supabase/db.ts migrate",

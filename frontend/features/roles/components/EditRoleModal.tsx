@@ -1,11 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/modal";
-import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
 import type { Role } from '@/lib/types';
+import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/contexts/LocaleProvider';
 
 interface EditRoleModalProps {
@@ -46,43 +45,23 @@ export function EditRoleModal({ isOpen, onClose, onSave, role }: EditRoleModalPr
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="lg">
-      <ModalContent>
-        <ModalHeader>{t('editRole')}</ModalHeader>
-        <ModalBody>
-          <div className="flex flex-col gap-4">
-            <Input
-              label={t('fields.name')}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              isRequired
-              isInvalid={attempted && !name.trim()}
-              errorMessage={attempted && !name.trim() ? t('fields.nameRequired') : undefined}
-              placeholder={t('fields.namePlaceholder')}
-            />
-            <Textarea
-              label={t('fields.description')}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder={t('fields.descriptionPlaceholder')}
-              minRows={2}
-            />
-          </div>
-        </ModalBody>
-        <ModalFooter className="flex md:flex-row flex-col-reverse">
-          <Button variant="flat" onClick={onClose} isDisabled={saving}>
-            {tCommon('actions.cancel')}
-          </Button>
-          <Button
-            color="primary"
-            onClick={handleSave}
-            isLoading={saving}
-            isDisabled={saving}
-          >
-            {tCommon('actions.save')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <FormModal isOpen={isOpen} onClose={onClose} title={t('editRole')} onSave={handleSave} saving={saving} saveLabel={tCommon('actions.save')} saveDisabled={false} size="lg">
+      <Input
+        label={t('fields.name')}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        isRequired
+        isInvalid={attempted && !name.trim()}
+        errorMessage={attempted && !name.trim() ? t('fields.nameRequired') : undefined}
+        placeholder={t('fields.namePlaceholder')}
+      />
+      <Textarea
+        label={t('fields.description')}
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder={t('fields.descriptionPlaceholder')}
+        minRows={2}
+      />
+    </FormModal>
   );
 }
