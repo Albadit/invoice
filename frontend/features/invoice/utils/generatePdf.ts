@@ -1,6 +1,7 @@
 'use server';
 
 import puppeteer, { Browser, PDFOptions } from 'puppeteer';
+import { PDFDocument } from 'pdf-lib';
 
 /** Singleton browser instance — reused across PDF calls */
 let browserInstance: Browser | null = null;
@@ -218,22 +219,43 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
       `,
     });
 
-    // Log the final HTML for debugging
-    const finalHtml = await page.content();
-    console.log('[PDF] Final HTML:\n', finalHtml);
-
     const puppeteerPdfOptions: PDFOptions = {
       format: pdfOptions.format || 'A4',
       landscape: pdfOptions.landscape || false,
       printBackground: true,
       preferCSSPageSize: true,
-      margin: {
-        top: '0',
-        right: '0',
-        bottom: '0',
-        left: '0',
-      },
+      margin: { top: '0', right: '0', bottom: '0', left: '0' },
     };
+
+    // Check if template uses page numbers
+    const hasPageNumbers = await page.evaluate(() =>
+      document.querySelectorAll('.page-number, .total-pages').length > 0
+    );
+
+    if (hasPageNumbers) {
+      // Generate once to count pages
+      const countBuffer = await page.pdf(puppeteerPdfOptions);
+      const countPdf = await PDFDocument.load(countBuffer);
+      const totalPages = countPdf.getPageCount();
+
+      // Set total pages text
+      await page.evaluate((total: number) => {
+        document.querySelectorAll('.total-pages').forEach(el => { el.textContent = String(total); });
+      }, totalPages);
+
+      // Generate each page with the correct page number, then merge
+      const mergedPdf = await PDFDocument.create();
+      for (let i = 1; i <= totalPages; i++) {
+        await page.evaluate((num: number) => {
+          document.querySelectorAll('.page-number').forEach(el => { el.textContent = String(num); });
+        }, i);
+        const singleBuf = await page.pdf({ ...puppeteerPdfOptions, pageRanges: String(i) });
+        const singlePdf = await PDFDocument.load(singleBuf);
+        const [copied] = await mergedPdf.copyPages(singlePdf, [0]);
+        mergedPdf.addPage(copied);
+      }
+      return Buffer.from(await mergedPdf.save());
+    }
 
     const pdfBuffer = await page.pdf(puppeteerPdfOptions);
     return Buffer.from(pdfBuffer);

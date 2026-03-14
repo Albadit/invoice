@@ -154,6 +154,27 @@ System margin presets: Normal, Narrow, Average, Wide.
 
 ---
 
+## Page Numbers
+
+Add automatic page numbers to your header or footer using template tags:
+
+| Tag | Renders as |
+|-----|------------|
+| `{{ page.number }}` | Current page number (1, 2, 3…) |
+| `{{ page.total }}` | Total number of pages |
+
+### Example
+
+```html
+<footer class="absolute bottom-0 left-0 w-full py-4 text-xs text-center">
+  Page {{ page.number }} of {{ page.total }}
+</footer>
+```
+
+These work in both the preview and the exported PDF.
+
+---
+
 ## Tips
 
 - The **Problems** panel in the status bar shows validation errors for unclosed tags, unknown variables, etc.

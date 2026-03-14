@@ -121,6 +121,7 @@ SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family
 </main>
 <footer class="absolute bottom-0 left-0 w-full bg-slate-900 py-2 flex items-center justify-between text-xs text-slate-400">
   <span>{{ company.name }}</span>
+  <span>{{ page.number }} / {{ page.total }}</span>
   <div class="flex gap-4">
     {{#if company.email}}<span>{{ company.email }}</span>{{/if}}
     {{#if company.phone}}<span>{{ company.phone }}</span>{{/if}}

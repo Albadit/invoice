@@ -77,6 +77,9 @@ const TEMPLATE_VARIABLES: { label: string; detail: string; insertText: string }[
   { label: 'lang.terms', detail: 'Translated "Terms"', insertText: 'lang.terms' },
   { label: 'lang.vatNumber', detail: 'Translated "VAT Number"', insertText: 'lang.vatNumber' },
   { label: 'lang.cocNumber', detail: 'Translated "CoC Number"', insertText: 'lang.cocNumber' },
+  // Page numbers
+  { label: 'page.number', detail: 'Current page number', insertText: 'page.number' },
+  { label: 'page.total', detail: 'Total number of pages', insertText: 'page.total' },
 ];
 
 // Item-level variables (inside {{#each items in item}} … {{/each}})

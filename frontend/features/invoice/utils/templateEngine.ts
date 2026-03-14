@@ -170,6 +170,10 @@ export function renderTemplate(
         if (key === 'issue_date') return fd(invoice.issue_date);
         if (key === 'due_date') return fd(invoice.due_date);
         return '';
+      case 'page':
+        if (key === 'number') return '<span class="page-number"></span>';
+        if (key === 'total') return '<span class="total-pages"></span>';
+        return '';
       case 'fc': {
         const val = invoiceMap[key];
         return val != null ? fc(Number(val).toFixed(2)) : '';
@@ -266,8 +270,16 @@ export function customInvoiceHtml(bodyContent: string, options?: {
         var bottomSpace=Math.max(ftrH,PB);
         var CH=A4-topSpace-bottomSpace;
         if(contentH<10){ran=false;return;}
+        // Fill page-number / total-pages spans for single or multi-page
+        function fillPageSpans(container,pageNum,totalPages){
+          var pn=container.querySelectorAll('.page-number');
+          for(var x=0;x<pn.length;x++)pn[x].textContent=String(pageNum);
+          var tp=container.querySelectorAll('.total-pages');
+          for(var x2=0;x2<tp.length;x2++)tp[x2].textContent=String(totalPages);
+        }
         // Single page — no splitting needed
         if(contentH<=CH){
+          fillPageSpans(document.body,1,1);
           document.body.style.minHeight=A4+'px';
           window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
           return;
@@ -319,12 +331,14 @@ export function customInvoiceHtml(bodyContent: string, options?: {
           if(hdrClone){
             var hc=hdrClone.cloneNode(true);
             hc.style.position='absolute';hc.style.top='0';hc.style.left='0';hc.style.width=W+'px';
+            fillPageSpans(hc,i+1,pages);
             page.appendChild(hc);
           }
           // Footer
           if(ftrClone){
             var fc=ftrClone.cloneNode(true);
             fc.style.position='absolute';fc.style.bottom='0';fc.style.left='0';fc.style.width=W+'px';
+            fillPageSpans(fc,i+1,pages);
             page.appendChild(fc);
           }
           // Content viewport
@@ -511,6 +525,7 @@ export const DEFAULT_TEMPLATE_STYLING = `
 </main>
 <footer class="absolute bottom-0 left-0 w-full bg-slate-900 px-[16mm] py-4 flex items-center justify-between text-xs text-slate-400">
   <span>{{ company.name }}</span>
+  <span>{{ page.number }} / {{ page.total }}</span>
   <div class="flex gap-4">
     {{#if company.email}}<span>{{ company.email }}</span>{{/if}}
     {{#if company.phone}}<span>{{ company.phone }}</span>{{/if}}

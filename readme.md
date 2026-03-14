@@ -184,3 +184,4 @@ Translation files are located in `frontend/locales/`.
 This project follows a **feature-first** architecture with strict dependency rules enforced by `eslint-plugin-boundaries`. See [ARCHITECTURE.md](./ARCHITECTURE.md) for details.
 
 - select which company you want to export
+- old classic template
