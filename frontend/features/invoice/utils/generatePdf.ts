@@ -7,7 +7,7 @@ let browserInstance: Browser | null = null;
 let browserLaunchPromise: Promise<Browser> | null = null;
 
 async function getBrowser(): Promise<Browser> {
-  if (browserInstance && browserInstance.connected) return browserInstance;
+  if (browserInstance && browserInstance.isConnected()) return browserInstance;
 
   // Avoid concurrent launch races
   if (browserLaunchPromise) return browserLaunchPromise;

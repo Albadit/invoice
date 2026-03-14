@@ -104,7 +104,7 @@ FROM (VALUES
     ('Global Solutions Ltd', 'hello@globalsolutions.com', '+44-20-5550-0300', '789 Business Road', 'London', 'SW1A 1AA', 'UK', 'GBP', 20.00, 'Payment is due within 14 days of invoice date. Please remit payment via bank transfer to the account details provided.')
 ) AS company_data(name, email, phone, street, city, zip_code, country, currency_code, tax_percent, terms)
 CROSS JOIN currencies cur
-CROSS JOIN (SELECT id FROM templates LIMIT 1) t
+CROSS JOIN (SELECT id FROM templates WHERE name = 'Classic' LIMIT 1) t
 WHERE cur.code = company_data.currency_code
   AND NOT EXISTS (SELECT 1 FROM companies WHERE name = company_data.name);
 
@@ -168,7 +168,7 @@ FROM (VALUES
 ) AS inv(code, status, customer_name, customer_street, customer_city, customer_zip_code, customer_country, company_name, currency_code, issue_date, due_date, discount_type, discount_amount, tax_type, tax_amount, shipping_type, shipping_amount, notes, terms)
 JOIN companies c ON c.name = inv.company_name
 JOIN currencies cur ON cur.code = inv.currency_code
-CROSS JOIN (SELECT id FROM templates LIMIT 1) t
+CROSS JOIN (SELECT id FROM templates WHERE name = 'Classic' LIMIT 1) t
 ON CONFLICT (invoice_code) DO NOTHING;
 
 -- Insert invoice items for each sample invoice
