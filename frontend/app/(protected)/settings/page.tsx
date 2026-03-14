@@ -11,6 +11,7 @@ import type { Currency, Template, Company, Client } from '@/lib/types';
 import { Button } from "@heroui/button";
 import { Input, Textarea } from "@heroui/input";
 import { Card, CardBody, CardFooter } from "@heroui/card";
+import { Switch } from "@heroui/switch";
 import Image from 'next/image';
 import { Save, Edit, Building2 } from 'lucide-react';
 import { addToast } from "@heroui/toast";
@@ -57,6 +58,7 @@ export default function SettingsPage() {
   const [dashboardCurrencyId, setDashboardCurrencyId] = useState<string | null>(null);
   const [customRates, setCustomRates] = useState<Record<string, number>>({});
   const [rateSearch, setRateSearch] = useState('');
+  const [showOnlyChanged, setShowOnlyChanged] = useState(false);
   const [language, setLanguage] = useState<string>('en');
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -114,6 +116,10 @@ export default function SettingsPage() {
     loadSettings();
     loadClients();
   }, []);
+
+  useEffect(() => {
+    if (Object.keys(customRates).length === 0) setShowOnlyChanged(false);
+  }, [customRates]);
 
   // Handle tab query parameter for scrolling (skip when triggered by scroll listener)
   useEffect(() => {
@@ -1067,8 +1073,19 @@ export default function SettingsPage() {
       {/* Exchange Rates Card – always visible (not tied to any company) */}
       <Card>
         <CardBody className="flex flex-col gap-4 p-4 sm:p-6">
-          <section className="flex flex-col gap-2">
-            <h2 className="text-2xl font-bold">{t('exchangeRates.title')}</h2>
+          <section className="flex flex-col justify-between items-start gap-4">
+            <div className="w-full flex sm:flex-row flex-col justify-between gap-2">
+              <h2 className="text-2xl font-bold">{t('exchangeRates.title')}</h2>
+              {Object.keys(customRates).length > 0 && (
+                <Switch
+                size="sm"
+                isSelected={showOnlyChanged}
+                onValueChange={setShowOnlyChanged}
+                >
+                  <span className="text-sm whitespace-nowrap">{t('exchangeRates.showOnlyChanged')}</span>
+                </Switch>
+              )}
+            </div>
             <p className="text-sm text-default-500">{t('exchangeRates.subtitle')}</p>
           </section>
 
@@ -1084,6 +1101,7 @@ export default function SettingsPage() {
           <div className="max-h-96 overflow-y-auto flex flex-col gap-2">
             {currencies
               .filter((c) => {
+                if (showOnlyChanged && customRates[c.id] == null) return false;
                 if (!rateSearch) return true;
                 const q = rateSearch.toLowerCase();
                 return c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q);
@@ -1109,7 +1127,7 @@ export default function SettingsPage() {
                         onChange={(e) => {
                           const val = e.target.value;
                           const num = parseFloat(val);
-                          if (val === '' || isNaN(num)) {
+                          if (val === '' || isNaN(num) || num === currency.exchange_rate) {
                             // Remove custom override, revert to system rate
                             setCustomRates((prev) => {
                               const next = { ...prev };
@@ -1120,7 +1138,7 @@ export default function SettingsPage() {
                             setCustomRates((prev) => ({ ...prev, [currency.id]: num }));
                           }
                         }}
-                        step="0.0001"
+                        step="any"
                         min="0"
                         aria-label={`${currency.code} rate`}
                       />

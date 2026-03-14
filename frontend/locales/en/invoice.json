@@ -101,7 +101,9 @@
   },
   "filter": {
     "company": "Company",
-    "allCompanies": "All Companies"
+    "allCompanies": "All Companies",
+    "client": "Client",
+    "allClients": "All Clients"
   },
   "preview": {
     "title": "Invoice Preview",
@@ -176,6 +178,8 @@
     "cancelConfirm": "Are you sure you want to cancel {{count}} invoice(s)?",
     "cancelledDescription": "{{count}} invoice(s) have been cancelled.",
     "deleteConfirm": "Are you sure you want to permanently delete {{count}} invoice(s)? This action cannot be undone.",
-    "deletedDescription": "{{count}} invoice(s) have been permanently deleted."
+    "deletedDescription": "{{count}} invoice(s) have been permanently deleted.",
+    "downloadConfirm": "Download {{count}} invoice(s) as PDF?",
+    "downloadedDescription": "{{count}} invoice(s) are being downloaded."
   }
 }

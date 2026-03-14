@@ -101,7 +101,9 @@
   },
   "filter": {
     "company": "Компанија",
-    "allCompanies": "Сите Компании"
+    "allCompanies": "Сите Компании",
+    "client": "Клиент",
+    "allClients": "Сите Клиенти"
   },
   "preview": {
     "title": "Преглед на Фактура",
@@ -176,6 +178,8 @@
     "cancelConfirm": "Дали сте сигурни дека сакате да откажете {{count}} фактура(и)?",
     "cancelledDescription": "{{count}} фактура(и) се откажани.",
     "deleteConfirm": "Дали сте сигурни дека сакате трајно да избришете {{count}} фактура(и)? Ова дејство не може да се поништи.",
-    "deletedDescription": "{{count}} фактура(и) се трајно избришани."
+    "deletedDescription": "{{count}} фактура(и) се трајно избришани.",
+    "downloadConfirm": "Преземи {{count}} фактура(и) како PDF?",
+    "downloadedDescription": "{{count}} фактура(и) се преземаат."
   }
 }

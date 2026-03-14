@@ -240,7 +240,8 @@ export function useTemplateEditor() {
 
   function handleStylingChange(value: string) {
     setStyling(value);
-    setEditorDirty(true);
+    const original = templates.find(t => t.id === selectedTemplateId)?.styling ?? DEFAULT_TEMPLATE_STYLING;
+    setEditorDirty(value !== original);
   }
 
   function handleResetStyling() {

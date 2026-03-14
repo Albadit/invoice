@@ -10,7 +10,7 @@
   "totalRevenue": "Вкупен Приход",
   "statusDistribution": "Распределба по Статус",
   "amountByStatus": "Износ по Статус",
-  "monthlyTrend": "Месечен Тренд (12 месеци)",
+  "revenueOverview": "Преглед на Приходи",
   "noData": "Нема податоци",
   "viewAll": "Прикажи ги сите",
   "outstanding": "Неплатени",

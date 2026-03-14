@@ -270,6 +270,7 @@
     "subtitle": "Customize exchange rates for your dashboard. Changes only affect your view, not the system currencies.",
     "search": "Search currencies...",
     "reset": "Reset to system rate",
+    "showOnlyChanged": "Show only changed",
     "customNote": "You have {{count}} custom rate(s). These are saved with your settings and only affect your dashboard."
   }
 }

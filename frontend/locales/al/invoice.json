@@ -101,7 +101,9 @@
   },
   "filter": {
     "company": "Kompania",
-    "allCompanies": "Të Gjitha Kompanitë"
+    "allCompanies": "Të Gjitha Kompanitë",
+    "client": "Klienti",
+    "allClients": "Të Gjithë Klientët"
   },
   "preview": {
     "title": "Pamja e Faturës",
@@ -176,6 +178,8 @@
     "cancelConfirm": "Je i sigurt që dëshiron të anulosh {{count}} fatura?",
     "cancelledDescription": "{{count}} fatura janë anuluar.",
     "deleteConfirm": "Je i sigurt që dëshiron të fshish përgjithmonë {{count}} fatura? Ky veprim nuk mund të kthehet.",
-    "deletedDescription": "{{count}} fatura janë fshirë përgjithmonë."
+    "deletedDescription": "{{count}} fatura janë fshirë përgjithmonë.",
+    "downloadConfirm": "Shkarko {{count}} fatura si PDF?",
+    "downloadedDescription": "{{count}} fatura po shkarkohen."
   }
 }

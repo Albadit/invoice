@@ -270,6 +270,7 @@
     "subtitle": "Personalizoni kurset e këmbimit për panelin tuaj. Ndryshimet ndikojnë vetëm pamjen tuaj, jo valutat e sistemit.",
     "search": "Kërko valuta...",
     "reset": "Kthe në kursin e sistemit",
+    "showOnlyChanged": "Shfaq vetëm të ndryshuarat",
     "customNote": "Keni {{count}} kurs(e) të personalizuar. Këto ruhen me cilësimet tuaja dhe ndikojnë vetëm panelin tuaj."
   }
 }

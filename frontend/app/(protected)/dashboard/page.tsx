@@ -235,7 +235,7 @@ export default function DashboardPage() {
             ];
 
             return (
-              <dl className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+              <dl className="grid w-full grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
                 {kpiItems.map((item, index) => (
                   <DashboardKpi key={index} {...item} />
                 ))}
@@ -260,7 +260,7 @@ export default function DashboardPage() {
               overdue: tInvoice('status.overdue'),
               cancelled: tInvoice('status.cancelled'),
             }}
-            title={t('monthlyTrend')}
+            title={t('revenueOverview')}
             isAllYears={!selectedYears.has('all') && selectedYears.size === 1 ? false : true}
           />
 

@@ -270,6 +270,7 @@
     "subtitle": "Pas wisselkoersen aan voor uw dashboard. Wijzigingen hebben alleen invloed op uw weergave, niet op de systeemvaluta's.",
     "search": "Zoek valuta...",
     "reset": "Herstel naar systeemkoers",
+    "showOnlyChanged": "Toon alleen gewijzigde",
     "customNote": "U heeft {{count}} aangepaste koers(en). Deze worden opgeslagen met uw instellingen en hebben alleen invloed op uw dashboard."
   }
 }

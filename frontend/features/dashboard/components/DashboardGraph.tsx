@@ -148,7 +148,7 @@ export default function DashboardGraph({
       return {...base, interval: 0 as const, angle: -45, textAnchor: "end" as const, height: 5, tickMargin: 10};
     }
     if (isAllYears) {
-      return {...base, interval: 0 as const, textAnchor: "middle" as const, height: 5, tickMargin: 10};
+      return {...base, interval: 0 as const, angle: -45, textAnchor: "end" as const, height: 5, tickMargin: 10};
     }
     return {...base, angle: -45, textAnchor: "end" as const, height: 5, tickMargin: 10};
   }, [isMonthView, isAllYears]);
@@ -299,14 +299,14 @@ export default function DashboardGraph({
         <div className="flex flex-col justify-between gap-y-2 p-6">
           <div className="flex flex-col gap-y-2">
             {/* Title row + top-right controls */}
-            <div className="flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex flex-row items-center justify-between gap-4 flex-wrap">
               <dt className="text-medium text-foreground font-medium">{sectionTitle}</dt>
               {!isAllYears && (
-                <div className="flex flex-row-reverse items-center gap-2 shrink-0">
+                <div className="w-full sm:w-fit flex sm:flex-row-reverse flex-col items-center gap-2 shrink-0">
                   <Select
                     aria-label={t("graphView")}
                     size="sm"
-                    className="w-28"
+                    className="w-full sm:w-28"
                     selectedKeys={new Set([graphView])}
                     onSelectionChange={(keys) => {
                       const v = Array.from(keys)[0];
@@ -320,7 +320,7 @@ export default function DashboardGraph({
                     <Select
                       aria-label={t("selectMonth")}
                       size="sm"
-                      className="w-36"
+                      className="w-full sm:w-36"
                       selectedKeys={new Set([String(selectedMonth)])}
                       onSelectionChange={(keys) => {
                         const v = Array.from(keys)[0];

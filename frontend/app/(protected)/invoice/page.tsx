@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { invoicesApi } from '@/features/invoice/api';
 import { currenciesApi } from '@/features/currencies/api';
 import { companiesApi } from '@/features/companies/api';
-import type { InvoiceWithItems, Currency, Company } from '@/lib/types';
+import { clientsApi } from '@/features/clients/api';
+import type { InvoiceWithItems, Currency, Company, Client } from '@/lib/types';
 import { formatCurrencyAmount } from '@/config/formatting';
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -59,6 +60,7 @@ export default function InvoicesPage() {
   const [filteredInvoices, setFilteredInvoices] = useState<InvoiceWithItems[]>([]);
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceWithItems | null>(null);
@@ -86,6 +88,7 @@ export default function InvoicesPage() {
     searchQuery: string;
     statusFilter: Set<string>;
     companyFilter: Set<string>;
+    clientFilter: Set<string>;
     dateRange: { start: DateValue; end: DateValue } | null;
   }>('invoices:filters', () => {
     const statusParam = searchParams.get('status');
@@ -107,12 +110,18 @@ export default function InvoicesPage() {
       searchQuery: '',
       statusFilter: statusParam ? new Set(statusParam.split(',')) : new Set<string>(),
       companyFilter: companyParam ? new Set([companyParam]) : new Set<string>(),
+      clientFilter: new Set<string>(),
       dateRange,
     };
   }, { skipRestore: hasUrlParams });
   
   // Debounced search value
   const [debouncedSearch, setDebouncedSearch] = useState(currentFilters.searchQuery);
+
+  // Ensure clientFilter exists (handles restored session state from before this field was added)
+  if (!currentFilters.clientFilter) {
+    currentFilters.clientFilter = new Set<string>();
+  }
   
   // Track previous filter values to detect actual changes
   const prevFiltersRef = useRef<string>('');
@@ -141,6 +150,7 @@ export default function InvoicesPage() {
       debouncedSearch,
       statusFilter: Array.from(currentFilters.statusFilter).sort(),
       companyFilter: Array.from(currentFilters.companyFilter).sort(),
+      clientFilter: Array.from(currentFilters.clientFilter).sort(),
       dateRange: currentFilters.dateRange,
       sortDescriptors: sortDescriptors.map(s => `${s.column}:${s.direction}`)
     });
@@ -151,16 +161,18 @@ export default function InvoicesPage() {
       setCurrentPage(1);
       loadInvoices(1);
     }
-  }, [rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.dateRange, sortDescriptors]);
+  }, [rowsPerPage, debouncedSearch, currentFilters.statusFilter, currentFilters.companyFilter, currentFilters.clientFilter, currentFilters.dateRange, sortDescriptors]);
 
   async function loadLookups() {
     try {
-      const [currencyData, companyData] = await Promise.all([
+      const [currencyData, companyData, clientData] = await Promise.all([
         currenciesApi.getAll(),
-        companiesApi.getAll()
+        companiesApi.getAll(),
+        clientsApi.list()
       ]);
       setCurrencies(currencyData);
       setCompanies(companyData);
+      setClients(clientData);
     } catch (error) {
       console.error('Failed to load lookups:', error);
     }
@@ -236,6 +248,7 @@ export default function InvoicesPage() {
         search: search || undefined,
         statusFilter: statusArr.length > 0 ? statusArr : undefined,
         companyIds: filters?.companyFilter.size ? Array.from(filters.companyFilter) : undefined,
+        clientIds: filters?.clientFilter.size ? Array.from(filters.clientFilter) : undefined,
         startDate,
         endDate,
         orderBy: orderParts.join(','),
@@ -313,6 +326,27 @@ export default function InvoicesPage() {
 
   // ── Bulk actions ──
   const bulkActions: BulkAction[] = [
+    {
+      key: 'download',
+      label: t('actions.downloadPdf'),
+      icon: <Download className="size-4" />,
+      color: 'primary',
+      onClick: (selectedKeys) => {
+        const ids = Array.from(selectedKeys);
+        openConfirm({
+          title: t('actions.downloadPdf'),
+          message: t('bulk.downloadConfirm', { count: ids.length }),
+          confirmColor: 'primary',
+          action: async () => {
+            for (let i = 0; i < ids.length; i++) {
+              if (i > 0) await new Promise(r => setTimeout(r, 500));
+              handleDownloadPDF(ids[i]);
+            }
+            addToast({ title: t('actions.downloadPdf'), description: t('bulk.downloadedDescription', { count: ids.length }), color: 'success' });
+          },
+        });
+      },
+    },
     {
       key: 'markAsPaid',
       label: t('confirm.markAsPaidTitle'),
@@ -482,11 +516,12 @@ export default function InvoicesPage() {
             variant="light"
             size="sm"
             onClick={() => handleViewInvoice(invoice)}
+            isIconOnly
             startContent={<Eye className="size-4" />}
           />
           <Dropdown>
             <DropdownTrigger asChild>
-              <Button variant="light" size="sm" startContent={<EllipsisVertical className="size-4" />} />
+              <Button variant="light" size="sm" isIconOnly startContent={<EllipsisVertical className="size-4" />} />
             </DropdownTrigger>
             <DropdownMenu>
               <DropdownItem key="download"
@@ -631,9 +666,8 @@ export default function InvoicesPage() {
       </StickyHeader>
 
       <Card>
-        <CardBody className='flex flex-col lg:grid grid-cols-2 gap-4'>
+        <CardBody className='flex flex-col gap-4'>
           <Input
-            className='col-span-1 row-span-1'
             isClearable
             startContent={<Search className="size-4" />}
             placeholder={t('search.placeholder')}
@@ -641,101 +675,128 @@ export default function InvoicesPage() {
             onChange={(e) => setCurrentFilters({ ...currentFilters, searchQuery: e.target.value })}
             onClear={() => setCurrentFilters({ ...currentFilters, searchQuery: '' })}
           />
-          <Select
-            aria-label={t('filter.company')}
-            selectionMode="multiple"
-            classNames={{
-              base: 'col-span-1 row-span-1',
-            }}
-            placeholder={t('filter.allCompanies')}
-            selectedKeys={currentFilters.companyFilter}
-            onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, companyFilter: new Set(Array.from(keys) as string[]) })}
-            endContent={currentFilters.companyFilter.size > 0 ? (
-              <span
-                role="button"
-                tabIndex={0}
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); } }}
-                aria-label="Clear company filter"
-              >
-                <X className="size-3.5 text-default-400" />
-              </span>
-            ) : null}
-            renderValue={(items) => (
-              <div className="flex gap-1 overflow-hidden">
-                {items.map((item) => (
-                  <Chip key={item.key} variant="flat" size="sm">{item.textValue}</Chip>
-                ))}
-              </div>
-            )}
-          >
-            {companies.map((company) => (
-              <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
-            ))}
-          </Select>
-          <Select
-            aria-label={t('table.status')}
-            selectionMode="multiple"
-            classNames={{
-              base: 'col-span-1 row-span-2',
-            }}
-            placeholder={t('status.all')}
-            selectedKeys={currentFilters.statusFilter}
-            onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, statusFilter: new Set(Array.from(keys) as string[]) })}
-            endContent={currentFilters.statusFilter.size > 0 ? (
-              <span
-                role="button"
-                tabIndex={0}
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); } }}
-                aria-label="Clear status filter"
-              >
-                <X className="size-3.5 text-default-400" />
-              </span>
-            ) : null}
-            renderValue={(items) => (
-              <div className="flex gap-1 overflow-hidden">
-                {items.map((item) => {
-                  const color = item.key === 'pending' ? 'warning' : item.key === 'paid' ? 'success' : item.key === 'overdue' ? 'danger' : 'default';
-                  return <Chip key={item.key} color={color} variant="flat" size="sm">{item.textValue}</Chip>;
-                })}
-              </div>
-            )}
-          >
-            <SelectItem key="pending" textValue={t('status.pending')}>
-              <Chip color="warning" variant="flat" size="sm">{t('status.pending')}</Chip>
-            </SelectItem>
-            <SelectItem key="paid" textValue={t('status.paid')}>
-              <Chip color="success" variant="flat" size="sm">{t('status.paid')}</Chip>
-            </SelectItem>
-            <SelectItem key="overdue" textValue={t('status.overdue')}>
-              <Chip color="danger" variant="flat" size="sm">{t('status.overdue')}</Chip>
-            </SelectItem>
-            <SelectItem key="cancelled" textValue={t('status.cancelled')}>
-              <Chip color="default" variant="flat" size="sm">{t('status.cancelled')}</Chip>
-            </SelectItem>
-          </Select>
-          <DateRangePicker
-            showMonthAndYearPickers
-            aria-label="Date Range Picker"
-            className='col-span-1 row-span-2'
-            value={currentFilters.dateRange}
-            onChange={(value) => setCurrentFilters({ ...currentFilters, dateRange: value })}
-            endContent={currentFilters.dateRange ? (
-              <span
-                role="button"
-                tabIndex={0}
-                className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
-                onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); }}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); } }}
-                aria-label="Clear date range"
-              >
-                <X className="size-3.5 text-default-400" />
-              </span>
-            ) : null}
-          />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Select
+              aria-label={t('filter.company')}
+              selectionMode="multiple"
+              placeholder={t('filter.allCompanies')}
+              selectedKeys={currentFilters.companyFilter}
+              onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, companyFilter: new Set(Array.from(keys) as string[]) })}
+              endContent={currentFilters.companyFilter.size > 0 ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, companyFilter: new Set<string>() }); } }}
+                  aria-label="Clear company filter"
+                >
+                  <X className="size-3.5 text-default-400" />
+                </span>
+              ) : null}
+              renderValue={(items) => (
+                <div className="flex gap-1 overflow-hidden">
+                  {items.map((item) => (
+                    <Chip key={item.key} variant="flat" size="sm">{item.textValue}</Chip>
+                  ))}
+                </div>
+              )}
+            >
+              {companies.map((company) => (
+                <SelectItem key={company.id} textValue={company.name}>{company.name}</SelectItem>
+              ))}
+            </Select>
+            <Select
+              aria-label={t('filter.client')}
+              selectionMode="multiple"
+              placeholder={t('filter.allClients')}
+              selectedKeys={currentFilters.clientFilter}
+              onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, clientFilter: new Set(Array.from(keys) as string[]) })}
+              endContent={currentFilters.clientFilter.size > 0 ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, clientFilter: new Set<string>() }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, clientFilter: new Set<string>() }); } }}
+                  aria-label="Clear client filter"
+                >
+                  <X className="size-3.5 text-default-400" />
+                </span>
+              ) : null}
+              renderValue={(items) => (
+                <div className="flex gap-1 overflow-hidden">
+                  {items.map((item) => (
+                    <Chip key={item.key} variant="flat" size="sm">{item.textValue}</Chip>
+                  ))}
+                </div>
+              )}
+            >
+              {clients.map((client) => (
+                <SelectItem key={client.id} textValue={client.name}>{client.name}</SelectItem>
+              ))}
+            </Select>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <Select
+              aria-label={t('table.status')}
+              selectionMode="multiple"
+              placeholder={t('status.all')}
+              selectedKeys={currentFilters.statusFilter}
+              onSelectionChange={(keys) => setCurrentFilters({ ...currentFilters, statusFilter: new Set(Array.from(keys) as string[]) })}
+              endContent={currentFilters.statusFilter.size > 0 ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, statusFilter: new Set<string>() }); } }}
+                  aria-label="Clear status filter"
+                >
+                  <X className="size-3.5 text-default-400" />
+                </span>
+              ) : null}
+              renderValue={(items) => (
+                <div className="flex gap-1 overflow-hidden">
+                  {items.map((item) => {
+                    const color = item.key === 'pending' ? 'warning' : item.key === 'paid' ? 'success' : item.key === 'overdue' ? 'danger' : 'default';
+                    return <Chip key={item.key} color={color} variant="flat" size="sm">{item.textValue}</Chip>;
+                  })}
+                </div>
+              )}
+            >
+              <SelectItem key="pending" textValue={t('status.pending')}>
+                <Chip color="warning" variant="flat" size="sm">{t('status.pending')}</Chip>
+              </SelectItem>
+              <SelectItem key="paid" textValue={t('status.paid')}>
+                <Chip color="success" variant="flat" size="sm">{t('status.paid')}</Chip>
+              </SelectItem>
+              <SelectItem key="overdue" textValue={t('status.overdue')}>
+                <Chip color="danger" variant="flat" size="sm">{t('status.overdue')}</Chip>
+              </SelectItem>
+              <SelectItem key="cancelled" textValue={t('status.cancelled')}>
+                <Chip color="default" variant="flat" size="sm">{t('status.cancelled')}</Chip>
+              </SelectItem>
+            </Select>
+            <DateRangePicker
+              showMonthAndYearPickers
+              aria-label="Date Range Picker"
+              value={currentFilters.dateRange}
+              onChange={(value) => setCurrentFilters({ ...currentFilters, dateRange: value })}
+              endContent={currentFilters.dateRange ? (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="p-0.5 rounded-full hover:bg-default-200 transition-colors cursor-pointer"
+                  onClick={(e) => { e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); setCurrentFilters({ ...currentFilters, dateRange: null }); } }}
+                  aria-label="Clear date range"
+                >
+                  <X className="size-3.5 text-default-400" />
+                </span>
+              ) : null}
+            />
+          </div>
         </CardBody>
       </Card>
 

@@ -204,17 +204,23 @@ export function DataTable<T extends object>({
     });
   }, [data, isControlled, sortDescriptors]);
 
+  // ── Disabled keys as a Set for fast lookups ──
+  const disabledKeySet = useMemo(() => {
+    if (!disabledKeys) return new Set<string>();
+    return new Set(disabledKeys);
+  }, [disabledKeys]);
+
   // ── Selection derived values ──
   const selectedCount = selectedKeysValue === 'all'
-    ? sortedData.length
+    ? sortedData.filter(item => !disabledKeySet.has(getKey(item))).length
     : (selectedKeysValue as Set<string>).size;
 
   const resolvedSelectedKeys = useMemo((): Set<string> => {
     if (selectedKeysValue === 'all') {
-      return new Set(sortedData.map(getKey));
+      return new Set(sortedData.filter(item => !disabledKeySet.has(getKey(item))).map(getKey));
     }
     return selectedKeysValue as Set<string>;
-  }, [selectedKeysValue, sortedData, getKey]);
+  }, [selectedKeysValue, sortedData, getKey, disabledKeySet]);
 
   // Resolve which sortDescriptor to pass to HeroUI's Table (it only supports single)
   const resolvedSortDescriptor = (() => {
@@ -294,6 +300,8 @@ export function DataTable<T extends object>({
       sortDescriptor={resolvedSortDescriptor}
       onSortChange={handleMultiSortChange}
       selectionMode={selectionMode}
+      selectionBehavior="toggle"
+      onRowAction={() => {}}
       selectedKeys={selectionMode !== 'none' ? selectedKeysValue : undefined}
       onSelectionChange={selectionMode !== 'none' ? handleSelectionChange : undefined}
       disabledKeys={selectionMode !== 'none' ? disabledKeys : undefined}

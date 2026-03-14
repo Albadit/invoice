@@ -127,7 +127,7 @@ export function AddCurrencyModal({ isOpen, onClose, onSave }: AddCurrencyModalPr
               value={String(exchangeRate)}
               onChange={(e) => setExchangeRate(parseFloat(e.target.value) || 0)}
               min="0"
-              step="0.00000001"
+              step="any"
               description={t('currencies.fields.exchangeRateDescription')}
             />
             <div className="text-sm text-default-500">

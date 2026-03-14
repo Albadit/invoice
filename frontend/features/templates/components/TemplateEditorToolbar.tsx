@@ -45,10 +45,23 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
           const selected = Array.from(keys)[0];
           if (selected) handleSelectTemplate(String(selected));
         }}
+        renderValue={(items) => {
+          const tpl = templates.find((t) => items[0]?.key === t.id);
+          if (!tpl) return null;
+          return (
+            <div className="flex items-center justify-between gap-2">
+              <span>{tpl.name}</span>
+              {tpl.is_system && <Chip size="sm" variant="flat" color="secondary">System</Chip>}
+            </div>
+          );
+        }}
       >
         {templates.map((tpl) => (
-          <SelectItem key={tpl.id} textValue={`${tpl.name}${tpl.is_system ? ' (System)' : ''}`}>
-            {tpl.name}{tpl.is_system ? ' (System)' : ''}
+          <SelectItem key={tpl.id} textValue={tpl.name}>
+            <div className="flex items-center justify-between gap-2">
+              <span>{tpl.name}</span>
+              {tpl.is_system && <Chip size="sm" variant="flat" color="secondary">System</Chip>}
+            </div>
           </SelectItem>
         ))}
       </Select>

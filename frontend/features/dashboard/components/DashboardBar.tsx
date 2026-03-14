@@ -86,7 +86,7 @@ export default function DashboardBar({
     <Card as="dl" className={cn("dark:border-default-100 min-h-75 border border-transparent")}>
       {/* Header + legend */}
       <div className="flex flex-col gap-y-4 p-4">
-        <h3 className="text-small text-default-500 font-medium">{title ?? t("amountByStatus")}</h3>
+        <h3 className="text-medium text-foreground font-medium">{title ?? t("amountByStatus")}</h3>
         <div className="text-tiny text-default-500 flex w-full justify-end gap-4 overflow-x-auto">
           {categories.map((c) => (
             <div key={c.key} className="flex items-center gap-2">

@@ -141,6 +141,7 @@ export const invoicesApi = {
     search?: string;
     statusFilter?: string[];
     companyIds?: string[];
+    clientIds?: string[];
     startDate?: string;
     endDate?: string;
     orderBy?: string;
@@ -152,6 +153,7 @@ export const invoicesApi = {
       search, 
       statusFilter, 
       companyIds,
+      clientIds,
       startDate, 
       endDate,
       orderBy,
@@ -174,6 +176,12 @@ export const invoicesApi = {
       url.searchParams.append('company_id', companyIds.length === 1
         ? `eq.${companyIds[0]}`
         : `in.(${companyIds.join(',')})`);
+    }
+    
+    if (clientIds && clientIds.length > 0) {
+      url.searchParams.append('client_id', clientIds.length === 1
+        ? `eq.${clientIds[0]}`
+        : `in.(${clientIds.join(',')})`);
     }
     
     if (search) {

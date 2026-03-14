@@ -101,7 +101,9 @@
   },
   "filter": {
     "company": "Bedrijf",
-    "allCompanies": "Alle Bedrijven"
+    "allCompanies": "Alle Bedrijven",
+    "client": "Klant",
+    "allClients": "Alle Klanten"
   },
   "preview": {
     "title": "Factuurvoorbeeld",
@@ -176,6 +178,8 @@
     "cancelConfirm": "Weet je zeker dat je {{count}} factu(u)r(en) wilt annuleren?",
     "cancelledDescription": "{{count}} factu(u)r(en) zijn geannuleerd.",
     "deleteConfirm": "Weet je zeker dat je {{count}} factu(u)r(en) permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
-    "deletedDescription": "{{count}} factu(u)r(en) zijn permanent verwijderd."
+    "deletedDescription": "{{count}} factu(u)r(en) zijn permanent verwijderd.",
+    "downloadConfirm": "{{count}} factu(u)r(en) downloaden als PDF?",
+    "downloadedDescription": "{{count}} factu(u)r(en) worden gedownload."
   }
 }

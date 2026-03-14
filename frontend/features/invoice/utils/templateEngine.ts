@@ -235,31 +235,40 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
   const previewScript = options?.preview ? `
     <script>
     (function(){
-      var A4=1123,W=794,GAP=16,done=false;
+      var A4=1123,W=794,GAP=16,ran=false;
       function paginate(){
-        if(done)return;
-        done=true;
-        var cs=getComputedStyle(document.body);
-        var M=Math.round(parseFloat(cs.paddingTop));
+        if(ran)return;
+        ran=true;
+        var M=Math.round(parseFloat(getComputedStyle(document.body).paddingTop));
         var CH=A4-2*M,CW=W-2*M;
+        // Find root content element (skip script/style/link)
         var root=null;
         for(var c=document.body.firstElementChild;c;c=c.nextElementSibling){
-          if(c.tagName!=='SCRIPT'&&c.tagName!=='STYLE'){root=c;break;}
+          if(c.tagName!=='SCRIPT'&&c.tagName!=='STYLE'&&c.tagName!=='LINK'){root=c;break;}
         }
-        if(!root){done=false;return;}
+        if(!root){ran=false;return;}
         var rr=root.getBoundingClientRect();
         var contentH=Math.round(rr.height);
-        if(contentH<10){done=false;return;}
+        if(contentH<10){ran=false;return;}
+        // Single page — no splitting needed
         if(contentH<=CH){
           document.body.style.minHeight=A4+'px';
           window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
           return;
         }
-        var bounds=[];
-        Array.from(root.children).forEach(function(el){
-          bounds.push(Math.round(el.getBoundingClientRect().top-rr.top));
-        });
-        bounds.push(contentH);
+        // Collect break-point boundaries using Set (O(1) dedup) and iterative stack
+        var set=new Set(),top=rr.top,stack=[[root,0]];
+        while(stack.length){
+          var pair=stack.pop(),el=pair[0],d=pair[1];
+          for(var j=0;j<el.children.length;j++){
+            var ch=el.children[j];
+            set.add(Math.round(ch.getBoundingClientRect().top-top));
+            if(d<3&&ch.children.length>1)stack.push([ch,d+1]);
+          }
+        }
+        set.add(contentH);
+        var bounds=Array.from(set).sort(function(a,b){return a-b});
+        // Determine page break positions
         var breaks=[0],pos=0;
         while(pos+CH<contentH){
           var target=pos+CH,best=target;
@@ -270,34 +279,34 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
           pos=best;
         }
         var pages=breaks.length;
-        var html=root.outerHTML;
-        Array.from(document.body.childNodes).forEach(function(n){
-          if(n.nodeType===1&&(n.tagName==='SCRIPT'||n.tagName==='STYLE'))return;
-          n.remove();
-        });
+        // Clone DOM once (avoids re-parsing outerHTML per page)
+        var clone=root.cloneNode(true);
+        // Clear body content (preserve script/style/link)
+        var n=document.body.firstChild;
+        while(n){var nx=n.nextSibling;if(!(n.nodeType===1&&(n.tagName==='SCRIPT'||n.tagName==='STYLE'||n.tagName==='LINK')))n.remove();n=nx;}
         document.documentElement.style.background='transparent';
-        document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent;';
+        document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent';
+        // Build all pages in a fragment (single DOM insertion)
+        var frag=document.createDocumentFragment();
+        var pageCSS='width:'+W+'px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px';
         for(var i=0;i<pages;i++){
-          var vpH=(i<pages-1)?(breaks[i+1]-breaks[i]):Math.min(CH,contentH-breaks[i]);
+          var vpH=i<pages-1?breaks[i+1]-breaks[i]:Math.min(CH,contentH-breaks[i]);
           var page=document.createElement('div');
-          page.style.cssText='width:'+W+'px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px;';
+          page.style.cssText=pageCSS;
           var vp=document.createElement('div');
-          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+vpH+'px;overflow:hidden;';
+          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+vpH+'px;overflow:hidden';
           var ct=document.createElement('div');
-          ct.innerHTML=html;
-          ct.style.cssText='position:absolute;top:'+(-breaks[i])+'px;left:0;width:'+CW+'px;';
+          ct.appendChild(clone.cloneNode(true));
+          ct.style.cssText='position:absolute;top:'+(-breaks[i])+'px;left:0;width:'+CW+'px';
           vp.appendChild(ct);
           page.appendChild(vp);
-          document.body.appendChild(page);
+          frag.appendChild(page);
         }
-        var totalH=pages*A4+(pages+1)*GAP;
-        window.parent.postMessage({type:'previewSize',height:totalH,pages:pages},'*');
+        document.body.appendChild(frag);
+        window.parent.postMessage({type:'previewSize',height:pages*A4+(pages+1)*GAP,pages:pages},'*');
       }
-      function run(){setTimeout(paginate,150)}
-      if(document.fonts&&document.fonts.ready){
-        document.fonts.ready.then(run);
-      }else if(document.readyState==='complete'){run()}
-      else{window.addEventListener('load',run)}
+      function run(){requestAnimationFrame(function(){setTimeout(paginate,100)})}
+      document.fonts&&document.fonts.ready?document.fonts.ready.then(run):document.readyState==='complete'?run():window.addEventListener('load',run);
     })();
     </script>` : '';
   return `
@@ -308,21 +317,21 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
       <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
       <style>
-        * {
-          padding: 0;
-          margin: 0;
-          box-sizing: border-box;
-        }
-        body {
-          font-family: Inter, sans-serif;
-          ${previewCss}
-        }
-        body > div > div:last-child {
-          break-inside: avoid;
-          page-break-inside: avoid;
+        @layer base {
+          * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+          }
+          body {
+            ${previewCss}
+          }
+          body > div > div:last-child {
+            break-inside: avoid;
+            page-break-inside: avoid;
+          }
         }
       </style>
     </head>
