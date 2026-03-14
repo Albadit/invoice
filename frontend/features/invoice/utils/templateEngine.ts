@@ -230,25 +230,41 @@ export function translateCustomHtml(html: string, labels: Translations): string 
  * Wrap rendered invoice HTML in a complete HTML document with styles.
  * Used for custom templates that only provide body content.
  */
-export function customInvoiceHtml(bodyContent: string, options?: { preview?: boolean }): string {
-  const previewCss = options?.preview ? 'padding: 16mm;' : '';
+export function customInvoiceHtml(bodyContent: string, options?: {
+  preview?: boolean;
+  margins?: { top: string; right: string; bottom: string; left: string };
+}): string {
+
   const previewScript = options?.preview ? `
     <script>
     (function(){
       var A4=1123,W=794,GAP=16,ran=false;
+      var SKIP={SCRIPT:1,STYLE:1,LINK:1};
       function paginate(){
         if(ran)return;
         ran=true;
-        var M=Math.round(parseFloat(getComputedStyle(document.body).paddingTop));
-        var CH=A4-2*M,CW=W-2*M;
-        // Find root content element (skip script/style/link)
+        // Detect <header> and <footer> tags in the body
+        var hdrEl=document.body.querySelector('header');
+        var ftrEl=document.body.querySelector('footer');
+        var hdrH=hdrEl?hdrEl.getBoundingClientRect().height:0;
+        var ftrH=ftrEl?ftrEl.getBoundingClientRect().height:0;
+        // Find root content element (skip header/footer/script/style/link)
         var root=null;
         for(var c=document.body.firstElementChild;c;c=c.nextElementSibling){
-          if(c.tagName!=='SCRIPT'&&c.tagName!=='STYLE'&&c.tagName!=='LINK'){root=c;break;}
+          if(!SKIP[c.tagName]&&c.tagName!=='HEADER'&&c.tagName!=='FOOTER'){root=c;break;}
         }
         if(!root){ran=false;return;}
+        // Measure content
+        var rootStyle=getComputedStyle(root);
+        var PT=parseFloat(rootStyle.paddingTop)||0;
+        var PB=parseFloat(rootStyle.paddingBottom)||0;
+        var PL=parseFloat(rootStyle.paddingLeft)||0;
         var rr=root.getBoundingClientRect();
-        var contentH=Math.round(rr.height);
+        var CW=Math.round(rr.width-2*PL);
+        var contentH=Math.round(rr.height-PT-PB);
+        var topSpace=Math.max(hdrH,PT);
+        var bottomSpace=Math.max(ftrH,PB);
+        var CH=A4-topSpace-bottomSpace;
         if(contentH<10){ran=false;return;}
         // Single page — no splitting needed
         if(contentH<=CH){
@@ -256,14 +272,14 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
           window.parent.postMessage({type:'previewSize',height:A4,pages:1},'*');
           return;
         }
-        // Collect break-point boundaries using Set (O(1) dedup) and iterative stack
-        var set=new Set(),top=rr.top,stack=[[root,0]];
+        // Collect break-point boundaries
+        var set=new Set(),top=rr.top+PT,stack=[];
+        for(var ci=0;ci<root.children.length;ci++)stack.push([root.children[ci],0]);
         while(stack.length){
           var pair=stack.pop(),el=pair[0],d=pair[1];
-          for(var j=0;j<el.children.length;j++){
-            var ch=el.children[j];
-            set.add(Math.round(ch.getBoundingClientRect().top-top));
-            if(d<3&&ch.children.length>1)stack.push([ch,d+1]);
+          set.add(Math.round(el.getBoundingClientRect().top-top));
+          if(d<3&&el.children.length>1){
+            for(var j=0;j<el.children.length;j++)stack.push([el.children[j],d+1]);
           }
         }
         set.add(contentH);
@@ -279,24 +295,44 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
           pos=best;
         }
         var pages=breaks.length;
-        // Clone DOM once (avoids re-parsing outerHTML per page)
-        var clone=root.cloneNode(true);
-        // Clear body content (preserve script/style/link)
+        // Clone content children (inside root, without root padding wrapper)
+        var contentClone=document.createElement('div');
+        for(var ci2=0;ci2<root.children.length;ci2++)contentClone.appendChild(root.children[ci2].cloneNode(true));
+        // Preserve flex/gap from root
+        var rootGap=rootStyle.gap||'0px';
+        contentClone.style.cssText='display:flex;flex-direction:column;gap:'+rootGap;
+        // Clone header/footer for reuse
+        var hdrClone=hdrEl?hdrEl.cloneNode(true):null;
+        var ftrClone=ftrEl?ftrEl.cloneNode(true):null;
+        // Clear body
         var n=document.body.firstChild;
-        while(n){var nx=n.nextSibling;if(!(n.nodeType===1&&(n.tagName==='SCRIPT'||n.tagName==='STYLE'||n.tagName==='LINK')))n.remove();n=nx;}
+        while(n){var nx=n.nextSibling;if(!(n.nodeType===1&&SKIP[n.tagName]))n.remove();n=nx;}
         document.documentElement.style.background='transparent';
         document.body.style.cssText='font-family:Inter,sans-serif;margin:0;padding:'+GAP+'px;display:flex;flex-direction:column;gap:'+GAP+'px;align-items:center;background:transparent';
-        // Build all pages in a fragment (single DOM insertion)
+        // Build pages
         var frag=document.createDocumentFragment();
         var pageCSS='width:'+W+'px;height:'+A4+'px;overflow:hidden;background:white;flex-shrink:0;position:relative;box-shadow:0 2px 16px rgba(0,0,0,0.08);border-radius:2px';
         for(var i=0;i<pages;i++){
-          var vpH=i<pages-1?breaks[i+1]-breaks[i]:Math.min(CH,contentH-breaks[i]);
           var page=document.createElement('div');
           page.style.cssText=pageCSS;
+          // Header
+          if(hdrClone){
+            var hc=hdrClone.cloneNode(true);
+            hc.style.position='absolute';hc.style.top='0';hc.style.left='0';hc.style.width=W+'px';
+            page.appendChild(hc);
+          }
+          // Footer
+          if(ftrClone){
+            var fc=ftrClone.cloneNode(true);
+            fc.style.position='absolute';fc.style.bottom='0';fc.style.left='0';fc.style.width=W+'px';
+            page.appendChild(fc);
+          }
+          // Content viewport
+          var vpH=i<pages-1?breaks[i+1]-breaks[i]:Math.min(CH,contentH-breaks[i]);
           var vp=document.createElement('div');
-          vp.style.cssText='position:absolute;top:'+M+'px;left:'+M+'px;width:'+CW+'px;height:'+vpH+'px;overflow:hidden';
+          vp.style.cssText='position:absolute;top:'+topSpace+'px;left:'+PL+'px;width:'+CW+'px;height:'+vpH+'px;overflow:hidden';
           var ct=document.createElement('div');
-          ct.appendChild(clone.cloneNode(true));
+          ct.appendChild(contentClone.cloneNode(true));
           ct.style.cssText='position:absolute;top:'+(-breaks[i])+'px;left:0;width:'+CW+'px';
           vp.appendChild(ct);
           page.appendChild(vp);
@@ -324,14 +360,26 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
             padding: 0;
             margin: 0;
             box-sizing: border-box;
+            // outline: solid red 1px;
           }
-          body {
-            ${previewCss}
-          }
-          body > div > div:last-child {
+          main > div:last-child {
             break-inside: avoid;
             page-break-inside: avoid;
           }
+
+          ${options?.margins ? `
+          main {
+            padding: ${options.margins.top} ${options.margins.right} ${options.margins.bottom} ${options.margins.left} !important;
+          }
+          header {
+            padding-left: ${options.margins.left} !important;
+            padding-right: ${options.margins.right} !important;
+          }
+          footer {
+            padding-left: ${options.margins.left} !important;
+            padding-right: ${options.margins.right} !important;
+          }
+          ` : ''}
         }
       </style>
     </head>
@@ -349,51 +397,45 @@ export function customInvoiceHtml(bodyContent: string, options?: { preview?: boo
  * Exported so the test page editor can use it as a starting point.
  */
 export const DEFAULT_TEMPLATE_STYLING = `
-<div class="w-full h-full bg-transparent flex flex-col gap-8">
-  <!-- Header -->
-  <div class="flex flex-col gap-4">
-    <div class="flex justify-between">
-      {{#if company.logo_url}}
-        <img src="{{ company.logo_url }}" alt="Logo" class="h-16" />
-      {{else}}
-        <div class="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold">
-          Logo Demo
+<header class="absolute top-0 left-0 w-full bg-slate-900 px-[16mm] py-6 flex items-center justify-between">
+  <div class="flex items-center gap-4">
+    {{#if company.logo_url}}
+      <img src="{{ company.logo_url }}" alt="Logo" class="h-12 brightness-0 invert" />
+    {{/if}}
+    <span class="text-xl font-bold text-white">{{ company.name }}</span>
+  </div>
+  <div class="text-right">
+    <h2 class="text-2xl font-bold text-white">{{ lang.invoiceTitle }}</h2>
+    <p class="text-base text-slate-300 font-semibold">#{{ invoice.invoice_code }}</p>
+  </div>
+</header>
+<main class="w-full h-full bg-transparent flex flex-col gap-8 p-[16mm]">
+  <div class="flex justify-between">
+    <div class="flex flex-col">
+      {{#if company.street}}<p class="text-sm text-gray-600">{{ company.street }}</p>{{/if}}
+      {{#if company.city}}<p class="text-sm text-gray-600">{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}
+      {{#if company.country}}<p class="text-sm text-gray-600">{{ company.country }}</p>{{/if}}
+      {{#if company.email}}<p class="text-sm text-gray-600">{{ company.email }}</p>{{/if}}
+      {{#if company.phone}}<p class="text-sm text-gray-600">{{ company.phone }}</p>{{/if}}
+      {{#if company.vat_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>{{/if}}
+      {{#if company.coc_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>{{/if}}
+    </div>
+    <div class="flex flex-col gap-1">
+      {{#if invoice.issue_date}}
+        <div class="flex justify-end gap-3">
+          <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
+          <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
         </div>
       {{/if}}
-      <div class="flex flex-col gap-2 text-right">
-        <h2 class="text-4xl font-bold text-slate-900">{{ lang.invoiceTitle }}</h2>
-        <p class="text-2xl text-slate-600 font-semibold">#{{ invoice.invoice_code }}</p>
-      </div>
-    </div>
-
-    <div class="flex justify-between">
-      <div class="flex flex-col">
-        <h1 class="text-2xl font-bold text-gray-900">{{ company.name }}</h1>
-        {{#if company.street}}<p class="text-sm text-gray-600">{{ company.street }}</p>{{/if}}
-        {{#if company.city}}<p class="text-sm text-gray-600">{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}
-        {{#if company.country}}<p class="text-sm text-gray-600">{{ company.country }}</p>{{/if}}
-        {{#if company.email}}<p class="text-sm text-gray-600">{{ company.email }}</p>{{/if}}
-        {{#if company.phone}}<p class="text-sm text-gray-600">{{ company.phone }}</p>{{/if}}
-        {{#if company.vat_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>{{/if}}
-        {{#if company.coc_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>{{/if}}
-      </div>
-      <div class="flex flex-col gap-1">
-        {{#if invoice.issue_date}}
-          <div class="flex justify-end gap-3">
-            <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
-            <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
-          </div>
-        {{/if}}
-        {{#if invoice.due_date}}
-          <div class="flex justify-end gap-3">
-            <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
-            <span class="text-sm text-gray-900">{{ date.due_date }}</span>
-          </div>
-        {{/if}}
-      </div>
+      {{#if invoice.due_date}}
+        <div class="flex justify-end gap-3">
+          <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
+          <span class="text-sm text-gray-900">{{ date.due_date }}</span>
+        </div>
+      {{/if}}
     </div>
   </div>
-  
+
   <hr class="border-1 border-gray-200"/>
 
   <!-- Bill To -->
@@ -407,14 +449,14 @@ export const DEFAULT_TEMPLATE_STYLING = `
 
   <!-- Items Table -->
   <div class="flex flex-col gap-4">
-    <div class="grid grid-cols-12 border-b-2 py-3 border-slate-900">
-      <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">{{ lang.item }}</div>
-      <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-center">{{ lang.quantity }}</div>
-      <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-right">{{ lang.rate }}</div>
-      <div class="col-span-3 text-sm font-bold text-slate-900 uppercase text-right">{{ lang.amount }}</div>
+    <div class="grid grid-cols-12 bg-slate-900 text-white rounded py-3 px-2">
+      <div class="col-span-5 text-sm font-bold uppercase">{{ lang.item }}</div>
+      <div class="col-span-2 text-sm font-bold uppercase text-center">{{ lang.quantity }}</div>
+      <div class="col-span-2 text-sm font-bold uppercase text-right">{{ lang.rate }}</div>
+      <div class="col-span-3 text-sm font-bold uppercase text-right">{{ lang.amount }}</div>
     </div>
     {{#each items in item}}
-      <div class="grid grid-cols-12">
+      <div class="grid grid-cols-12 px-2">
         <span class="col-span-5 text-slate-700">{{ item.name }}</span>
         <span class="col-span-2 text-slate-700 text-center">{{ item.quantity }}</span>
         <span class="col-span-2 text-slate-700 text-right">{{ item.fc.unit_price }}</span>
@@ -466,7 +508,14 @@ export const DEFAULT_TEMPLATE_STYLING = `
       </div>
     </div>
   </div>
-</div>`.trim();
+</main>
+<footer class="absolute bottom-0 left-0 w-full bg-slate-900 px-[16mm] py-4 flex items-center justify-between text-xs text-slate-400">
+  <span>{{ company.name }}</span>
+  <div class="flex gap-4">
+    {{#if company.email}}<span>{{ company.email }}</span>{{/if}}
+    {{#if company.phone}}<span>{{ company.phone }}</span>{{/if}}
+  </div>
+</footer>`.trim();
 
 /**
  * Build HTML content for the default invoice template.

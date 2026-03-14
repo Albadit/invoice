@@ -99,6 +99,7 @@ export function TemplateEditorToolbar({ editor }: TemplateEditorToolbarProps) {
           <SelectItem key={lang.key} textValue={lang.name}>{lang.name}</SelectItem>
         ))}
       </Select>
+
       <div className="w-px h-5 bg-default-300" />
 
       {/* Download */}

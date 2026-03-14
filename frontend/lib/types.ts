@@ -6,6 +6,7 @@ export type InvoiceItem = Database['public']['Tables']['invoice_items']['Row'];
 export type Currency = Database['public']['Tables']['currencies']['Row'];
 export type Company = Database['public']['Tables']['companies']['Row'];
 export type Template = Database['public']['Tables']['templates']['Row'];
+export type PdfMargin = Database['public']['Tables']['pdf_margins']['Row'];
 export type Client = Database['public']['Tables']['clients']['Row'];
 export type Settings = Database['public']['Tables']['settings']['Row'];
 

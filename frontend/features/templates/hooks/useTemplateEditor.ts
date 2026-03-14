@@ -6,12 +6,13 @@ import { companiesApi } from '@/features/companies/api';
 // eslint-disable-next-line boundaries/element-types
 import { currenciesApi } from '@/features/currencies/api';
 import { templatesApi } from '@/features/templates/api';
+import { pdfMarginsApi } from '@/features/templates/pdfMarginsApi';
 // eslint-disable-next-line boundaries/element-types
 import { DEFAULT_TEMPLATE_STYLING } from '@/features/invoice/utils/templateEngine';
 import { DUMMY_INVOICE } from '@/features/templates/data/dummyInvoice';
 import { EDITOR_ROUTES } from '@/config/routes';
 import { useLocale } from '@/contexts/LocaleProvider';
-import type { Template, Company, Currency, InvoiceWithItems } from '@/lib/types';
+import type { Template, Company, Currency, InvoiceWithItems, PdfMargin } from '@/lib/types';
 
 /**
  * Custom hook encapsulating all state and logic for the template editor page.
@@ -28,8 +29,10 @@ export function useTemplateEditor() {
 
   // ── Template state ───────────────────────────────────────────────
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [pdfMargins, setPdfMargins] = useState<PdfMargin[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [styling, setStyling] = useState<string>('');
+  const [selectedMarginId, setSelectedMarginId] = useState<string>('');
   const [editorDirty, setEditorDirty] = useState(false);
 
   // ── UI state ─────────────────────────────────────────────────────
@@ -59,19 +62,23 @@ export function useTemplateEditor() {
   useEffect(() => {
     async function init() {
       try {
-        const [companyList, currencyList, tplList] = await Promise.all([
+        const [companyList, currencyList, tplList, marginList] = await Promise.all([
           companiesApi.getAll(),
           currenciesApi.getAll(),
           templatesApi.getAll(),
+          pdfMarginsApi.getAll(),
         ]);
         setCompanies(companyList);
         setCurrencies(currencyList);
         setTemplates(tplList);
+        setPdfMargins(marginList);
 
-        // Auto-select first template
-        if (tplList.length > 0) {
-          setSelectedTemplateId(tplList[0].id);
-          setStyling(tplList[0].styling ?? DEFAULT_TEMPLATE_STYLING);
+        // Auto-select "Classic" template, or fall back to first
+        const classic = tplList.find(t => t.name === 'Classic') ?? tplList[0];
+        if (classic) {
+          setSelectedTemplateId(classic.id);
+          setStyling(classic.styling ?? DEFAULT_TEMPLATE_STYLING);
+          setSelectedMarginId(classic.margin_id ?? '');
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load');
@@ -108,7 +115,7 @@ export function useTemplateEditor() {
       const res = await fetch(EDITOR_ROUTES.render, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoice, styling: tplStyling || undefined }),
+        body: JSON.stringify({ invoice, styling: tplStyling || undefined, margin_id: selectedMarginId || undefined }),
       });
       const html = await res.text();
       const iframe = iframeRef.current;
@@ -119,12 +126,12 @@ export function useTemplateEditor() {
     } catch (err) {
       console.error('Preview render failed:', err);
     }
-  }, [showPreview]);
+  }, [showPreview, selectedMarginId]);
 
   useEffect(() => {
     if (loading || !showPreview) return;
     renderPreview(previewInvoice, styling);
-  }, [loading, selectedCompanyId, previewLanguage, styling, showPreview, renderPreview]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loading, selectedCompanyId, previewLanguage, styling, selectedMarginId, showPreview, renderPreview]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── A4 scale logic ───────────────────────────────────────────────
 
@@ -235,19 +242,31 @@ export function useTemplateEditor() {
     if (!tpl) return;
     setSelectedTemplateId(templateId);
     setStyling(tpl.styling ?? DEFAULT_TEMPLATE_STYLING);
+    setSelectedMarginId(tpl.margin_id ?? '');
     setEditorDirty(false);
   }
 
   function handleStylingChange(value: string) {
     setStyling(value);
-    const original = templates.find(t => t.id === selectedTemplateId)?.styling ?? DEFAULT_TEMPLATE_STYLING;
-    setEditorDirty(value !== original);
+    const original = templates.find(t => t.id === selectedTemplateId);
+    const origStyling = original?.styling ?? DEFAULT_TEMPLATE_STYLING;
+    const origMarginId = original?.margin_id ?? '';
+    setEditorDirty(value !== origStyling || selectedMarginId !== origMarginId);
   }
 
   function handleResetStyling() {
     const tpl = templates.find(t => t.id === selectedTemplateId);
     setStyling(tpl?.styling ?? DEFAULT_TEMPLATE_STYLING);
+    setSelectedMarginId(tpl?.margin_id ?? '');
     setEditorDirty(false);
+  }
+
+  function handleMarginChange(marginId: string) {
+    setSelectedMarginId(marginId);
+    const original = templates.find(t => t.id === selectedTemplateId);
+    const origMarginId = original?.margin_id ?? '';
+    const origStyling = original?.styling ?? DEFAULT_TEMPLATE_STYLING;
+    setEditorDirty(styling !== origStyling || marginId !== origMarginId);
   }
 
   async function handleDownload() {
@@ -255,7 +274,7 @@ export function useTemplateEditor() {
       const res = await fetch(EDITOR_ROUTES.render, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invoice: previewInvoice, styling, pdf: true }),
+        body: JSON.stringify({ invoice: previewInvoice, styling, margin_id: selectedMarginId || undefined, pdf: true }),
       });
       if (!res.ok) throw new Error(await res.text());
       const blob = await res.blob();
@@ -278,9 +297,9 @@ export function useTemplateEditor() {
     if (!selectedTemplateId || isSystemTemplate) { setSavingExisting(false); return; }
     setSavingExisting(true);
     try {
-      await templatesApi.update(selectedTemplateId, { styling });
+      await templatesApi.update(selectedTemplateId, { styling, margin_id: selectedMarginId || null });
       setTemplates(prev => prev.map(t =>
-        t.id === selectedTemplateId ? { ...t, styling } : t
+        t.id === selectedTemplateId ? { ...t, styling, margin_id: selectedMarginId || null } : t
       ));
       setEditorDirty(false);
     } catch (err) {
@@ -298,6 +317,7 @@ export function useTemplateEditor() {
       const newTpl = await templatesApi.create({
         name: saveTemplateName.trim(),
         styling,
+        margin_id: selectedMarginId || null,
       });
       setTemplates(prev => [...prev, newTpl]);
       setSaveTemplateName('');
@@ -322,6 +342,8 @@ export function useTemplateEditor() {
     selectedTemplateId,
     isSystemTemplate,
     styling,
+    pdfMargins,
+    selectedMarginId,
     editorDirty,
 
     // UI state
@@ -355,6 +377,7 @@ export function useTemplateEditor() {
     handleSelectLanguage,
     handleSelectTemplate,
     handleStylingChange,
+    handleMarginChange,
     handleResetStyling,
     handleDownload,
     handleSaveTemplate,

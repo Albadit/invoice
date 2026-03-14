@@ -96,12 +96,28 @@ CREATE TABLE IF NOT EXISTS currencies (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- PDF Margins table
+CREATE TABLE IF NOT EXISTS pdf_margins (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    top TEXT NOT NULL,
+    "right" TEXT NOT NULL,
+    bottom TEXT NOT NULL,
+    "left" TEXT NOT NULL,
+    sort INTEGER NOT NULL DEFAULT 0,
+    is_system BOOLEAN NOT NULL DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Templates table
 CREATE TABLE IF NOT EXISTS templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID DEFAULT auth.uid() REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     styling TEXT NOT NULL DEFAULT '',
+    margin_id UUID REFERENCES pdf_margins(id) ON DELETE SET NULL,
     is_system BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -288,6 +304,8 @@ CREATE INDEX IF NOT EXISTS idx_companies_name ON companies(name);
 CREATE INDEX IF NOT EXISTS idx_currencies_user_id ON currencies(user_id);
 CREATE INDEX IF NOT EXISTS idx_currencies_is_system ON currencies(is_system);
 CREATE INDEX IF NOT EXISTS idx_currencies_code ON currencies(code);
+CREATE INDEX IF NOT EXISTS idx_pdf_margins_user_id ON pdf_margins(user_id);
+CREATE INDEX IF NOT EXISTS idx_pdf_margins_is_system ON pdf_margins(is_system);
 CREATE INDEX IF NOT EXISTS idx_templates_user_id ON templates(user_id);
 CREATE INDEX IF NOT EXISTS idx_templates_is_system ON templates(is_system);
 CREATE INDEX IF NOT EXISTS idx_invoices_user_id ON invoices(user_id);
@@ -533,6 +551,19 @@ CREATE OR REPLACE TRIGGER update_settings_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- Trigger for pdf_margins updated_at
+DO $$ BEGIN
+    DROP TRIGGER IF EXISTS update_pdf_margins_updated_at ON pdf_margins;
+EXCEPTION
+    WHEN undefined_table THEN NULL;
+    WHEN undefined_object THEN NULL;
+END $$;
+
+CREATE OR REPLACE TRIGGER update_pdf_margins_updated_at
+    BEFORE UPDATE ON pdf_margins
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 DO $$ BEGIN
     DROP TRIGGER IF EXISTS update_templates_updated_at ON templates;
 EXCEPTION
@@ -602,6 +633,7 @@ CREATE OR REPLACE TRIGGER calculate_invoice_totals_on_change
 -- =============================================
 
 ALTER TABLE currencies    ENABLE ROW LEVEL SECURITY;
+ALTER TABLE pdf_margins   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE templates     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE companies     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE clients       ENABLE ROW LEVEL SECURITY;
@@ -618,6 +650,17 @@ CREATE POLICY currencies_update ON currencies FOR UPDATE
     USING (user_id = auth.uid() AND is_system = false)
     WITH CHECK (user_id = auth.uid() AND is_system = false);
 CREATE POLICY currencies_delete ON currencies FOR DELETE
+    USING (user_id = auth.uid() AND is_system = false);
+
+-- PDF Margins: read system + own; write own non-system only
+CREATE POLICY pdf_margins_select ON pdf_margins FOR SELECT
+    USING (is_system = true OR user_id = auth.uid());
+CREATE POLICY pdf_margins_insert ON pdf_margins FOR INSERT
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY pdf_margins_update ON pdf_margins FOR UPDATE
+    USING (user_id = auth.uid() AND is_system = false)
+    WITH CHECK (user_id = auth.uid() AND is_system = false);
+CREATE POLICY pdf_margins_delete ON pdf_margins FOR DELETE
     USING (user_id = auth.uid() AND is_system = false);
 
 -- Templates: read system + own; write own non-system only

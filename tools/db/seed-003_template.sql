@@ -1,46 +1,59 @@
+-- Insert system PDF margin presets
+INSERT INTO pdf_margins (name, top, "right", bottom, "left", sort, is_system)
+SELECT v.name, v.top, v.r, v.bottom, v.l, v.sort, true
+FROM (VALUES
+  ('Normal',  '25mm', '25mm', '25mm', '25mm', 0),
+  ('Narrow',  '12.7mm', '12.7mm', '12.7mm', '12.7mm', 1),
+  ('Average', '25.4mm', '19.1mm', '25.4mm', '19.1mm', 2),
+  ('Wide',    '25.4mm', '50.8mm', '25.4mm', '50.8mm', 3)
+) AS v(name, top, r, bottom, l, sort)
+WHERE NOT EXISTS (
+  SELECT 1 FROM pdf_margins pm WHERE pm.name = v.name AND pm.is_system = true
+);
+
+
 -- Insert system templates (is_system = true, no user_id)
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<main class="w-full h-full bg-transparent flex flex-col gap-8">
-  <div class="flex flex-col gap-4">
-    <div class="flex justify-between">
-      {{#if company.logo_url}}
-        <img src="{{ company.logo_url }}" alt="Logo" class="h-16" />
-      {{else}}
-        <div class="h-16 w-32 bg-gray-200 rounded flex items-center justify-center text-gray-500 text-sm font-bold">Logo Demo</div>
-      {{/if}}
-      <div class="flex flex-col gap-2 text-right">
-        <h2 class="text-4xl font-bold text-slate-900">{{ lang.invoiceTitle }}</h2>
-        <p class="text-2xl text-slate-600 font-semibold">#{{ invoice.invoice_code }}</p>
-      </div>
+<header class="absolute top-0 left-0 w-full bg-slate-900 py-2 flex items-center justify-between">
+  <div class="flex items-center gap-4">
+    {{#if company.logo_url}}
+      <img src="{{ company.logo_url }}" alt="Logo" class="h-12 brightness-0 invert" />
+    {{/if}}
+    <span class="text-xl font-bold text-white">{{ company.name }}</span>
+  </div>
+  <div class="text-right">
+    <h2 class="text-2xl font-bold text-white">{{ lang.invoiceTitle }}</h2>
+    <p class="text-base text-slate-300 font-semibold">#{{ invoice.invoice_code }}</p>
+  </div>
+</header>
+<main class="w-full flex flex-col gap-8">
+  <div class="flex justify-between">
+    <div class="flex flex-col">
+      {{#if company.street}}<p class="text-sm text-gray-600">{{ company.street }}</p>{{/if}}
+      {{#if company.city}}<p class="text-sm text-gray-600">{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}
+      {{#if company.country}}<p class="text-sm text-gray-600">{{ company.country }}</p>{{/if}}
+      {{#if company.email}}<p class="text-sm text-gray-600">{{ company.email }}</p>{{/if}}
+      {{#if company.phone}}<p class="text-sm text-gray-600">{{ company.phone }}</p>{{/if}}
+      {{#if company.vat_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>{{/if}}
+      {{#if company.coc_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>{{/if}}
     </div>
-    <div class="flex justify-between">
-      <div class="flex flex-col">
-        <h1 class="text-2xl font-bold text-gray-900">{{ company.name }}</h1>
-        {{#if company.street}}<p class="text-sm text-gray-600">{{ company.street }}</p>{{/if}}
-        {{#if company.city}}<p class="text-sm text-gray-600">{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}
-        {{#if company.country}}<p class="text-sm text-gray-600">{{ company.country }}</p>{{/if}}
-        {{#if company.email}}<p class="text-sm text-gray-600">{{ company.email }}</p>{{/if}}
-        {{#if company.phone}}<p class="text-sm text-gray-600">{{ company.phone }}</p>{{/if}}
-        {{#if company.vat_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>{{/if}}
-        {{#if company.coc_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>{{/if}}
-      </div>
-      <div class="flex flex-col gap-1">
-        {{#if invoice.issue_date}}
-          <div class="flex justify-end gap-3">
-            <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
-            <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
-          </div>
-        {{/if}}
-        {{#if invoice.due_date}}
-          <div class="flex justify-end gap-3">
-            <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
-            <span class="text-sm text-gray-900">{{ date.due_date }}</span>
-          </div>
-        {{/if}}
-      </div>
+    <div class="flex flex-col gap-1">
+      {{#if invoice.issue_date}}
+        <div class="flex justify-end gap-3">
+          <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
+          <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
+        </div>
+      {{/if}}
+      {{#if invoice.due_date}}
+        <div class="flex justify-end gap-3">
+          <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
+          <span class="text-sm text-gray-900">{{ date.due_date }}</span>
+        </div>
+      {{/if}}
     </div>
   </div>
+
   <hr class="border-1 border-gray-200"/>
   <div class="flex flex-col">
     <h3 class="text-xs font-bold uppercase text-gray-600">{{ lang.billTo }}:</h3>
@@ -50,14 +63,14 @@ SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family
     {{#if customer.country}}<p class="text-sm text-gray-600">{{ customer.country }}</p>{{/if}}
   </div>
   <div class="flex flex-col gap-4">
-    <div class="grid grid-cols-12 border-b-2 py-3 border-slate-900">
-      <div class="col-span-5 text-sm font-bold text-slate-900 uppercase">{{ lang.item }}</div>
-      <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-center">{{ lang.quantity }}</div>
-      <div class="col-span-2 text-sm font-bold text-slate-900 uppercase text-right">{{ lang.rate }}</div>
-      <div class="col-span-3 text-sm font-bold text-slate-900 uppercase text-right">{{ lang.amount }}</div>
+    <div class="grid grid-cols-12 bg-slate-900 text-white rounded py-3 px-2">
+      <div class="col-span-5 text-sm font-bold uppercase">{{ lang.item }}</div>
+      <div class="col-span-2 text-sm font-bold uppercase text-center">{{ lang.quantity }}</div>
+      <div class="col-span-2 text-sm font-bold uppercase text-right">{{ lang.rate }}</div>
+      <div class="col-span-3 text-sm font-bold uppercase text-right">{{ lang.amount }}</div>
     </div>
     {{#each items in item}}
-      <div class="grid grid-cols-12">
+      <div class="grid grid-cols-12 px-2">
         <span class="col-span-5 text-slate-700">{{ item.name }}</span>
         <span class="col-span-2 text-slate-700 text-center">{{ item.quantity }}</span>
         <span class="col-span-2 text-slate-700 text-right">{{ item.fc.unit_price }}</span>
@@ -105,11 +118,18 @@ SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>
+<footer class="absolute bottom-0 left-0 w-full bg-slate-900 py-2 flex items-center justify-between text-xs text-slate-400">
+  <span>{{ company.name }}</span>
+  <div class="flex gap-4">
+    {{#if company.email}}<span>{{ company.email }}</span>{{/if}}
+    {{#if company.phone}}<span>{{ company.phone }}</span>{{/if}}
+  </div>
+</footer>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Classic');
 
 -- ── Minimal ──────────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Minimal', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap">
 <main class="w-full h-full flex flex-col gap-10 text-gray-800 font-[DM_Sans,sans-serif]">
   <div class="flex justify-between items-start">
@@ -174,11 +194,11 @@ SELECT 'Minimal', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapi
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Minimal');
 
 -- ── Bold Stripe ──────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Bold Stripe', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
 <main class="w-full h-full flex flex-col font-[Montserrat,sans-serif]">
   <div class="px-8 py-6 text-white bg-[#2563eb]">
@@ -249,11 +269,11 @@ SELECT 'Bold Stripe', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googl
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Bold Stripe');
 
 -- ── Elegant ──────────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Elegant', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap">
 <main class="w-full h-full flex flex-col gap-8 text-gray-800 font-[Playfair_Display,Georgia,serif]">
   <div class="text-center pt-2">
@@ -318,11 +338,11 @@ SELECT 'Elegant', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapi
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Elegant');
 
 -- ── Warm Earth ───────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Warm Earth', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap">
 <main class="w-full h-full flex flex-col gap-8 font-[Lora,serif] text-[#3d2c2c]">
   <div class="flex justify-between items-start">
@@ -390,11 +410,11 @@ SELECT 'Warm Earth', $TEMPLATE$<link rel="stylesheet" href="https://fonts.google
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Warm Earth');
 
 -- ── Corporate ────────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Corporate', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800;900&display=swap">
 <main class="w-full h-full flex flex-col text-gray-800 font-[Source_Sans_3,sans-serif]">
   <div class="flex justify-between items-center pb-4 border-b-4 border-gray-900">
@@ -469,11 +489,11 @@ SELECT 'Corporate', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googlea
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Corporate');
 
 -- ── Ocean Breeze ─────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Ocean Breeze', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap">
 <main class="w-full h-full flex flex-col gap-6 font-[Nunito,sans-serif] text-[#1e3a5f]">
   <div class="flex justify-between items-start">
@@ -541,11 +561,11 @@ SELECT 'Ocean Breeze', $TEMPLATE$<link rel="stylesheet" href="https://fonts.goog
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Ocean Breeze');
 
 -- ── Monochrome ───────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Monochrome', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
 <main class="w-full h-full flex flex-col gap-8 text-black font-[Space_Grotesk,sans-serif]">
   <div class="flex justify-between items-start pb-6 border-b-2 border-black">
@@ -614,11 +634,11 @@ SELECT 'Monochrome', $TEMPLATE$<link rel="stylesheet" href="https://fonts.google
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Monochrome');
 
 -- ── Royal Purple ─────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Royal Purple', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
 <main class="w-full h-full flex flex-col gap-6 font-[Outfit,sans-serif] text-[#2d1b4e]">
   <div class="flex justify-between items-start">
@@ -686,11 +706,11 @@ SELECT 'Royal Purple', $TEMPLATE$<link rel="stylesheet" href="https://fonts.goog
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Royal Purple');
 
 -- ── Swiss Clean ──────────────────────────────────────────────────
-INSERT INTO templates (name, styling, is_system)
+INSERT INTO templates (name, styling, margin_id, is_system)
 SELECT 'Swiss Clean', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap">
 <main class="w-full h-full flex flex-col gap-10 text-gray-900 font-[Manrope,sans-serif]">
   <div class="flex justify-between items-start">
@@ -767,7 +787,7 @@ SELECT 'Swiss Clean', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googl
       </div>
     </div>
   </div>
-</main>$TEMPLATE$, true
+</main>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Swiss Clean');
 
 -- Ensure all new templates are flagged as system

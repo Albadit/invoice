@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { renderInvoiceHtml } from '@/features/invoice/utils/renderInvoiceHtml';
 import { generatePdf } from '@/features/invoice/utils/generatePdf';
+import { resolveMargins } from '@/config/formatting';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
+import { pdfMarginsApi } from '@/features/templates/pdfMarginsApi';
 import { loadTranslations } from '@/lib/i18n/translate.server';
 import { createClient } from '@/lib/supabase/server';
 import type { InvoiceWithItems } from '@/lib/types';
@@ -83,6 +85,7 @@ export async function POST(request: Request) {
       id?: string;
       invoice?: InvoiceWithItems;
       styling?: string;
+      margin_id?: string;
       pdf?: boolean;
     };
 
@@ -103,14 +106,23 @@ export async function POST(request: Request) {
     const labels = loadTranslations(invoice.language || 'en');
     const { styling } = body;
 
+    // Resolve margin record once for both preview and PDF paths
+    let marginRecord = null;
+    if (body.margin_id) {
+      const allMargins = await pdfMarginsApi.getAll(authToken);
+      marginRecord = allMargins.find(m => m.id === body.margin_id) ?? null;
+    }
+    const margin = resolveMargins(marginRecord);
+
     const html = renderInvoiceHtml(invoice, labels, {
       styling,
       preview: !body.pdf,
+      margins: !body.pdf ? margin : undefined,
     });
 
     // Return PDF binary when requested
     if (body.pdf) {
-      const pdfBuffer = await generatePdf({ html });
+      const pdfBuffer = await generatePdf({ html, pdfOptions: { format: 'A4', margin } });
       return new NextResponse(new Uint8Array(pdfBuffer), {
         status: 200,
         headers: {

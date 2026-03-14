@@ -18,6 +18,8 @@ export interface RenderOptions {
   styling?: string | null;
   /** When true the HTML is wrapped for an in-browser preview (adds viewport meta etc.) */
   preview?: boolean;
+  /** Optional margin values to visually apply in the preview. */
+  margins?: { top: string; right: string; bottom: string; left: string };
 }
 
 /**
@@ -33,12 +35,12 @@ export function renderInvoiceHtml(
   labels: Translations,
   options: RenderOptions = {},
 ): string {
-  const { styling, preview = false } = options;
+  const { styling, preview = false, margins } = options;
 
   if (styling) {
     try {
       const body = renderTemplate(styling, invoice, labels);
-      return customInvoiceHtml(body, { preview });
+      return customInvoiceHtml(body, { preview, margins });
     } catch {
       // Malformed template – fall through to the built-in default
     }

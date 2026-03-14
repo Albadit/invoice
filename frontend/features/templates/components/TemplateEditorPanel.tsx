@@ -1,11 +1,14 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Editor, { loader, type OnMount, type BeforeMount } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import { useTheme } from 'next-themes';
-import { AlertTriangle, XCircle, ChevronDown, ChevronUp, X, Copy, ClipboardCheck } from 'lucide-react';
+import { AlertTriangle, XCircle, ChevronDown, ChevronUp, X, Copy, ClipboardCheck, BookOpen } from 'lucide-react';
 import { registerTemplateProviders, validateTemplate, type TemplateDiagnostics } from '../utils/monacoSetup';
+import { MarginDropdown } from './MarginDropdown';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { TemplateEditorState } from '../hooks/useTemplateEditor';
 
 // Load Monaco from local node_modules instead of CDN to avoid tracking prevention warnings
@@ -44,7 +47,10 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
     wordWrap,
     showPreview,
     editorWidth,
+    pdfMargins,
+    selectedMarginId,
     handleStylingChange,
+    handleMarginChange,
   } = editor;
 
   const { theme } = useTheme();
@@ -55,12 +61,29 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showProblems, setShowProblems] = useState(false);
+  const [activeTab, setActiveTab] = useState<'editor' | 'readme'>('editor');
+  const [readmeContent, setReadmeContent] = useState('');
+
+  useEffect(() => {
+    if (activeTab === 'readme' && !readmeContent) {
+      fetch('/TEMPLATE_EDITOR_README.md')
+        .then(r => r.text())
+        .then(setReadmeContent);
+    }
+  }, [activeTab, readmeContent]);
 
   const runValidation = useCallback(() => {
     const m = monacoRef.current;
     const model = m?.editor.getModels()[0];
     if (m && model) setDiagnostics(validateTemplate(m, model));
   }, []);
+
+  // Re-run validation when styling changes (e.g. template switch or reset)
+  useEffect(() => {
+    // Small delay so Monaco model updates first
+    const id = setTimeout(runValidation, 100);
+    return () => clearTimeout(id);
+  }, [styling, runValidation]);
 
   const handleBeforeMount: BeforeMount = useCallback((monaco) => {
     monacoRef.current = monaco;
@@ -107,18 +130,77 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
       className="flex flex-col min-h-0 min-w-0"
       style={{ width: showPreview ? `${editorWidth}%` : '100%' }}
     >
-      {/* Editor header bar */}
+      {/* Editor header bar with tabs */}
       <div className="flex items-center justify-between px-3 py-1.5 bg-content1 border-b border-divider">
-        <span className="text-[11px] font-medium text-default-400 uppercase tracking-wider">
-          Template - Mustache
-        </span>
-        {editorDirty && (
-          <span className="text-[11px] text-warning font-medium">● Modified</span>
-        )}
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('editor')}
+            className={`text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded transition-colors ${
+              activeTab === 'editor' ? 'text-foreground bg-default-100' : 'text-default-400 hover:text-default-600'
+            }`}
+          >
+            Template - Mustache
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('readme')}
+            className={`flex items-center gap-1 text-[11px] font-medium uppercase tracking-wider px-2 py-0.5 rounded transition-colors ${
+              activeTab === 'readme' ? 'text-foreground bg-default-100' : 'text-default-400 hover:text-default-600'
+            }`}
+          >
+            <BookOpen size={11} />
+            Readme
+          </button>
+        </div>
+        <div className="flex items-center gap-2">
+          {editorDirty && (
+            <span className="text-[11px] text-warning font-medium">● Modified</span>
+          )}
+          <MarginDropdown
+            pdfMargins={pdfMargins}
+            selectedMarginId={selectedMarginId}
+            onMarginChange={handleMarginChange}
+          />
+        </div>
       </div>
 
+      {/* README panel */}
+      {activeTab === 'readme' && (
+        <div className="flex-1 min-h-0 overflow-auto px-6 py-4 bg-content2 text-sm text-default-700 leading-relaxed">
+          <div className="max-w-2xl">
+            <Markdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                h1: ({ children }) => <h1 className="text-xl font-bold text-foreground mb-4">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold text-foreground mt-6 mb-2">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mt-4 mb-1">{children}</h3>,
+                p: ({ children }) => <p className="mb-2 text-default-600">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc list-inside space-y-0.5 text-default-600 mb-2">{children}</ul>,
+                li: ({ children }) => <li>{children}</li>,
+                code: ({ children, className }) => {
+                  const isBlock = className?.includes('language-');
+                  return isBlock
+                    ? <code className="block text-xs bg-default-100 px-3 py-2 rounded overflow-x-auto my-2 whitespace-pre">{children}</code>
+                    : <code className="text-xs bg-default-100 px-1 py-0.5 rounded">{children}</code>;
+                },
+                pre: ({ children }) => <>{children}</>,
+                table: ({ children }) => <table className="w-full text-xs border-collapse my-2">{children}</table>,
+                thead: ({ children }) => <thead className="bg-default-100">{children}</thead>,
+                th: ({ children }) => <th className="text-left px-2 py-1 font-semibold text-default-600 border border-divider">{children}</th>,
+                td: ({ children }) => <td className="px-2 py-1 text-default-500 border border-divider">{children}</td>,
+                hr: () => <hr className="my-4 border-divider" />,
+                strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+              }}
+            >
+              {readmeContent}
+            </Markdown>
+          </div>
+        </div>
+      )}
+
       {/* Monaco Editor */}
-      <div className="flex-1 min-h-0 overflow-hidden" style={showProblems && totalProblems > 0 ? { flex: '1 1 0%', minHeight: 0 } : undefined}>
+      {activeTab === 'editor' && <div className="flex-1 min-h-0 overflow-hidden" style={showProblems && totalProblems > 0 ? { flex: '1 1 0%', minHeight: 0 } : undefined}>
         <Editor
           height="100%"
           language="html"
@@ -156,10 +238,10 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
             </div>
           }
         />
-      </div>
+      </div>}
 
       {/* Problems panel */}
-      {showProblems && totalProblems > 0 && (
+      {activeTab === 'editor' && showProblems && totalProblems > 0 && (
         <div className="flex flex-col border-t border-divider bg-content1" style={{ height: '35%', minHeight: 80, maxHeight: 250 }}>
           <div className="flex items-center justify-between px-3 py-1 border-b border-divider">
             <div className="flex items-center gap-2">
@@ -222,9 +304,7 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
               <AlertTriangle size={12} /> {diagnostics.warnings}
             </span>
           )}
-          {diagnostics.errors === 0 && diagnostics.warnings === 0 && (
-            <span className="text-success font-medium">✓ No issues</span>
-          )}
+
           {totalProblems > 0 && (
             showProblems
               ? <ChevronDown size={10} className="text-default-400" />

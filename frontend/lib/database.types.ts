@@ -117,11 +117,26 @@ export interface Invoices {
   search_text: string | null
 }
 
+export interface PdfMargins {
+  id: string
+  user_id: string | null
+  name: string
+  top: string
+  right: string
+  bottom: string
+  left: string
+  sort: number
+  is_system: boolean
+  created_at: string | null
+  updated_at: string | null
+}
+
 export interface Templates {
   id: string
   user_id: string | null
   name: string
   styling: string
+  margin_id: string | null
   is_system: boolean
   created_at: string | null
   updated_at: string | null
@@ -213,10 +228,15 @@ export type InvoicesPatch = Partial<InvoicesPost>
 export type InvoicesDelete = Pick<Invoices, 'id'>
 
 export type TemplatesGet = Templates
-export type TemplatesPost = Omit<Templates, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'user_id'>
+export type TemplatesPost = Omit<Templates, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'user_id' | 'margin_id'> & { margin_id?: string | null }
 export type TemplatesPut = Omit<Templates, 'created_at' | 'updated_at'>
 export type TemplatesPatch = Partial<TemplatesPost>
 export type TemplatesDelete = Pick<Templates, 'id'>
+
+export type PdfMarginsGet = PdfMargins
+export type PdfMarginsPost = Omit<PdfMargins, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'user_id' | 'sort'>
+export type PdfMarginsPatch = Partial<PdfMarginsPost>
+export type PdfMarginsDelete = Pick<PdfMargins, 'id'>
 
 export type RolesGet = Roles
 export type RolesPost = Omit<Roles, 'id' | 'created_at' | 'updated_at' | 'is_system' | 'level'>
@@ -301,6 +321,13 @@ export interface Database {
         Put: TemplatesPut
         Patch: TemplatesPatch
         Delete: TemplatesDelete
+      }
+      pdf_margins: {
+        Row: PdfMargins
+        Get: PdfMarginsGet
+        Post: PdfMarginsPost
+        Patch: PdfMarginsPatch
+        Delete: PdfMarginsDelete
       }
       roles: {
         Row: Roles

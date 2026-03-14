@@ -1,4 +1,5 @@
 import type { InvoiceStatus } from '@/lib/types';
+import type { PdfMargins } from '@/lib/database.types';
 
 // ─── Date Formats ────────────────────────────────────────────────────
 
@@ -78,6 +79,36 @@ export function getCurrencySymbol(
   if (!currencyId) return '$';
   const currency = currencies.find(c => c.id === currencyId);
   return currency ? currency.symbol : '$';
+}
+
+// ─── PDF Margin Defaults ─────────────────────────────────────────────
+
+export interface MarginValues {
+  top: string;
+  right: string;
+  bottom: string;
+  left: string;
+}
+
+export const DEFAULT_MARGINS: MarginValues = {
+  top: '25.4mm',
+  right: '31.8mm',
+  bottom: '25.4mm',
+  left: '31.8mm',
+};
+
+/**
+ * Extract concrete margin values from a PdfMargins record.
+ * Falls back to Normal preset values when no record is provided.
+ */
+export function resolveMargins(margin?: PdfMargins | null): MarginValues {
+  if (!margin) return DEFAULT_MARGINS;
+  return {
+    top: margin.top,
+    right: margin.right,
+    bottom: margin.bottom,
+    left: margin.left,
+  };
 }
 
 // ─── Invoice Status ──────────────────────────────────────────────────

@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { generatePdf } from '@/features/invoice/utils/generatePdf';
 import { renderInvoiceHtml } from '@/features/invoice/utils/renderInvoiceHtml';
+import { resolveMargins } from '@/config/formatting';
 import { invoicesApi } from '@/features/invoice/api';
 import { templatesApi } from '@/features/templates/api';
+import { pdfMarginsApi } from '@/features/templates/pdfMarginsApi';
 import { loadTranslations } from '@/lib/i18n/translate.server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -42,29 +44,30 @@ export async function GET(
     const lang = invoice.language || 'en';
     const labels = loadTranslations(lang);
 
-    // Fetch template styling
+    // Fetch template styling and margin
     let styling: string | null = null;
+    let marginRecord = null;
     if (invoice.template_id) {
       const templates = await templatesApi.getAll(authToken);
       const template = templates.find(t => t.id === invoice.template_id) || null;
       styling = template?.styling ?? null;
+      if (template?.margin_id) {
+        const allMargins = await pdfMarginsApi.getAll(authToken);
+        marginRecord = allMargins.find(m => m.id === template.margin_id) ?? null;
+      }
     }
 
     // Build HTML using the shared renderer
     const html = renderInvoiceHtml(invoice, labels, { styling });
     
     // Generate PDF on the server (no CSS needed - Tailwind is included in HTML)
+    const margin = resolveMargins(marginRecord);
     const pdfBuffer = await generatePdf({
       html,
       pdfOptions: {
         format: 'A4',
         landscape: false,
-        margin: {
-          top: '16mm',
-          right: '16mm',
-          bottom: '16mm',
-          left: '16mm',
-        },
+        margin,
       },
     });
 
@@ -116,20 +119,26 @@ export async function POST(
 
     // Resolve styling: use provided override, else fall back to DB template
     let resolvedStyling = styling ?? null;
-    if (!resolvedStyling && invoice.template_id) {
+    let marginRecord = null;
+    if (invoice.template_id) {
       const templates = await templatesApi.getAll(authToken);
       const template = templates.find(t => t.id === invoice.template_id) || null;
-      resolvedStyling = template?.styling ?? null;
+      if (!resolvedStyling) resolvedStyling = template?.styling ?? null;
+      if (template?.margin_id) {
+        const allMargins = await pdfMarginsApi.getAll(authToken);
+        marginRecord = allMargins.find(m => m.id === template.margin_id) ?? null;
+      }
     }
 
     const html = renderInvoiceHtml(invoice, labels, { styling: resolvedStyling });
 
+    const margin = resolveMargins(marginRecord);
     const pdfBuffer = await generatePdf({
       html,
       pdfOptions: {
         format: 'A4',
         landscape: false,
-        margin: { top: '16mm', right: '16mm', bottom: '16mm', left: '16mm' },
+        margin,
       },
     });
 
