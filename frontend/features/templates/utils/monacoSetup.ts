@@ -7,8 +7,8 @@
  */
 
 import type { Monaco } from '@monaco-editor/react';
-import type { editor, Position } from 'monaco-editor';
-import { TAILWIND_CLASSES } from './tailwindClasses';
+import type { editor, Position, MarkerSeverity as MarkerSeverityType } from 'monaco-editor';
+import { TAILWIND_CLASSES, TAILWIND_CLASS_SET, resolveTailwindCSS } from './tailwindClasses';
 
 let registered = false;
 
@@ -283,4 +283,311 @@ export function registerTemplateProviders(monaco: Monaco): void {
       return null;
     },
   });
+
+  // ── 4. Hover info for Tailwind CSS classes ────────────────────────
+
+  monaco.languages.registerHoverProvider('html', {
+    provideHover(model: editor.ITextModel, position: Position) {
+      const line = model.getLineContent(position.lineNumber);
+
+      // Check if cursor is inside a class="…" attribute
+      const beforeCursor = line.slice(0, position.column - 1);
+      const classAttrMatch = beforeCursor.match(/class\s*=\s*["'][^"']*$/);
+      if (!classAttrMatch) return null;
+
+      // Find the individual class token under the cursor
+      // Walk back from cursor to find start of class name
+      let start = position.column - 2; // 0-indexed
+      while (start >= 0 && /[\w\-:/]/.test(line[start])) start--;
+      start++;
+      // Walk forward to find end
+      let end = position.column - 1;
+      while (end < line.length && /[\w\-:/]/.test(line[end])) end++;
+
+      const className = line.slice(start, end);
+      if (!className) return null;
+
+      const css = resolveTailwindCSS(className);
+      if (!css) return null;
+
+      return {
+        range: {
+          startLineNumber: position.lineNumber,
+          startColumn: start + 1,
+          endLineNumber: position.lineNumber,
+          endColumn: end + 1,
+        },
+        contents: [
+          { value: `**\`.${className}\`**` },
+          { value: '```css\n' + css + '\n```' },
+        ],
+      };
+    },
+  });
+}
+
+// ── 4. Template validation (errors & warnings) ─────────────────────
+
+const KNOWN_LABELS = new Set([
+  ...TEMPLATE_VARIABLES.map(v => v.label),
+  ...ITEM_VARIABLES.map(v => v.label),
+]);
+
+const BLOCK_HELPERS = new Set(['if', 'each', 'unless']);
+
+const VOID_ELEMENTS = new Set([
+  'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+  'link', 'meta', 'param', 'source', 'track', 'wbr',
+]);
+
+/** Count the HTML nesting depth change for a single line. */
+function htmlDepthDelta(line: string): number {
+  let delta = 0;
+  const tagRegex = /<\/?([a-zA-Z][\w-]*)\b[^>]*\/?>/g;
+  let m: RegExpExecArray | null;
+  while ((m = tagRegex.exec(line)) !== null) {
+    const full = m[0];
+    const tag = m[1].toLowerCase();
+    if (full.endsWith('/>') || VOID_ELEMENTS.has(tag)) continue;
+    if (full.startsWith('</')) { delta--; } else { delta++; }
+  }
+  return delta;
+}
+
+export interface TemplateDiagnostics {
+  errors: number;
+  warnings: number;
+  markers: editor.IMarkerData[];
+}
+
+/**
+ * Validate the template and set model markers for errors/warnings.
+ * Call this on every content change (debounced is fine).
+ */
+export function validateTemplate(
+  monaco: Monaco,
+  model: editor.ITextModel,
+): TemplateDiagnostics {
+  const text = model.getValue();
+  const lines = text.split('\n');
+  const markers: editor.IMarkerData[] = [];
+  const MarkerSeverity = monaco.MarkerSeverity;
+  const blockStack: { tag: string; line: number; col: number; htmlDepth: number }[] = [];
+  let htmlDepth = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const lineNumber = i + 1;
+    const depthAtLine = htmlDepth;
+
+    // ── Broken brace detection ──────────────────────────────────────
+
+    // {{ ... } — missing one closing brace
+    const brokenCloseRegex = /\{\{[^}]*\}(?!\})/g;
+    let brokenMatch: RegExpExecArray | null;
+    while ((brokenMatch = brokenCloseRegex.exec(line)) !== null) {
+      markers.push({
+        severity: MarkerSeverity.Error,
+        message: 'Missing closing brace — expected "}}" but found "}"',
+        startLineNumber: lineNumber,
+        startColumn: brokenMatch.index + 1,
+        endLineNumber: lineNumber,
+        endColumn: brokenMatch.index + 1 + brokenMatch[0].length,
+      });
+    }
+
+    // { ... }} — missing one opening brace
+    const brokenOpenRegex = /(?<!\{)\{(?!\{)[^{}]*\}\}/g;
+    while ((brokenMatch = brokenOpenRegex.exec(line)) !== null) {
+      markers.push({
+        severity: MarkerSeverity.Error,
+        message: 'Missing opening brace — expected "{{" but found "{"',
+        startLineNumber: lineNumber,
+        startColumn: brokenMatch.index + 1,
+        endLineNumber: lineNumber,
+        endColumn: brokenMatch.index + 1 + brokenMatch[0].length,
+      });
+    }
+
+    // ── Valid {{ … }} expression checks ─────────────────────────────
+
+    const regex = /\{\{(.*?)\}\}/g;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(line)) !== null) {
+      const inner = match[1].trim();
+      const col = match.index + 1;
+      const endCol = col + match[0].length;
+
+      // Error: empty expression {{ }}
+      if (!inner) {
+        markers.push({
+          severity: MarkerSeverity.Error,
+          message: 'Empty Mustache expression',
+          startLineNumber: lineNumber,
+          startColumn: col,
+          endLineNumber: lineNumber,
+          endColumn: endCol,
+        });
+        continue;
+      }
+
+      // Error: invalid / strange characters in expression
+      const stripped = inner.replace(/^[#/]/, '');
+      const invalidChars = stripped.match(/[^\w.\s]/g);
+      if (invalidChars) {
+        const chars = [...new Set(invalidChars)].join(' ');
+        markers.push({
+          severity: MarkerSeverity.Error,
+          message: `Invalid character(s) in expression: ${chars}`,
+          startLineNumber: lineNumber,
+          startColumn: col,
+          endLineNumber: lineNumber,
+          endColumn: endCol,
+        });
+        continue;
+      }
+
+      // Opening block: {{#if …}}, {{#each …}}, {{#unless …}}
+      const openMatch = inner.match(/^#(\w+)/);
+      if (openMatch) {
+        const tag = openMatch[1];
+        if (!BLOCK_HELPERS.has(tag)) {
+          markers.push({
+            severity: MarkerSeverity.Error,
+            message: `Unknown block helper: #${tag}`,
+            startLineNumber: lineNumber,
+            startColumn: col,
+            endLineNumber: lineNumber,
+            endColumn: endCol,
+          });
+        } else {
+          blockStack.push({ tag, line: lineNumber, col, htmlDepth: depthAtLine });
+        }
+        continue;
+      }
+
+      // Closing block: {{/if}}, {{/each}}, {{/unless}}
+      const closeMatch = inner.match(/^\/(\w+)$/);
+      if (closeMatch) {
+        const tag = closeMatch[1];
+        if (blockStack.length === 0) {
+          markers.push({
+            severity: MarkerSeverity.Error,
+            message: `Unexpected closing tag: {{/${tag}}} — no matching opening tag`,
+            startLineNumber: lineNumber,
+            startColumn: col,
+            endLineNumber: lineNumber,
+            endColumn: endCol,
+          });
+        } else {
+          const top = blockStack[blockStack.length - 1];
+          if (top.tag !== tag) {
+            markers.push({
+              severity: MarkerSeverity.Error,
+              message: `Mismatched block: expected {{/${top.tag}}} but found {{/${tag}}}`,
+              startLineNumber: lineNumber,
+              startColumn: col,
+              endLineNumber: lineNumber,
+              endColumn: endCol,
+            });
+          } else if (top.htmlDepth !== depthAtLine) {
+            markers.push({
+              severity: MarkerSeverity.Warning,
+              message: `Block {{#${tag}}}…{{/${tag}}} crosses HTML nesting levels (opened at depth ${top.htmlDepth}, closed at depth ${depthAtLine})`,
+              startLineNumber: lineNumber,
+              startColumn: col,
+              endLineNumber: lineNumber,
+              endColumn: endCol,
+            });
+          }
+          blockStack.pop();
+        }
+        continue;
+      }
+
+      // {{else}} — valid only inside a block
+      if (inner === 'else') {
+        if (blockStack.length === 0) {
+          markers.push({
+            severity: MarkerSeverity.Warning,
+            message: '{{else}} used outside of a block helper',
+            startLineNumber: lineNumber,
+            startColumn: col,
+            endLineNumber: lineNumber,
+            endColumn: endCol,
+          });
+        }
+        continue;
+      }
+
+      // Variable expression — check if known
+      const varName = inner.trim();
+      if (varName && /^[\w.]+$/.test(varName) && !KNOWN_LABELS.has(varName)) {
+        markers.push({
+          severity: MarkerSeverity.Warning,
+          message: `Unknown template variable: ${varName}`,
+          startLineNumber: lineNumber,
+          startColumn: col,
+          endLineNumber: lineNumber,
+          endColumn: endCol,
+        });
+      }
+    }
+
+    // ── Tailwind class validation ─────────────────────────────────────
+
+    const classAttrRegex = /class\s*=\s*["']([^"']*)["']/g;
+    let classMatch: RegExpExecArray | null;
+    while ((classMatch = classAttrRegex.exec(line)) !== null) {
+      const classesStr = classMatch[1];
+      const attrStart = classMatch.index + classMatch[0].indexOf(classesStr);
+      const classes = classesStr.split(/\s+/).filter(Boolean);
+      let offset = 0;
+      for (const cls of classes) {
+        const clsStart = classesStr.indexOf(cls, offset);
+        offset = clsStart + cls.length;
+        // Strip responsive/state prefix for validation (e.g. sm:flex → flex, hover:bg-red-500 → bg-red-500)
+        const base = cls.replace(/^(sm|md|lg|xl|2xl|hover|focus|active|disabled|dark|first|last|odd|even|group-hover|focus-within|focus-visible|placeholder|before|after|print):/, '');
+        if (!base) continue;
+        // Skip arbitrary values like w-[200px]
+        if (base.includes('[')) continue;
+        // Check negative prefix (e.g. -mt-4 → mt-4)
+        const lookup = base.startsWith('-') ? base.slice(1) : base;
+        if (!TAILWIND_CLASS_SET.has(lookup)) {
+          markers.push({
+            severity: MarkerSeverity.Warning,
+            message: `Unknown Tailwind CSS class: ${cls}`,
+            startLineNumber: lineNumber,
+            startColumn: attrStart + clsStart + 1,
+            endLineNumber: lineNumber,
+            endColumn: attrStart + clsStart + cls.length + 1,
+          });
+        }
+      }
+    }
+
+    // Update HTML depth after processing this line
+    htmlDepth += htmlDepthDelta(line);
+  }
+
+  // Any unclosed blocks remaining on the stack
+  for (const open of blockStack) {
+    markers.push({
+      severity: MarkerSeverity.Error,
+      message: `Unclosed block: {{#${open.tag}}} — missing {{/${open.tag}}}`,
+      startLineNumber: open.line,
+      startColumn: open.col,
+      endLineNumber: open.line,
+      endColumn: open.col + `{{#${open.tag}}}`.length,
+    });
+  }
+
+  monaco.editor.setModelMarkers(model, 'template-validator', markers);
+
+  return {
+    errors: markers.filter(m => m.severity === MarkerSeverity.Error).length,
+    warnings: markers.filter(m => m.severity === MarkerSeverity.Warning).length,
+    markers,
+  };
 }

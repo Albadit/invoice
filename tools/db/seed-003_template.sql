@@ -1,7 +1,7 @@
 -- Insert system templates (is_system = true, no user_id)
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<article class="w-full h-full bg-transparent flex flex-col gap-8">
+<main class="w-full h-full bg-transparent flex flex-col gap-8">
   <div class="flex flex-col gap-4">
     <div class="flex justify-between">
       {{#if company.logo_url}}
@@ -105,13 +105,13 @@ SELECT 'Classic', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Classic');
 
 -- ── Minimal ──────────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Minimal', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap">
-<article class="w-full h-full flex flex-col gap-10 text-gray-800 font-[DM_Sans,sans-serif]">
+<main class="w-full h-full flex flex-col gap-10 text-gray-800 font-[DM_Sans,sans-serif]">
   <div class="flex justify-between items-start">
     <div>
       {{#if company.logo_url}}
@@ -174,13 +174,13 @@ SELECT 'Minimal', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapi
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Minimal');
 
 -- ── Bold Stripe ──────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Bold Stripe', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap">
-<article class="w-full h-full flex flex-col font-[Montserrat,sans-serif]">
+<main class="w-full h-full flex flex-col font-[Montserrat,sans-serif]">
   <div class="px-8 py-6 text-white bg-[#2563eb]">
     <div class="flex justify-between items-center">
       <div>
@@ -249,13 +249,13 @@ SELECT 'Bold Stripe', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googl
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Bold Stripe');
 
 -- ── Elegant ──────────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Elegant', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap">
-<article class="w-full h-full flex flex-col gap-8 text-gray-800 font-[Playfair_Display,Georgia,serif]">
+<main class="w-full h-full flex flex-col gap-8 text-gray-800 font-[Playfair_Display,Georgia,serif]">
   <div class="text-center pt-2">
     {{#if company.logo_url}}
       <img src="{{ company.logo_url }}" alt="Logo" class="h-14 mx-auto mb-3" />
@@ -318,13 +318,13 @@ SELECT 'Elegant', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapi
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Elegant');
 
 -- ── Warm Earth ───────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Warm Earth', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap">
-<article class="w-full h-full flex flex-col gap-8 font-[Lora,serif] text-[#3d2c2c]">
+<main class="w-full h-full flex flex-col gap-8 font-[Lora,serif] text-[#3d2c2c]">
   <div class="flex justify-between items-start">
     <div>
       {{#if company.logo_url}}
@@ -390,13 +390,13 @@ SELECT 'Warm Earth', $TEMPLATE$<link rel="stylesheet" href="https://fonts.google
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Warm Earth');
 
 -- ── Corporate ────────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Corporate', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700;800;900&display=swap">
-<article class="w-full h-full flex flex-col text-gray-800 font-[Source_Sans_3,sans-serif]">
+<main class="w-full h-full flex flex-col text-gray-800 font-[Source_Sans_3,sans-serif]">
   <div class="flex justify-between items-center pb-4 border-b-4 border-gray-900">
     <div class="flex items-center gap-4">
       {{#if company.logo_url}}
@@ -469,13 +469,13 @@ SELECT 'Corporate', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googlea
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Corporate');
 
 -- ── Ocean Breeze ─────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Ocean Breeze', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap">
-<article class="w-full h-full flex flex-col gap-6 font-[Nunito,sans-serif] text-[#1e3a5f]">
+<main class="w-full h-full flex flex-col gap-6 font-[Nunito,sans-serif] text-[#1e3a5f]">
   <div class="flex justify-between items-start">
     <div>
       {{#if company.logo_url}}
@@ -541,13 +541,13 @@ SELECT 'Ocean Breeze', $TEMPLATE$<link rel="stylesheet" href="https://fonts.goog
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Ocean Breeze');
 
 -- ── Monochrome ───────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Monochrome', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap">
-<article class="w-full h-full flex flex-col gap-8 text-black font-[Space_Grotesk,sans-serif]">
+<main class="w-full h-full flex flex-col gap-8 text-black font-[Space_Grotesk,sans-serif]">
   <div class="flex justify-between items-start pb-6 border-b-2 border-black">
     <div>
       {{#if company.logo_url}}
@@ -614,13 +614,13 @@ SELECT 'Monochrome', $TEMPLATE$<link rel="stylesheet" href="https://fonts.google
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Monochrome');
 
 -- ── Royal Purple ─────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Royal Purple', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap">
-<article class="w-full h-full flex flex-col gap-6 font-[Outfit,sans-serif] text-[#2d1b4e]">
+<main class="w-full h-full flex flex-col gap-6 font-[Outfit,sans-serif] text-[#2d1b4e]">
   <div class="flex justify-between items-start">
     <div>
       {{#if company.logo_url}}
@@ -686,13 +686,13 @@ SELECT 'Royal Purple', $TEMPLATE$<link rel="stylesheet" href="https://fonts.goog
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Royal Purple');
 
 -- ── Swiss Clean ──────────────────────────────────────────────────
 INSERT INTO templates (name, styling, is_system)
 SELECT 'Swiss Clean', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap">
-<article class="w-full h-full flex flex-col gap-10 text-gray-900 font-[Manrope,sans-serif]">
+<main class="w-full h-full flex flex-col gap-10 text-gray-900 font-[Manrope,sans-serif]">
   <div class="flex justify-between items-start">
     <div class="flex items-start gap-3">
       {{#if company.logo_url}}
@@ -767,7 +767,7 @@ SELECT 'Swiss Clean', $TEMPLATE$<link rel="stylesheet" href="https://fonts.googl
       </div>
     </div>
   </div>
-</article>$TEMPLATE$, true
+</main>$TEMPLATE$, true
 WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Swiss Clean');
 
 -- Ensure all new templates are flagged as system
