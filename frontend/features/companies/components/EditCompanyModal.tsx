@@ -10,11 +10,11 @@ interface EditCompanyModalProps {
   onClose: () => void;
   onSave: (companyData: {
     name: string; email: string; phone: string; street: string;
-    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string;
+    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string; bankNumber: string;
   }) => Promise<void>;
   initialData: {
     name: string; email: string; phone: string; street: string;
-    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string;
+    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string; bankNumber: string;
   };
 }
 
@@ -29,20 +29,21 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
   const [country, setCountry] = useState('');
   const [vatNumber, setVatNumber] = useState('');
   const [cocNumber, setCocNumber] = useState('');
+  const [bankNumber, setBankNumber] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
       setName(initialData.name); setEmail(initialData.email); setPhone(initialData.phone);
       setStreet(initialData.street); setCity(initialData.city); setZipCode(initialData.zipCode);
-      setCountry(initialData.country); setVatNumber(initialData.vatNumber); setCocNumber(initialData.cocNumber);
+      setCountry(initialData.country); setVatNumber(initialData.vatNumber); setCocNumber(initialData.cocNumber); setBankNumber(initialData.bankNumber);
     }
   }, [isOpen, initialData]);
 
   const handleSave = async () => {
     if (!name.trim()) return;
     setSaving(true);
-    try { await onSave({ name, email, phone, street, city, zipCode, country, vatNumber, cocNumber }); onClose(); }
+    try { await onSave({ name, email, phone, street, city, zipCode, country, vatNumber, cocNumber, bankNumber }); onClose(); }
     catch (error) { console.error('Failed to save company:', error); }
     finally { setSaving(false); }
   };
@@ -62,6 +63,7 @@ export function EditCompanyModal({ isOpen, onClose, onSave, initialData }: EditC
         <Input label={t('companies.fields.vatNumber')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="NL123456789B01" />
         <Input label={t('companies.fields.cocNumber')} value={cocNumber} onChange={(e) => setCocNumber(e.target.value)} placeholder="12345678" />
       </div>
+      <Input label={t('companies.fields.bankNumber')} value={bankNumber} onChange={(e) => setBankNumber(e.target.value)} placeholder="NL91ABNA0417164300" />
     </FormModal>
   );
 }

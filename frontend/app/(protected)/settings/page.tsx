@@ -73,6 +73,7 @@ export default function SettingsPage() {
   const [companyCountry, setCompanyCountry] = useState('');
   const [companyVatNumber, setCompanyVatNumber] = useState('');
   const [companyCocNumber, setCompanyCocNumber] = useState('');
+  const [companyBankNumber, setCompanyBankNumber] = useState('');
   const [isAddCompanyModalOpen, setIsAddCompanyModalOpen] = useState(false);
   const [isEditCompanyModalOpen, setIsEditCompanyModalOpen] = useState(false);
   const [isManageCompaniesModalOpen, setIsManageCompaniesModalOpen] = useState(false);
@@ -220,6 +221,7 @@ export default function SettingsPage() {
       setCompanyCountry(company.country || '');
       setCompanyVatNumber(company.vat_number || '');
       setCompanyCocNumber(company.coc_number || '');
+      setCompanyBankNumber(company.bank_number || '');
       setLogoUrl(company.logo_url || '');
       savedLogoUrlRef.current = company.logo_url || '';
       setPendingLogoFile(null);
@@ -243,6 +245,7 @@ export default function SettingsPage() {
     country: string;
     vatNumber: string;
     cocNumber: string;
+    bankNumber: string;
   }) {
     try {
       const newCompany = await companiesApi.create({
@@ -255,6 +258,7 @@ export default function SettingsPage() {
         country: companyData.country || null,
         vat_number: companyData.vatNumber || null,
         coc_number: companyData.cocNumber || null,
+        bank_number: companyData.bankNumber || null,
         logo_url: logoUrl || null,
         template_id: templateId,
         currency_id: currencyId,
@@ -299,6 +303,7 @@ export default function SettingsPage() {
     country: string;
     vatNumber: string;
     cocNumber: string;
+    bankNumber: string;
   }) {
     if (!companyId) return;
 
@@ -313,6 +318,7 @@ export default function SettingsPage() {
         country: companyData.country || null,
         vat_number: companyData.vatNumber || null,
         coc_number: companyData.cocNumber || null,
+        bank_number: companyData.bankNumber || null,
       });
 
       // Update local state
@@ -325,6 +331,7 @@ export default function SettingsPage() {
       setCompanyCountry(companyData.country);
       setCompanyVatNumber(companyData.vatNumber);
       setCompanyCocNumber(companyData.cocNumber);
+      setCompanyBankNumber(companyData.bankNumber);
 
       // Reload companies list
       await loadCompanies();
@@ -371,6 +378,7 @@ export default function SettingsPage() {
             setCompanyCountry('');
             setCompanyVatNumber('');
             setCompanyCocNumber('');
+            setCompanyBankNumber('');
             setLogoUrl('');
           }
           
@@ -765,6 +773,7 @@ export default function SettingsPage() {
         setCompanyCountry(firstCompany.country || '');
         setCompanyVatNumber(firstCompany.vat_number || '');
         setCompanyCocNumber(firstCompany.coc_number || '');
+        setCompanyBankNumber(firstCompany.bank_number || '');
         setLogoUrl(firstCompany.logo_url || '');
         savedLogoUrlRef.current = firstCompany.logo_url || '';
         setTemplateId(firstCompany.template_id);
@@ -1295,6 +1304,7 @@ export default function SettingsPage() {
           setCompanyCountry(company.country || '');
           setCompanyVatNumber(company.vat_number || '');
           setCompanyCocNumber(company.coc_number || '');
+          setCompanyBankNumber(company.bank_number || '');
           setIsManageCompaniesModalOpen(false);
           setIsEditCompanyModalOpen(true);
         }}
@@ -1332,6 +1342,7 @@ export default function SettingsPage() {
           country: companyCountry,
           vatNumber: companyVatNumber,
           cocNumber: companyCocNumber,
+          bankNumber: companyBankNumber,
         }}
       />
 

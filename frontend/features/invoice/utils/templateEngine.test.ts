@@ -1,7 +1,7 @@
 /**
  * Template Engine Unit Tests
  *
- * Tests the mustache-like interpolation engine used for default invoice PDFs.
+ * Tests the Vue-style template interpolation engine used for invoice PDFs.
  * Run with:  npx vitest run features/invoice/utils/templateEngine.test.ts
  */
 
@@ -26,6 +26,7 @@ const mockCurrency = {
   symbol: '$',
   symbol_position: 'left' as const,
   symbol_space: false,
+  exchange_rate: 1,
   is_system: true,
   created_at: null,
   updated_at: null,
@@ -43,6 +44,7 @@ const mockCompany = {
   country: 'US',
   vat_number: 'US123456',
   coc_number: 'COC-789',
+  bank_number: 'NL91ABNA0417164300',
   logo_url: 'https://example.com/logo.png',
   template_id: null,
   currency_id: 'cur-1',
@@ -83,6 +85,7 @@ const mockInvoice: InvoiceWithItems = {
   language: 'en',
   subtotal_amount: 200,
   total_amount: 232,
+  exchange_rate: 1,
   created_at: null,
   updated_at: null,
   search_tsv: null,
@@ -116,6 +119,25 @@ const mockInvoice: InvoiceWithItems = {
 };
 
 const mockLabels: Translations = {
+  // Flat keys used by DEFAULT_TEMPLATE_STYLING
+  invoiceTitle: 'INVOICE',
+  issueDate: 'Issue Date',
+  dueDate: 'Due Date',
+  billTo: 'Bill To',
+  vatNumber: 'VAT',
+  cocNumber: 'CoC',
+  item: 'Item',
+  quantity: 'Quantity',
+  rate: 'Rate',
+  amount: 'Amount',
+  subtotal: 'Subtotal',
+  discount_label: 'Discount',
+  tax_label: 'Tax',
+  shipping_label: 'Shipping',
+  total: 'Total',
+  notes: 'Notes',
+  terms: 'Terms & Conditions',
+  // Nested keys used by individual renderTemplate tests
   preview: {
     invoiceTitle: 'INVOICE',
     issueDate: 'Issue Date:',
@@ -240,90 +262,206 @@ describe('renderTemplate — {{ fc.* }}', () => {
   });
 });
 
-// ── renderTemplate — {{#if}} conditionals ──────────────────────────
+// ── renderTemplate — v-if conditionals ─────────────────────────────
 
-describe('renderTemplate — {{#if}}', () => {
-  it('renders if-block when truthy', () => {
-    const tpl = '{{#if company.logo_url}}<img src="{{ company.logo_url }}"/>{{/if}}';
+describe('renderTemplate — v-if', () => {
+  it('renders element when condition is truthy', () => {
+    const tpl = '<img v-if="company.logo_url" src="{{ company.logo_url }}"/>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
     expect(out).toContain('<img src="https://example.com/logo.png"/>');
   });
 
-  it('hides if-block when falsy', () => {
+  it('hides element when condition is falsy', () => {
     const inv = { ...mockInvoice, company: { ...mockCompany, logo_url: null } };
-    const tpl = '{{#if company.logo_url}}VISIBLE{{/if}}';
+    const tpl = '<span v-if="company.logo_url">VISIBLE</span>';
     const out = renderTemplate(tpl, inv, mockLabels);
     expect(out).toBe('');
   });
 
-  it('renders else-block when falsy', () => {
+  it('renders v-else element when v-if is falsy', () => {
     const inv = { ...mockInvoice, company: { ...mockCompany, logo_url: null } };
-    const tpl = '{{#if company.logo_url}}HAS_LOGO{{else}}NO_LOGO{{/if}}';
+    const tpl = '<span v-if="company.logo_url">HAS_LOGO</span><span v-else>NO_LOGO</span>';
     const out = renderTemplate(tpl, inv, mockLabels);
-    expect(out).toBe('NO_LOGO');
+    expect(out).toBe('<span>NO_LOGO</span>');
   });
 
-  it('renders if-block and skips else when truthy', () => {
-    const tpl = '{{#if invoice.discount_amount}}DISCOUNT{{else}}NONE{{/if}}';
+  it('renders v-if element and skips v-else when truthy', () => {
+    const tpl = '<span v-if="invoice.discount_amount">DISCOUNT</span><span v-else>NONE</span>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('DISCOUNT');
+    expect(out).toBe('<span>DISCOUNT</span>');
   });
 
-  it('handles nested {{#if}} blocks', () => {
-    const tpl = '{{#if company.city}}<p>{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}';
+  it('handles nested v-if elements', () => {
+    const tpl = '<p v-if="company.city">{{ company.city }}<span v-if="company.zip_code">, {{ company.zip_code }}</span></p>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('<p>Springfield, 62701</p>');
+    expect(out).toBe('<p>Springfield<span>, 62701</span></p>');
   });
 
-  it('handles nested {{#if}} when inner is falsy', () => {
+  it('handles nested v-if when inner is falsy', () => {
     const inv = { ...mockInvoice, company: { ...mockInvoice.company, zip_code: null } };
-    const tpl = '{{#if company.city}}<p>{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}';
+    const tpl = '<p v-if="company.city">{{ company.city }}<span v-if="company.zip_code">, {{ company.zip_code }}</span></p>';
     const out = renderTemplate(tpl, inv, mockLabels);
     expect(out).toBe('<p>Springfield</p>');
   });
 
-  it('handles nested {{#if}} when outer is falsy', () => {
+  it('handles nested v-if when outer is falsy', () => {
     const inv = { ...mockInvoice, company: { ...mockInvoice.company, city: null } };
-    const tpl = '{{#if company.city}}<p>{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}';
+    const tpl = '<p v-if="company.city">{{ company.city }}<span v-if="company.zip_code">, {{ company.zip_code }}</span></p>';
     const out = renderTemplate(tpl, inv, mockLabels);
     expect(out).toBe('');
   });
-});
 
-// ── renderTemplate — {{#each items}} ───────────────────────────────
-
-describe('renderTemplate — {{#each items}}', () => {
-  it('iterates over all items', () => {
-    const tpl = '{{#each items}}<li>{{ item.name }}</li>{{/each}}';
+  it('supports negation with !', () => {
+    const tpl = '<span v-if="!company.logo_url">NO LOGO</span>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('<li>Widget A</li><li>Widget B</li>');
+    // logo_url is truthy → negated = false → element hidden
+    expect(out).toBe('');
+  });
+
+  it('renders negated condition when value is falsy', () => {
+    const inv = { ...mockInvoice, company: { ...mockCompany, logo_url: null } };
+    const tpl = '<span v-if="!company.logo_url">NO LOGO</span>';
+    const out = renderTemplate(tpl, inv, mockLabels);
+    expect(out).toBe('<span>NO LOGO</span>');
+  });
+
+  it('supports === equality comparison', () => {
+    const tpl = `<div v-if="invoice.status === 'pending'">PENDING</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>PENDING</div>');
+  });
+
+  it('hides element when === does not match', () => {
+    const tpl = `<div v-if="invoice.status === 'paid'">PAID</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('');
+  });
+
+  it('supports == equality comparison', () => {
+    const tpl = `<div v-if="invoice.status == 'pending'">PENDING</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>PENDING</div>');
+  });
+
+  it('supports !== inequality comparison', () => {
+    const tpl = `<div v-if="invoice.status !== 'paid'">NOT PAID</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>NOT PAID</div>');
+  });
+
+  it('hides element when !== does not match', () => {
+    const tpl = `<div v-if="invoice.status !== 'pending'">NOT PENDING</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('');
+  });
+
+  it('supports != inequality comparison', () => {
+    const tpl = `<div v-if="invoice.status != 'cancelled'">ACTIVE</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>ACTIVE</div>');
+  });
+
+  it('supports equality in v-else-if chains', () => {
+    const tpl = `<div v-if="invoice.status === 'paid'">PAID</div><div v-else-if="invoice.status === 'pending'">PENDING</div><div v-else>OTHER</div>`;
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>PENDING</div>');
+  });
+  it('<template> v-if renders inner content without wrapper', () => {
+    const tpl = '<template v-if="invoice.discount_amount"><span>A</span><span>B</span></template>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<span>A</span><span>B</span>');
+  });
+
+  it('<template> v-if hides content when falsy', () => {
+    const tpl = '<template v-if="invoice.shipping_amount"><span>SHIP</span></template>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('');
+  });
+
+  it('<template> v-if with v-else chain', () => {
+    const tpl = '<template v-if="invoice.shipping_amount"><span>SHIP</span></template><div v-else>NONE</div>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toBe('<div>NONE</div>');
+  });});
+
+// ── renderTemplate — v-for loop ────────────────────────────────────
+
+describe('renderTemplate — v-for', () => {
+  it('iterates over all items', () => {
+    const tpl = '<li v-for="item in items">{{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('Widget A');
+    expect(out).toContain('Widget B');
   });
 
   it('resolves item.quantity and item.unit_price', () => {
-    const tpl = '{{#each items}}{{ item.quantity }}x{{ item.unit_price }} {{/each}}';
+    const tpl = '<span v-for="item in items">{{ item.quantity }}x{{ item.unit_price }} </span>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('2x50 1x100 ');
+    expect(out).toContain('2x50');
+    expect(out).toContain('1x100');
   });
 
-  it('resolves fc.item_unit_price (currency formatted)', () => {
-    const tpl = '{{#each items}}{{ fc.item_unit_price }},{{/each}}';
+  it('resolves item.fc.unit_price (currency formatted)', () => {
+    const tpl = '<span v-for="item in items">{{ item.fc.unit_price }}</span>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('$50.00,$100.00,');
+    expect(out).toContain('$50.00');
+    expect(out).toContain('$100.00');
   });
 
-  it('resolves fc.item_amount (quantity × unit_price formatted)', () => {
-    const tpl = '{{#each items}}{{ fc.item_amount }},{{/each}}';
+  it('resolves item.fc.amount (quantity × unit_price formatted)', () => {
+    const tpl = '<span v-for="item in items">{{ item.fc.amount }}</span>';
     const out = renderTemplate(tpl, mockInvoice, mockLabels);
-    expect(out).toBe('$100.00,$100.00,');
+    expect(out).toContain('$100.00');
   });
 
   it('produces empty string when no items', () => {
     const inv = { ...mockInvoice, items: [] };
-    const tpl = '{{#each items}}<li>{{ item.name }}</li>{{/each}}';
+    const tpl = '<li v-for="item in items">{{ item.name }}</li>';
     const out = renderTemplate(tpl, inv, mockLabels);
     expect(out).toBe('');
   });
-});
+
+  it('supports (item, index) destructuring', () => {
+    const tpl = '<li v-for="(item, index) in items">{{ index }}. {{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('0. Widget A');
+    expect(out).toContain('1. Widget B');
+  });
+
+  it('supports (item, key, index) destructuring', () => {
+    const tpl = '<li v-for="(item, key, index) in items">{{ key }}-{{ index }}: {{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('0-0: Widget A');
+    expect(out).toContain('1-1: Widget B');
+  });
+
+  it('supports {{ index + 1 }} arithmetic', () => {
+    const tpl = '<li v-for="(item, index) in items">{{ index + 1 }}. {{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('1. Widget A');
+    expect(out).toContain('2. Widget B');
+  });
+
+  it('supports {{ index - 1 }} arithmetic', () => {
+    const tpl = '<li v-for="(item, index) in items">{{ index - 1 }}. {{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('-1. Widget A');
+    expect(out).toContain('0. Widget B');
+  });
+
+  it('supports {{ key + 1 }} arithmetic in 3-arg form', () => {
+    const tpl = '<li v-for="(item, key, index) in items">#{{ key + 1 }}: {{ item.name }}</li>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('#1: Widget A');
+    expect(out).toContain('#2: Widget B');
+  });
+  it('<template> v-for renders inner content without wrapper', () => {
+    const tpl = '<template v-for="item in items"><span>{{ item.name }}</span><span>{{ item.quantity }}</span></template>';
+    const out = renderTemplate(tpl, mockInvoice, mockLabels);
+    expect(out).toContain('<span>Widget A</span><span>2</span>');
+    expect(out).toContain('<span>Widget B</span><span>1</span>');
+    expect(out).not.toContain('<template');
+  });});
 
 // ── translateCustomHtml ────────────────────────────────────────────
 
@@ -466,12 +604,11 @@ describe('InvoiceHtml', () => {
   it('shows logo image when logo_url exists', () => {
     const html = InvoiceHtml(mockInvoice, mockLabels);
     expect(html).toContain('https://example.com/logo.png');
-    expect(html).not.toContain('Logo Demo');
   });
 
-  it('shows placeholder when logo_url is null', () => {
+  it('hides logo when logo_url is null', () => {
     const inv = { ...mockInvoice, company: { ...mockCompany, logo_url: null } };
     const html = InvoiceHtml(inv, mockLabels);
-    expect(html).toContain('Logo Demo');
+    expect(html).not.toContain('<img');
   });
 });

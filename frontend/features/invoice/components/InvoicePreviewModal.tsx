@@ -103,6 +103,11 @@ export function InvoicePreviewModal({
                       <span className="font-semibold">{tl(labels, 'preview.cocNumber') || 'CoC'}:</span> {invoice.company.coc_number}
                     </p>
                   )}
+                  {invoice.company?.bank_number && (
+                    <p className="text-sm text-default-500">
+                      <span className="font-semibold">{tl(labels, 'preview.bankNumber') || 'Bank'}:</span> {invoice.company.bank_number}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground uppercase">{tl(labels, 'preview.invoiceDetails') || 'Invoice Details'}</h3>

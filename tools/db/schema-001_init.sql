@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS companies (
     country TEXT,
     vat_number TEXT,
     coc_number TEXT,
+    bank_number TEXT,
     logo_url TEXT,
     template_id UUID REFERENCES templates(id) ON DELETE SET NULL,
     currency_id UUID REFERENCES currencies(id) ON DELETE SET NULL,

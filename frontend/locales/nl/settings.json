@@ -35,6 +35,7 @@
       "taxId": "BTW-nummer",
       "vatNumber": "BTW-nummer",
       "cocNumber": "KVK-nummer",
+      "bankNumber": "Banknummer",
       "taxPercent": "Standaard BTW %",
       "logo": "Logo",
       "terms": "Standaard Voorwaarden",

@@ -8,7 +8,7 @@
 
 import type { Monaco } from '@monaco-editor/react';
 import type { editor, Position, MarkerSeverity as MarkerSeverityType } from 'monaco-editor';
-import { TAILWIND_CLASSES, TAILWIND_CLASS_SET, resolveTailwindCSS } from './tailwindClasses';
+import { generateCompletions, resolveTailwindCSS } from './tailwindClasses';
 
 let registered = false;
 
@@ -26,6 +26,7 @@ const TEMPLATE_VARIABLES: { label: string; detail: string; insertText: string }[
   { label: 'company.logo_url', detail: 'Company logo URL', insertText: 'company.logo_url' },
   { label: 'company.vat_number', detail: 'Company VAT number', insertText: 'company.vat_number' },
   { label: 'company.coc_number', detail: 'Company CoC number', insertText: 'company.coc_number' },
+  { label: 'company.bank_number', detail: 'Company bank number', insertText: 'company.bank_number' },
   // Customer
   { label: 'customer.name', detail: 'Customer name', insertText: 'customer.name' },
   { label: 'customer.street', detail: 'Customer street', insertText: 'customer.street' },
@@ -77,37 +78,77 @@ const TEMPLATE_VARIABLES: { label: string; detail: string; insertText: string }[
   { label: 'lang.terms', detail: 'Translated "Terms"', insertText: 'lang.terms' },
   { label: 'lang.vatNumber', detail: 'Translated "VAT Number"', insertText: 'lang.vatNumber' },
   { label: 'lang.cocNumber', detail: 'Translated "CoC Number"', insertText: 'lang.cocNumber' },
+  { label: 'lang.bankNumber', detail: 'Translated "Bank Number"', insertText: 'lang.bankNumber' },
   // Page numbers
   { label: 'page.number', detail: 'Current page number', insertText: 'page.number' },
   { label: 'page.total', detail: 'Total number of pages', insertText: 'page.total' },
 ];
 
-// Item-level variables (inside {{#each items in item}} … {{/each}})
-const ITEM_VARIABLES: { label: string; detail: string; insertText: string }[] = [
-  { label: 'item.name', detail: 'Item name', insertText: 'item.name' },
-  { label: 'item.quantity', detail: 'Item quantity', insertText: 'item.quantity' },
-  { label: 'item.unit_price', detail: 'Item unit price (raw)', insertText: 'item.unit_price' },
-  { label: 'item.amount', detail: 'Item total (formatted)', insertText: 'item.amount' },
-  { label: 'item.fc.unit_price', detail: 'Item unit price (formatted)', insertText: 'item.fc.unit_price' },
-  { label: 'item.fc.amount', detail: 'Item total (formatted)', insertText: 'item.fc.amount' },
+// Item-level variable suffixes (loop variable name is dynamic)
+const ITEM_SUFFIXES: { suffix: string; detail: string }[] = [
+  { suffix: 'name', detail: 'Item name' },
+  { suffix: 'quantity', detail: 'Item quantity' },
+  { suffix: 'unit_price', detail: 'Item unit price (raw)' },
+  { suffix: 'amount', detail: 'Item total (formatted)' },
+  { suffix: 'fc.unit_price', detail: 'Item unit price (formatted)' },
+  { suffix: 'fc.amount', detail: 'Item total (formatted)' },
 ];
 
-// Mustache block snippets
-const MUSTACHE_SNIPPETS: { label: string; detail: string; insertText: string }[] = [
+/** Build item variables using the actual loop variable name from v-for. */
+function getItemVariables(varName: string): { label: string; detail: string; insertText: string }[] {
+  return ITEM_SUFFIXES.map(s => ({
+    label: `${varName}.${s.suffix}`,
+    detail: s.detail,
+    insertText: `${varName}.${s.suffix}`,
+  }));
+}
+
+/** Extract the loop variable name from the nearest v-for in the text before cursor. */
+function detectLoopVar(textBefore: string): string | null {
+  const matches = [...textBefore.matchAll(/v-for\s*=\s*"([^"]*)"/g)];
+  if (matches.length === 0) return null;
+  const expr = matches[matches.length - 1][1];
+  const m = expr.match(/(?:\(\s*(\w+)\s*(?:,\s*\w+\s*)*\)|(\w+))\s+in\s+/);
+  return m ? (m[1] || m[2] || null) : null;
+}
+
+/** Extract all declared v-for variable names (value, index, key) from the nearest v-for. */
+function detectLoopVarNames(textBefore: string): Set<string> {
+  const names = new Set<string>();
+  const matches = [...textBefore.matchAll(/v-for\s*=\s*"([^"]*)"/g)];
+  if (matches.length === 0) return names;
+  const expr = matches[matches.length - 1][1];
+  const m = expr.match(/(?:\(\s*(\w+)\s*(?:,\s*(\w+)\s*(?:,\s*(\w+)\s*)?)?\)|(\w+))\s+in\s+/);
+  if (m) {
+    if (m[1]) names.add(m[1]);
+    if (m[2]) names.add(m[2]);
+    if (m[3]) names.add(m[3]);
+    if (m[4]) names.add(m[4]);
+  }
+  return names;
+}
+
+// Directive snippets (v-if, v-for, etc.)
+const DIRECTIVE_SNIPPETS: { label: string; detail: string; insertText: string }[] = [
   {
-    label: '#if … /if',
-    detail: 'Conditional block',
-    insertText: '{{#if ${1:condition}}}\\n  $0\\n{{/if}}',
+    label: 'v-if',
+    detail: 'Conditional rendering',
+    insertText: 'v-if="${1:condition}"',
   },
   {
-    label: '#if … else … /if',
-    detail: 'Conditional with else',
-    insertText: '{{#if ${1:condition}}}\\n  $2\\n{{else}}\\n  $0\\n{{/if}}',
+    label: 'v-else-if',
+    detail: 'Else-if branch',
+    insertText: 'v-else-if="${1:condition}"',
   },
   {
-    label: '#each items in item',
+    label: 'v-else',
+    detail: 'Else branch',
+    insertText: 'v-else',
+  },
+  {
+    label: 'v-for',
     detail: 'Loop over invoice items',
-    insertText: '{{#each items in item}}\\n  $0\\n{{/each}}',
+    insertText: 'v-for="item in items"',
   },
 ];
 
@@ -151,9 +192,7 @@ export function registerTemplateProviders(monaco: Monaco): void {
 
       const typed = lineContent.slice(startCol - 1, wordInfo.endColumn - 1).toLowerCase();
 
-      const suggestions = TAILWIND_CLASSES
-        .filter(c => !typed || c.name.toLowerCase().startsWith(typed) || c.name.toLowerCase().includes(typed))
-        .slice(0, 200) // cap for performance
+      const suggestions = generateCompletions(typed)
         .map((c, i) => ({
           label: c.name,
           kind: monaco.languages.CompletionItemKind.Value,
@@ -207,20 +246,30 @@ export function registerTemplateProviders(monaco: Monaco): void {
 
       const typed = lineContent.slice(startCol - 1, wordInfo.endColumn - 1).toLowerCase();
 
-      // Determine if we're inside an {{#each}} block for item-level vars
+      // Determine if we're inside a v-for element for item-level vars
       const fullText = model.getValue();
       const offset = model.getOffsetAt(position);
       const before = fullText.slice(0, offset);
-      const inEachBlock =
-        (before.match(/\{\{#each/g) || []).length >
-        (before.match(/\{\{\/each\}\}/g) || []).length;
+      const inForBlock =
+        (before.match(/v-for\s*=\s*"/g) || []).length >
+        (before.match(/<\/\w[\w-]*>/g) || []).length * 0 || // approximate: if any v-for exists in ancestors
+        /v-for\s*=\s*"[^"]*"/.test(before);
 
       // Check if we're after {{ or {{# for snippet suggestions
       const isBlockStart = /\{\{\s*#\s*$/.test(textUntilPosition) || /\{\{\s*$/.test(textUntilPosition);
 
+      const loopVar = inForBlock ? detectLoopVar(before) : null;
+      const loopVarNames = inForBlock ? detectLoopVarNames(before) : new Set<string>();
+      const extraLoopVars: { label: string; detail: string; insertText: string }[] = [];
+      for (const name of loopVarNames) {
+        if (name !== loopVar) {
+          extraLoopVars.push({ label: name, detail: 'Loop variable (index/key)', insertText: name });
+        }
+      }
       const allVars = [
         ...TEMPLATE_VARIABLES,
-        ...(inEachBlock ? ITEM_VARIABLES : []),
+        ...(loopVar ? getItemVariables(loopVar) : []),
+        ...extraLoopVars,
       ];
 
       const suggestions = [
@@ -235,9 +284,9 @@ export function registerTemplateProviders(monaco: Monaco): void {
             range: replaceRange,
             sortText: `0${String(i).padStart(4, '0')}`,
           })),
-        // Snippet completions (block helpers)
+        // Snippet completions (directive helpers)
         ...(isBlockStart
-          ? MUSTACHE_SNIPPETS.map((s, i) => ({
+          ? DIRECTIVE_SNIPPETS.map((s, i) => ({
               label: s.label,
               kind: monaco.languages.CompletionItemKind.Snippet,
               detail: s.detail,
@@ -258,29 +307,81 @@ export function registerTemplateProviders(monaco: Monaco): void {
   monaco.languages.registerHoverProvider('html', {
     provideHover(model: editor.ITextModel, position: Position) {
       const line = model.getLineContent(position.lineNumber);
-      // Find {{ var }} at cursor position
-      const regex = /\{\{\s*([\w.]+)\s*\}\}/g;
+      const fullText = model.getValue();
+      const offsetAtPos = model.getOffsetAt(position);
+      const textBefore = fullText.slice(0, offsetAtPos);
+      const loopVar = detectLoopVar(textBefore);
+      const loopVarNames = detectLoopVarNames(textBefore);
+
+      // Find {{ expr }} at cursor position (supports arithmetic like index + 1)
+      const regex = /\{\{\s*([\w.]+(?:\s*[+-]\s*\d+)?)\s*\}\}/g;
       let match: RegExpExecArray | null;
       while ((match = regex.exec(line)) !== null) {
-        const start = match.index + match[0].indexOf(match[1]);
-        const end = start + match[1].length;
-        if (position.column >= start + 1 && position.column <= end + 1) {
-          const varName = match[1];
-          const entry = [...TEMPLATE_VARIABLES, ...ITEM_VARIABLES].find(v => v.label === varName);
-          if (entry) {
-            return {
-              range: {
-                startLineNumber: position.lineNumber,
-                startColumn: start + 1,
-                endLineNumber: position.lineNumber,
-                endColumn: end + 1,
-              },
-              contents: [
-                { value: `**\`{{ ${entry.label} }}\`**` },
-                { value: entry.detail },
-              ],
-            };
-          }
+        const exprStr = match[1];
+        const start = match.index + match[0].indexOf(exprStr);
+        const end = start + exprStr.length;
+        if (position.column < start + 1 || position.column > end + 1) continue;
+
+        // Check for arithmetic expression (e.g. index + 1)
+        const arithMatch = exprStr.match(/^(\w+)\s*([+-])\s*(\d+)$/);
+        if (arithMatch && loopVarNames.has(arithMatch[1])) {
+          const name = arithMatch[1];
+          return {
+            range: {
+              startLineNumber: position.lineNumber, startColumn: start + 1,
+              endLineNumber: position.lineNumber, endColumn: end + 1,
+            },
+            contents: [
+              { value: `**\`{{ ${exprStr} }}\`**` },
+              { value: `Loop variable \`${name}\` with arithmetic offset — 0-based index ${arithMatch[2] === '+' ? 'plus' : 'minus'} ${arithMatch[3]}` },
+            ],
+          };
+        }
+
+        const varName = exprStr.trim();
+
+        // Check if it's a bare loop variable (index, key)
+        if (loopVarNames.has(varName) && varName !== loopVar) {
+          return {
+            range: {
+              startLineNumber: position.lineNumber, startColumn: start + 1,
+              endLineNumber: position.lineNumber, endColumn: end + 1,
+            },
+            contents: [
+              { value: `**\`{{ ${varName} }}\`**` },
+              { value: `Loop variable — 0-based numeric index` },
+            ],
+          };
+        }
+
+        // Check if it's the loop value variable (e.g. {{ value }} bare or {{ value.name }})
+        if (loopVar && varName === loopVar) {
+          return {
+            range: {
+              startLineNumber: position.lineNumber, startColumn: start + 1,
+              endLineNumber: position.lineNumber, endColumn: end + 1,
+            },
+            contents: [
+              { value: `**\`{{ ${varName} }}\`**` },
+              { value: `Loop iteration variable — current item object` },
+            ],
+          };
+        }
+
+        // Check known variables and dynamic item variables
+        const itemVars = loopVar ? getItemVariables(loopVar) : [];
+        const entry = [...TEMPLATE_VARIABLES, ...itemVars].find(v => v.label === varName);
+        if (entry) {
+          return {
+            range: {
+              startLineNumber: position.lineNumber, startColumn: start + 1,
+              endLineNumber: position.lineNumber, endColumn: end + 1,
+            },
+            contents: [
+              { value: `**\`{{ ${entry.label} }}\`**` },
+              { value: entry.detail },
+            ],
+          };
         }
       }
       return null;
@@ -333,10 +434,21 @@ export function registerTemplateProviders(monaco: Monaco): void {
 
 const KNOWN_LABELS = new Set([
   ...TEMPLATE_VARIABLES.map(v => v.label),
-  ...ITEM_VARIABLES.map(v => v.label),
 ]);
 
-const BLOCK_HELPERS = new Set(['if', 'each', 'unless']);
+/** Check if a variable name is a valid loop variable reference (e.g. value.name, val.fc.amount, index). */
+function isLoopVariable(varName: string, fullText: string): boolean {
+  const allNames = detectLoopVarNames(fullText);
+  // Bare variable (e.g. index, key)
+  if (allNames.has(varName)) return true;
+  // Dotted path (e.g. value.name, value.fc.amount)
+  const loopVar = detectLoopVar(fullText);
+  if (!loopVar || !varName.startsWith(loopVar + '.')) return false;
+  const suffix = varName.slice(loopVar.length + 1);
+  return ITEM_SUFFIXES.some(s => s.suffix === suffix);
+}
+
+const KNOWN_DIRECTIVES = new Set(['v-if', 'v-else-if', 'v-else', 'v-for']);
 
 const VOID_ELEMENTS = new Set([
   'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
@@ -375,13 +487,11 @@ export function validateTemplate(
   const lines = text.split('\n');
   const markers: editor.IMarkerData[] = [];
   const MarkerSeverity = monaco.MarkerSeverity;
-  const blockStack: { tag: string; line: number; col: number; htmlDepth: number }[] = [];
   let htmlDepth = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineNumber = i + 1;
-    const depthAtLine = htmlDepth;
 
     // ── Broken brace detection ──────────────────────────────────────
 
@@ -436,135 +546,82 @@ export function validateTemplate(
       }
 
       // Error: invalid / strange characters in expression
-      const stripped = inner.replace(/^[#/]/, '');
-      const invalidChars = stripped.match(/[^\w.\s]/g);
-      if (invalidChars) {
-        const chars = [...new Set(invalidChars)].join(' ');
-        markers.push({
-          severity: MarkerSeverity.Error,
-          message: `Invalid character(s) in expression: ${chars}`,
-          startLineNumber: lineNumber,
-          startColumn: col,
-          endLineNumber: lineNumber,
-          endColumn: endCol,
-        });
-        continue;
-      }
-
-      // Opening block: {{#if …}}, {{#each …}}, {{#unless …}}
-      const openMatch = inner.match(/^#(\w+)/);
-      if (openMatch) {
-        const tag = openMatch[1];
-        if (!BLOCK_HELPERS.has(tag)) {
+      // Allow + - digits for loop variable arithmetic (e.g. index + 1)
+      const textBefore = lines.slice(0, i + 1).join('\n');
+      const loopNames = detectLoopVarNames(textBefore);
+      const isArithmeticExpr = loopNames.size > 0 &&
+        /^\w+\s*[+-]\s*\d+$/.test(inner) &&
+        loopNames.has(inner.match(/^(\w+)/)?.[1] || '');
+      if (!isArithmeticExpr) {
+        const invalidChars = inner.match(/[^\w.\s]/g);
+        if (invalidChars) {
+          const chars = [...new Set(invalidChars)].join(' ');
           markers.push({
             severity: MarkerSeverity.Error,
-            message: `Unknown block helper: #${tag}`,
+            message: `Invalid character(s) in expression: ${chars}`,
             startLineNumber: lineNumber,
             startColumn: col,
             endLineNumber: lineNumber,
             endColumn: endCol,
           });
-        } else {
-          blockStack.push({ tag, line: lineNumber, col, htmlDepth: depthAtLine });
+          continue;
         }
-        continue;
-      }
-
-      // Closing block: {{/if}}, {{/each}}, {{/unless}}
-      const closeMatch = inner.match(/^\/(\w+)$/);
-      if (closeMatch) {
-        const tag = closeMatch[1];
-        if (blockStack.length === 0) {
-          markers.push({
-            severity: MarkerSeverity.Error,
-            message: `Unexpected closing tag: {{/${tag}}} — no matching opening tag`,
-            startLineNumber: lineNumber,
-            startColumn: col,
-            endLineNumber: lineNumber,
-            endColumn: endCol,
-          });
-        } else {
-          const top = blockStack[blockStack.length - 1];
-          if (top.tag !== tag) {
-            markers.push({
-              severity: MarkerSeverity.Error,
-              message: `Mismatched block: expected {{/${top.tag}}} but found {{/${tag}}}`,
-              startLineNumber: lineNumber,
-              startColumn: col,
-              endLineNumber: lineNumber,
-              endColumn: endCol,
-            });
-          } else if (top.htmlDepth !== depthAtLine) {
-            markers.push({
-              severity: MarkerSeverity.Warning,
-              message: `Block {{#${tag}}}…{{/${tag}}} crosses HTML nesting levels (opened at depth ${top.htmlDepth}, closed at depth ${depthAtLine})`,
-              startLineNumber: lineNumber,
-              startColumn: col,
-              endLineNumber: lineNumber,
-              endColumn: endCol,
-            });
-          }
-          blockStack.pop();
-        }
-        continue;
-      }
-
-      // {{else}} — valid only inside a block
-      if (inner === 'else') {
-        if (blockStack.length === 0) {
-          markers.push({
-            severity: MarkerSeverity.Warning,
-            message: '{{else}} used outside of a block helper',
-            startLineNumber: lineNumber,
-            startColumn: col,
-            endLineNumber: lineNumber,
-            endColumn: endCol,
-          });
-        }
-        continue;
       }
 
       // Variable expression — check if known
       const varName = inner.trim();
+      // Skip arithmetic expressions (already validated above)
+      if (isArithmeticExpr) continue;
       if (varName && /^[\w.]+$/.test(varName) && !KNOWN_LABELS.has(varName)) {
-        markers.push({
-          severity: MarkerSeverity.Warning,
-          message: `Unknown template variable: ${varName}`,
-          startLineNumber: lineNumber,
-          startColumn: col,
-          endLineNumber: lineNumber,
-          endColumn: endCol,
-        });
+        const textBefore = lines.slice(0, i + 1).join('\n');
+        if (!isLoopVariable(varName, textBefore)) {
+          markers.push({
+            severity: MarkerSeverity.Warning,
+            message: `Unknown template variable: ${varName}`,
+            startLineNumber: lineNumber,
+            startColumn: col,
+            endLineNumber: lineNumber,
+            endColumn: endCol,
+          });
+        }
       }
     }
 
-    // ── Tailwind class validation ─────────────────────────────────────
+    // ── v-directive validation ───────────────────────────────────────
 
-    const classAttrRegex = /class\s*=\s*["']([^"']*)["']/g;
-    let classMatch: RegExpExecArray | null;
-    while ((classMatch = classAttrRegex.exec(line)) !== null) {
-      const classesStr = classMatch[1];
-      const attrStart = classMatch.index + classMatch[0].indexOf(classesStr);
-      const classes = classesStr.split(/\s+/).filter(Boolean);
-      let offset = 0;
-      for (const cls of classes) {
-        const clsStart = classesStr.indexOf(cls, offset);
-        offset = clsStart + cls.length;
-        // Strip responsive/state prefix for validation (e.g. sm:flex → flex, hover:bg-red-500 → bg-red-500)
-        const base = cls.replace(/^(sm|md|lg|xl|2xl|hover|focus|active|disabled|dark|first|last|odd|even|group-hover|focus-within|focus-visible|placeholder|before|after|print):/, '');
-        if (!base) continue;
-        // Skip arbitrary values like w-[200px]
-        if (base.includes('[')) continue;
-        // Check negative prefix (e.g. -mt-4 → mt-4)
-        const lookup = base.startsWith('-') ? base.slice(1) : base;
-        if (!TAILWIND_CLASS_SET.has(lookup)) {
+    const directiveRegex = /\b(v-(?:if|else-if|else|for))\s*(?:=\s*"([^"]*)")?/g;
+    let dirMatch: RegExpExecArray | null;
+    while ((dirMatch = directiveRegex.exec(line)) !== null) {
+      const directive = dirMatch[1];
+      const value = dirMatch[2];
+      const dCol = dirMatch.index + 1;
+      const dEndCol = dCol + dirMatch[0].length;
+
+      if (directive === 'v-for' && value) {
+        if (!/^\s*(?:\(\s*\w+\s*,\s*\w+\s*,\s*\w+\s*\)|\(\s*\w+\s*,\s*\w+\s*\)|\w+)\s+in\s+\w+\s*$/.test(value)) {
+          markers.push({
+            severity: MarkerSeverity.Error,
+            message: 'Invalid v-for expression — expected "item in items", "(item, index) in items", or "(item, key, index) in items"',
+            startLineNumber: lineNumber,
+            startColumn: dCol,
+            endLineNumber: lineNumber,
+            endColumn: dEndCol,
+          });
+        }
+      }
+
+      // Validate v-if / v-else-if expressions
+      if ((directive === 'v-if' || directive === 'v-else-if') && value) {
+        const validCondition = /^\s*!?[\w.]+\s*$/.test(value) ||
+          /^\s*[\w.]+\s*(?:===|!==|==|!=)\s*(?:'[^']*'|"[^"]*")\s*$/.test(value);
+        if (!validCondition) {
           markers.push({
             severity: MarkerSeverity.Warning,
-            message: `Unknown Tailwind CSS class: ${cls}`,
+            message: 'Unsupported condition — use "path", "!path", or "path === \'value\'"',
             startLineNumber: lineNumber,
-            startColumn: attrStart + clsStart + 1,
+            startColumn: dCol,
             endLineNumber: lineNumber,
-            endColumn: attrStart + clsStart + cls.length + 1,
+            endColumn: dEndCol,
           });
         }
       }
@@ -572,18 +629,6 @@ export function validateTemplate(
 
     // Update HTML depth after processing this line
     htmlDepth += htmlDepthDelta(line);
-  }
-
-  // Any unclosed blocks remaining on the stack
-  for (const open of blockStack) {
-    markers.push({
-      severity: MarkerSeverity.Error,
-      message: `Unclosed block: {{#${open.tag}}} — missing {{/${open.tag}}}`,
-      startLineNumber: open.line,
-      startColumn: open.col,
-      endLineNumber: open.line,
-      endColumn: open.col + `{{#${open.tag}}}`.length,
-    });
   }
 
   monaco.editor.setModelMarkers(model, 'template-validator', markers);

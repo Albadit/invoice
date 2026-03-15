@@ -140,7 +140,7 @@ export function TemplateEditorPanel({ editor }: TemplateEditorPanelProps) {
               activeTab === 'editor' ? 'text-foreground bg-default-100' : 'text-default-400 hover:text-default-600'
             }`}
           >
-            Template - Mustache
+            Template
           </button>
           <button
             type="button"

@@ -35,6 +35,7 @@
       "taxId": "Tax ID",
       "vatNumber": "VAT Number",
       "cocNumber": "CoC Number",
+      "bankNumber": "Bank Number",
       "taxPercent": "Default Tax %",
       "logo": "Logo",
       "terms": "Default Terms & Conditions",

@@ -106,6 +106,7 @@ export const DUMMY_INVOICE: InvoiceWithItems = {
     country: 'Netherlands',
     vat_number: 'NL123456789B01',
     coc_number: '12345678',
+    bank_number: 'NL91ABNA0417164300',
     logo_url: null,
     template_id: null,
     currency_id: null,

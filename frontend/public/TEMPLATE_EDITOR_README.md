@@ -2,7 +2,7 @@
 
 ## Overview
 
-The template editor lets you design invoice layouts using **HTML**, **Tailwind CSS** classes, and **Mustache-like** template tags. Changes are previewed live on the right.
+The template editor lets you design invoice layouts using **HTML**, **Tailwind CSS** classes, and **Vue-style** directives with **Mustache** interpolation. Changes are previewed live on the right.
 
 ---
 
@@ -10,13 +10,13 @@ The template editor lets you design invoice layouts using **HTML**, **Tailwind C
 
 Every template has three semantic sections:
 
-- `<header>` — Repeats at the top of every PDF page
-- `<main>` — Flowing content (company info, items table, totals)
-- `<footer>` — Repeats at the bottom of every PDF page
+- `<header>` - Repeats at the top of every PDF page
+- `<main>` - Flowing content (company info, items table, totals)
+- `<footer>` - Repeats at the bottom of every PDF page
 
 ---
 
-## Mustache Tags
+## Interpolation Tags
 
 Use double curly braces to insert dynamic data:
 
@@ -34,6 +34,7 @@ Use double curly braces to insert dynamic data:
 | `{{ company.logo_url }}` | Logo URL |
 | `{{ company.vat_number }}` | VAT number |
 | `{{ company.coc_number }}` | CoC number |
+| `{{ company.bank_number }}` | Bank number |
 
 ### Customer
 
@@ -92,42 +93,112 @@ Use double curly braces to insert dynamic data:
 | `{{ lang.terms }}` | "Terms" |
 | `{{ lang.vatNumber }}` | "VAT Number" |
 | `{{ lang.cocNumber }}` | "CoC Number" |
+| `{{ lang.bankNumber }}` | "Bank Number" |
 
 ---
 
 ## Conditionals
 
-Show or hide sections based on data:
+Show or hide elements based on data using `v-if`, `v-else-if`, and `v-else` directives:
 
 ```html
-{{#if company.logo_url}}
-  <img src="{{ company.logo_url }}" />
-{{else}}
-  <span>No logo</span>
-{{/if}}
+<img v-if="company.logo_url" src="{{ company.logo_url }}" />
+```
+
+Negation (show when value is falsy):
+
+```html
+<div v-if="!invoice.notes">No notes provided</div>
+```
+
+Equality comparison:
+
+```html
+<div v-if="invoice.status === 'paid'">Paid</div>
+<div v-if="invoice.status == 'pending'">Pending</div>
+```
+
+Inequality comparison:
+
+```html
+<div v-if="invoice.status !== 'cancelled'">Active</div>
+```
+
+With else:
+
+```html
+<img v-if="company.logo_url" src="{{ company.logo_url }}" />
+<div v-else>No logo</div>
+```
+
+With else-if:
+
+```html
+<div v-if="invoice.discount_amount">Has discount</div>
+<div v-else-if="invoice.tax_amount">Has tax only</div>
+<div v-else>No adjustments</div>
 ```
 
 ---
 
 ## Loops
 
-Iterate over invoice items:
+Iterate over invoice items with `v-for`:
 
 ```html
-{{#each items in item}}
-  <div>{{ item.name }} — {{ item.fc.amount }}</div>
-{{/each}}
+<div v-for="value in items">{{ value.name }} - {{ value.fc.amount }}</div>
 ```
+
+With index:
+
+```html
+<div v-for="(value, index) in items">{{ index }}. {{ value.name }}</div>
+```
+
+With index arithmetic (1-based numbering):
+
+```html
+<div v-for="(value, index) in items">{{ index + 1 }}. {{ value.name }}</div>
+```
+
+With key and index (for arrays key equals index):
+
+```html
+<div v-for="(value, key, index) in items">{{ index }}. {{ value.name }}</div>
+```
+
+### Fragment (`<template>`)
+
+Use the `<template>` tag to group multiple elements under a single directive without adding an extra wrapper to the DOM. Works with both `v-if` and `v-for`:
+
+```html
+<template v-if="invoice.discount_amount">
+  <span>Discount:</span>
+  <span>-{{ fc.discount_total_amount }}</span>
+</template>
+```
+
+```html
+<template v-for="item in items">
+  <span>{{ item.name }}</span>
+  <span>{{ item.fc.amount }}</span>
+</template>
+```
+
+This is useful inside CSS Grid layouts where extra wrapper elements would break the column flow.
 
 ### Available inside the loop
 
 | Tag | Description |
 |-----|-------------|
-| `{{ item.name }}` | Item name |
-| `{{ item.quantity }}` | Quantity |
-| `{{ item.unit_price }}` | Unit price (raw) |
-| `{{ item.fc.unit_price }}` | Unit price (formatted) |
-| `{{ item.fc.amount }}` | Line total (formatted) |
+| `{{ value.name }}` | Item name |
+| `{{ value.quantity }}` | Quantity |
+| `{{ value.unit_price }}` | Unit price (raw) |
+| `{{ value.fc.unit_price }}` | Unit price (formatted) |
+| `{{ value.fc.amount }}` | Line total (formatted) |
+| `{{ index }}` | Numeric index (0-based) |
+| `{{ index + 1 }}` | 1-based index (supports `+` and `-`) |
+| `{{ key }}` | Key (equals index for arrays) |
 
 ---
 
@@ -177,8 +248,10 @@ These work in both the preview and the exported PDF.
 
 ## Tips
 
-- The **Problems** panel in the status bar shows validation errors for unclosed tags, unknown variables, etc.
-- Use `position: absolute` on header/footer — the PDF generator converts it to `fixed` for multi-page repeating.
+- The **Problems** panel in the status bar shows validation errors for unknown variables, invalid directives, etc.
+- Use `v-if` on any HTML element to conditionally include it.
+- Use `v-for="item in items"` on an element to repeat it for each invoice item.
+- Use `position: absolute` on header/footer - the PDF generator converts it to `fixed` for multi-page repeating.
 - System templates cannot be overwritten, but you can **Save As New** to create your own copy.
 - Type `{{` to trigger variable autocomplete.
 - The preview updates automatically as you type.

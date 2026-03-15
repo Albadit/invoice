@@ -13,6 +13,7 @@
   "issueDate": "Data e Lëshimit",
   "vatNumber": "TVSH",
   "cocNumber": "Regjistri Tregtar",
+  "bankNumber": "Nr. Bankar",
   "discount_label": "Zbritja",
   "tax_label": "Tatimi",
   "shipping_label": "Transporti",
@@ -116,6 +117,7 @@
     "status": "Statusi:",
     "vatNumber": "TVSH",
     "cocNumber": "Regjistri Tregtar",
+    "bankNumber": "Nr. Bankar",
     "close": "Mbyll"
   },
   "settings": {

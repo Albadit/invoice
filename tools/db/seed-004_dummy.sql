@@ -231,3 +231,124 @@ WHERE NOT EXISTS (
     SELECT 1 FROM invoice_items
     WHERE invoice_id = i.id AND name = item.name
 );
+
+-- ── Isfa template (owned by admin@admin.com) ─────────────────────
+INSERT INTO templates (user_id, name, styling, margin_id, is_system)
+SELECT current_setting('seed.user_id')::uuid, 'Isfa', $TEMPLATE$<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<main class="w-full h-full bg-transparent flex flex-col gap-6">
+  <div class="flex justify-between items-start">
+    <div class="flex items-center gap-4">
+      <img v-if="company.logo_url" src="{{ company.logo_url }}" alt="Logo" class="size-26 object-contain m-[8px] border-[6px] border-[#0b7db3] outline outline-[10px] outline-[#0b7db3] outline-offset-[4px]" />
+      <div v-else class="size-26 flex items-center justify-center text-[#0b7db3] text-lg font-black tracking-tight border-[6px] border-[#0b7db3] outline outline-[10px] outline-[#0b7db3] outline-offset-[4px]">LOGO</div>
+      <div>
+        <h1 class="text-2xl font-black text-[#0369a1]">{{ company.name }}</h1>
+      </div>
+    </div>
+    <div class="text-right text-xs text-[#475569] leading-relaxed">
+      <p v-if="company.street">{{ company.street }}</p>
+      <p v-if="company.city">{{ company.city }}<span v-if="company.zip_code">, {{ company.zip_code }}</span></p>
+      <p v-if="company.phone">mob: {{ company.phone }}</p>
+      <p v-if="company.email">E-mail: {{ company.email }}</p>
+      <p v-if="company.coc_number">{{ lang.cocNumber }}: {{ company.coc_number }}</p>
+      <p v-if="company.vat_number">{{ lang.vatNumber }}: {{ company.vat_number }}</p>
+    </div>
+  </div>
+  <div class="flex justify-between items-start">
+    <div class="flex flex-col gap-0.5">
+      <p class="text-lg font-bold text-[#0369a1]">{{ customer.name }}</p>
+      <p v-if="customer.street" class="text-sm text-[#475569]">{{ customer.street }}</p>
+      <p v-if="customer.city" class="text-sm text-[#475569]">{{ customer.city }}<span v-if="customer.zip_code">, {{ customer.zip_code }}</span></p>
+      <p v-if="customer.country" class="text-sm text-[#475569]">{{ customer.country }}</p>
+    </div>
+    <div class="text-right text-sm text-[#475569]">
+      <p v-if="invoice.issue_date"><span class="font-semibold">{{ lang.issueDate }}:</span> {{ date.issue_date }}</p>
+      <p v-if="invoice.due_date"><span class="font-semibold">{{ lang.dueDate }}:</span> {{ date.due_date }}</p>
+    </div>
+  </div>
+  <div class="flex items-center justify-between mt-2">
+    <div>
+      <p class="text-sm text-[#475569] font-semibold">#{{ invoice.invoice_code }}</p>
+    </div>
+    <h2 class="text-4xl font-black text-[#0369a1] tracking-tight">{{ lang.invoiceTitle }}</h2>
+  </div>
+  <div class="flex flex-col gap-0">
+    <div class="grid grid-cols-12 py-3 text-xs font-bold uppercase text-white bg-[#0369a1] rounded-t-md px-3">
+      <div class="col-span-7">{{ lang.item }}</div>
+      <div class="col-span-2 text-center">{{ lang.quantity }}</div>
+      <div class="col-span-3 text-right">{{ lang.amount }}</div>
+    </div>
+    <div v-for="item in items" class="grid grid-cols-12 py-3 px-3 border-b border-[#e2e8f0] text-sm">
+      <span class="col-span-7 text-[#1e293b]">{{ item.name }}</span>
+      <span class="col-span-2 text-center text-[#64748b]">{{ item.quantity }}</span>
+      <span class="col-span-3 text-right font-semibold text-[#1e293b]">{{ item.fc.amount }}</span>
+    </div>
+  </div>
+  <div class="flex flex-col gap-8 grow content-end">
+    <div class="grid grid-cols-[160px_200px] items-center justify-end gap-y-2 text-sm px-3">
+      <span class="text-[#64748b] text-right">{{ lang.subtotal }}:</span>
+      <span class="font-semibold text-[#1e293b] text-right">{{ fc.subtotal_amount }}</span>
+    
+      <template v-if="invoice.discount_amount">
+        <span class="text-[#64748b] text-right">
+          {{ lang.discount_label }}<span v-if="invoice.discount_is_percent"> ({{ invoice.discount }})</span>:
+        </span>
+        <span class="font-semibold text-[#1e293b] text-right">-{{ fc.discount_total_amount }}</span>
+      </template>
+    
+      <template v-if="invoice.tax_amount">
+        <span class="text-[#64748b] text-right">
+          {{ lang.tax_label }}<span v-if="invoice.tax_is_percent"> ({{ invoice.tax }})</span>:
+        </span>
+        <span class="font-semibold text-[#1e293b] text-right">{{ fc.tax_total_amount }}</span>
+      </template>
+    
+      <template v-if="invoice.shipping_amount">
+        <span class="text-[#64748b] text-right">
+          {{ lang.shipping_label }}<span v-if="invoice.shipping_is_percent"> ({{ invoice.shipping }})</span>:
+        </span>
+        <span class="font-semibold text-[#1e293b] text-right">{{ fc.shipping_total_amount }}</span>
+      </template>
+    </div>
+    <div class="grid grid-cols-[160px_200px] justify-end items-center py-2 px-3 rounded-md text-white bg-[#0369a1]">
+      <span class="text-base font-bold text-right">{{ lang.total }}:</span>
+      <span class="text-xl font-black text-right">{{ fc.total_amount }}</span>
+    </div>
+    <div class="flex flex-col gap-4">
+      <div v-if="invoice.notes">
+        <h4 class="text-xs font-bold uppercase text-[#64748b]">{{ lang.notes }}</h4>
+        <p class="text-xs text-[#64748b] whitespace-pre-line mt-1">{{ invoice.notes }}</p>
+      </div>
+      <div v-if="invoice.terms">
+        <h4 class="text-xs font-bold uppercase text-[#64748b]">{{ lang.terms }}</h4>
+        <p class="text-xs text-[#64748b] whitespace-pre-line mt-1">{{ invoice.terms }}</p>
+      </div>
+    </div>
+  </div>
+</main>
+<footer class="absolute bottom-0 left-0 w-full p-4 flex items-center justify-between text-[10px] text-[#94a3b8]">
+  <span v-if="company.phone">mob.nr. {{ company.phone }}</span>
+  <span v-if="company.email">{{ company.email }}</span>
+  <span v-if="company.bank_number">{{ company.bank_number }}</span>
+</footer>$TEMPLATE$, (SELECT id FROM pdf_margins WHERE name = 'Normal'), false
+WHERE NOT EXISTS (SELECT 1 FROM templates WHERE name = 'Isfa' AND user_id = current_setting('seed.user_id')::uuid);
+
+-- Insert Isfa Ku. company (uses Isfa template + MKD currency)
+INSERT INTO companies (user_id, name, email, phone, street, city, zip_code, country, bank_number, currency_id, template_id, tax_percent, terms)
+SELECT
+    current_setting('seed.user_id')::uuid,
+    'Isfa Ku.',
+    'isfamk@hotmail.com',
+    '+389 71 233 685',
+    '11-ti Noemvri 68',
+    'Kumanovë',
+    '1300',
+    'North Macedonia',
+    'Halk bank: 270700068894490',
+    cur.id,
+    t.id,
+    18.00,
+    NULL
+FROM currencies cur
+CROSS JOIN (SELECT id FROM templates WHERE name = 'Isfa' LIMIT 1) t
+WHERE cur.code = 'MKD'
+  AND NOT EXISTS (SELECT 1 FROM companies WHERE name = 'Isfa Ku.');

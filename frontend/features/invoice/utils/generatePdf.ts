@@ -1,7 +1,7 @@
 'use server';
 
 import puppeteer, { Browser, PDFOptions } from 'puppeteer';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 /** Singleton browser instance — reused across PDF calls */
 let browserInstance: Browser | null = null;
@@ -72,9 +72,6 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
   const browser = await getBrowser();
   const page = await browser.newPage();
 
-  // Forward browser console to Node console for debugging
-  page.on('console', msg => console.log('[Puppeteer]', msg.text()));
-
   try {
     const m = pdfOptions.margin || { top: '16mm', right: '16mm', bottom: '16mm', left: '16mm' };
 
@@ -144,9 +141,6 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
     const selectedTopPx = parseFloat(m.top || '16') * PX_PER_MM;
     const selectedBottomPx = parseFloat(m.bottom || '16') * PX_PER_MM;
 
-    console.log(`[PDF] header=${dims.headerHeight}px, footer=${dims.footerHeight}px`);
-    console.log(`[PDF] topMargin=${selectedTopPx.toFixed(1)}px, bottomMargin=${selectedBottomPx.toFixed(1)}px`);
-
     // Table thead/tfoot trick: browsers repeat <thead> at the top and
     // <tfoot> at the bottom of every printed page. We wrap <main> inside
     // a table and use invisible thead/tfoot spacers whose
@@ -204,8 +198,8 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
         table.appendChild(tbody);
         table.appendChild(tfoot);
       },
-      0,
-      0,
+      dims.headerHeight,
+      dims.footerHeight,
       selectedTopPx,
       selectedBottomPx
     );
@@ -233,28 +227,69 @@ export async function generatePdf(options: GeneratePdfOptions): Promise<Buffer> 
     );
 
     if (hasPageNumbers) {
-      // Generate once to count pages
-      const countBuffer = await page.pdf(puppeteerPdfOptions);
-      const countPdf = await PDFDocument.load(countBuffer);
-      const totalPages = countPdf.getPageCount();
+      // Pass 1: generate PDF to count actual pages
+      const countBuf = await page.pdf(puppeteerPdfOptions);
+      const countDoc = await PDFDocument.load(countBuf);
+      const totalPages = countDoc.getPageCount();
 
-      // Set total pages text
-      await page.evaluate((total: number) => {
-        document.querySelectorAll('.total-pages').forEach(el => { el.textContent = String(total); });
+      // Fill spans with text for layout measurement, then capture positions
+      const spanMeta = await page.evaluate((total: number) => {
+        document.querySelectorAll('.page-number').forEach(el => {
+          (el as HTMLElement).textContent = String(total);
+        });
+        document.querySelectorAll('.total-pages').forEach(el => {
+          (el as HTMLElement).textContent = String(total);
+        });
+
+        const result: { type: 'pn' | 'tp'; x: number; y: number; w: number; h: number; fontSize: number; color: string }[] = [];
+        document.querySelectorAll('.page-number, .total-pages').forEach(el => {
+          const rect = (el as HTMLElement).getBoundingClientRect();
+          const style = getComputedStyle(el as HTMLElement);
+          result.push({
+            type: el.classList.contains('page-number') ? 'pn' : 'tp',
+            x: rect.x, y: rect.y, w: rect.width, h: rect.height,
+            fontSize: parseFloat(style.fontSize),
+            color: style.color,
+          });
+        });
+
+        // Hide text so PDF renders clean placeholders (layout preserved)
+        document.querySelectorAll('.page-number, .total-pages').forEach(el => {
+          (el as HTMLElement).style.color = 'transparent';
+        });
+
+        return result;
       }, totalPages);
 
-      // Generate each page with the correct page number, then merge
-      const mergedPdf = await PDFDocument.create();
-      for (let i = 1; i <= totalPages; i++) {
-        await page.evaluate((num: number) => {
-          document.querySelectorAll('.page-number').forEach(el => { el.textContent = String(num); });
-        }, i);
-        const singleBuf = await page.pdf({ ...puppeteerPdfOptions, pageRanges: String(i) });
-        const singlePdf = await PDFDocument.load(singleBuf);
-        const [copied] = await mergedPdf.copyPages(singlePdf, [0]);
-        mergedPdf.addPage(copied);
+      // Pass 2: generate final PDF with invisible placeholders
+      const pdfBytes = await page.pdf(puppeteerPdfOptions);
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const pdfPages = pdfDoc.getPages();
+      const S = 72 / 96; // CSS px → PDF pt
+
+      // Stamp correct page numbers onto each page
+      for (let i = 0; i < pdfPages.length; i++) {
+        const pg = pdfPages[i];
+        const { height: pgH } = pg.getSize();
+        for (const span of spanMeta) {
+          const text = span.type === 'pn' ? String(i + 1) : String(totalPages);
+          const fs = span.fontSize * S;
+          const tw = font.widthOfTextAtSize(text, fs);
+          // Center text within the measured span area
+          const x = span.x * S + (span.w * S - tw) / 2;
+          // Baseline: top of span + height - descent (≈ 20% of fontSize)
+          const y = pgH - (span.y + span.h - span.fontSize * 0.2) * S;
+          // Parse computed color (rgb/rgba)
+          const c = (span.color.match(/[\d.]+/g) || ['148', '163', '184']).map(Number);
+          pg.drawText(text, {
+            x, y, size: fs, font,
+            color: rgb(c[0] / 255, c[1] / 255, c[2] / 255),
+          });
+        }
       }
-      return Buffer.from(await mergedPdf.save());
+
+      return Buffer.from(await pdfDoc.save());
     }
 
     const pdfBuffer = await page.pdf(puppeteerPdfOptions);

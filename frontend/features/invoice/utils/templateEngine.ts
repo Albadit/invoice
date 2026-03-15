@@ -1,22 +1,27 @@
 /**
- * Mustache-like Template Interpolation Engine
+ * Vue-Style Template Interpolation Engine
  *
  * Renders a template string with invoice data, translations and formatting.
  *
- * Supported tags:
+ * Supported interpolation:
  *   {{ company.name }}          → invoice.company?.name || ''
  *   {{ invoice.invoice_code }}  → invoice.invoice_code || ''
  *   {{ customer.name }}         → invoice.customer_name || ''
- *   {{ lang.invoiceTitle }}       → tl(labels, 'invoiceTitle')
+ *   {{ lang.invoiceTitle }}     → tl(labels, 'invoiceTitle')
  *   {{ date.issue_date }}       → formatted invoice.issue_date
- *   {{ date.due_date }}         → formatted invoice.due_date
  *   {{ fc.subtotal_amount }}    → currency-formatted invoice field
- *   {{#if company.logo_url}}...{{/if}}            → conditional block
- *   {{#if company.logo_url}}...{{else}}...{{/if}} → if/else block
- *   {{#each items in item}} ... {{/each}}          → iterate items
- *     inside each: {{ item.name }}, {{ item.quantity }},
- *                  {{ item.unit_price }}, {{ item.amount }}
+ *
+ * Directives (on HTML elements):
+ *   v-if="company.logo_url"    → conditional rendering
+ *   v-else-if="condition"      → else-if branch
+ *   v-else                     → else branch
+ *   v-for="item in items"      → loop over invoice items
+ *     inside loop: {{ item.name }}, {{ item.quantity }},
  *                  {{ item.fc.unit_price }}, {{ item.fc.amount }}
+ *
+ * Fragment element:
+ *   <template v-if="...">       → renders inner content without wrapper
+ *   <template v-for="...">      → repeats inner content without wrapper
  *
  * @module features/invoice/utils/templateEngine
  */
@@ -40,6 +45,279 @@ export function resolvePath(obj: Record<string, unknown>, path: string): unknown
     }
     return undefined;
   }, obj);
+}
+
+// ── Void HTML elements (self-closing) ──────────────────────────────
+
+const VOID_ELS = new Set([
+  'area','base','br','col','embed','hr','img','input',
+  'link','meta','param','source','track','wbr',
+]);
+
+// ── Directive helpers ──────────────────────────────────────────────
+
+/**
+ * Extract a complete HTML element starting at `startPos`.
+ * Returns tag metadata, inner content, and end position.
+ */
+function extractElement(html: string, startPos: number): {
+  tagName: string; openTag: string; inner: string; endPos: number; selfClosing: boolean;
+} | null {
+  const rest = html.slice(startPos);
+  const m = rest.match(/^<(\w[\w-]*)((?:\s+[^>]*)?)>/);
+  if (!m) return null;
+  const tagName = m[1];
+  const openTag = m[0];
+  const selfClosing = openTag.endsWith('/>') || VOID_ELS.has(tagName.toLowerCase());
+  if (selfClosing) {
+    return { tagName, openTag, inner: '', endPos: startPos + openTag.length, selfClosing: true };
+  }
+  const contentStart = startPos + openTag.length;
+  const closeStr = `</${tagName}>`;
+  let depth = 1;
+  let pos = contentStart;
+  while (depth > 0 && pos < html.length) {
+    const idx = html.indexOf('<', pos);
+    if (idx === -1) return null;
+    if (html.startsWith(closeStr, idx)) {
+      depth--;
+      if (depth === 0) {
+        return { tagName, openTag, inner: html.slice(contentStart, idx), endPos: idx + closeStr.length, selfClosing: false };
+      }
+      pos = idx + closeStr.length;
+    } else {
+      const openCheck = new RegExp(`^<${tagName}(?=\\s|>)`, 'i').test(html.slice(idx));
+      if (openCheck) {
+        const tagEnd = html.indexOf('>', idx);
+        if (tagEnd !== -1 && html[tagEnd - 1] !== '/') depth++;
+        pos = (tagEnd !== -1 ? tagEnd : idx) + 1;
+      } else {
+        pos = idx + 1;
+      }
+    }
+  }
+  return null;
+}
+
+/** Get an attribute value from an opening tag string. */
+function getAttr(tag: string, name: string): string | null {
+  const m = tag.match(new RegExp(`\\b${name}\\s*=\\s*"([^"]*)"`));
+  return m ? m[1] : null;
+}
+
+/** Remove an attribute from an opening tag string. */
+function removeAttr(tag: string, name: string): string {
+  if (name === 'v-else') return tag.replace(/\s+v-else\b(?!-)/, '');
+  return tag.replace(new RegExp(`\\s+${name}\\s*=\\s*"[^"]*"`), '');
+}
+
+/**
+ * Evaluate a condition expression against the namespace map.
+ *
+ * Supported forms:
+ *   "company.street"                 → truthy check
+ *   "!company.street"                → negated truthy check
+ *   "invoice.status === 'paid'"      → strict equality
+ *   "invoice.status == 'paid'"       → loose equality
+ *   "invoice.status !== 'paid'"      → strict inequality
+ *   "invoice.status != 'paid'"       → loose inequality
+ */
+function resolveCondition(expr: string, ns: Record<string, Record<string, unknown>>): boolean {
+  const trimmed = expr.trim();
+
+  // Comparison operators: ===, !==, ==, !=
+  const cmpMatch = trimmed.match(/^(.+?)\s*(===|!==|==|!=)\s*'([^']*)'$/) ||
+                   trimmed.match(/^(.+?)\s*(===|!==|==|!=)\s*"([^"]*)"$/);
+  if (cmpMatch) {
+    const val = resolvePathInNs(cmpMatch[1].trim(), ns);
+    const literal = cmpMatch[3];
+    const strVal = val != null ? String(val) : '';
+    switch (cmpMatch[2]) {
+      case '===': case '==': return strVal === literal;
+      case '!==': case '!=': return strVal !== literal;
+    }
+  }
+
+  // Negation: !path
+  const negated = trimmed.startsWith('!');
+  const path = negated ? trimmed.slice(1).trim() : trimmed;
+
+  const val = resolvePathInNs(path, ns);
+  const truthy = val != null && val !== '' && val !== false && val !== 0;
+  return negated ? !truthy : truthy;
+}
+
+/** Resolve a dotted namespace path (e.g. "company.street") to its value. */
+function resolvePathInNs(path: string, ns: Record<string, Record<string, unknown>>): unknown {
+  const dot = path.indexOf('.');
+  if (dot === -1) return undefined;
+  const map = ns[path.slice(0, dot)];
+  if (!map) return undefined;
+  return map[path.slice(dot + 1)];
+}
+
+/**
+ * Process v-for directives.
+ * Finds elements with v-for and repeats them for each item.
+ *
+ * Supported forms:
+ *   v-for="item in items"
+ *   v-for="(item, index) in items"
+ *   v-for="(item, key, index) in items"
+ */
+function processVFor(
+  html: string,
+  items: InvoiceItem[],
+  fc: (amount: string | number) => string,
+): string {
+  let result = html;
+  const vForRe = /<\w[\w-]*\s+[^>]*?v-for\s*=\s*"/g;
+  const positions: number[] = [];
+  let match;
+  while ((match = vForRe.exec(result)) !== null) positions.push(match.index);
+
+  // Process in reverse to preserve earlier positions
+  for (let i = positions.length - 1; i >= 0; i--) {
+    const pos = positions[i];
+    const elem = extractElement(result, pos);
+    if (!elem) continue;
+    const vForExpr = getAttr(elem.openTag, 'v-for');
+    if (!vForExpr) continue;
+    // Match: item in col | (item, idx) in col | (item, key, idx) in col
+    const exprMatch = vForExpr.match(
+      /(?:\(\s*(\w+)\s*,\s*(\w+)\s*,\s*(\w+)\s*\)|\(\s*(\w+)\s*,\s*(\w+)\s*\)|(\w+))\s+in\s+(\w+)/,
+    );
+    if (!exprMatch) continue;
+    const varName = exprMatch[1] || exprMatch[4] || exprMatch[6];
+    // 3-arg: (value, key, index) → key=group3's key, index=group3
+    // 2-arg: (value, index) → index=group5
+    const keyName = exprMatch[2] || null;   // only set in 3-arg form
+    const indexName = exprMatch[3] || exprMatch[5] || null;
+    const collection = exprMatch[7];
+    if (collection !== 'items') continue;
+
+    const isTemplateTag = elem.tagName.toLowerCase() === 'template';
+    const cleanTag = removeAttr(elem.openTag, 'v-for');
+    const fcRe = new RegExp(`\\{\\{\\s*${varName}\\.fc\\.(\\w+)\\s*\\}\\}`, 'g');
+    const valRe = new RegExp(`\\{\\{\\s*${varName}\\.(\\w+)\\s*\\}\\}`, 'g');
+
+    const repeated = items.map((item: InvoiceItem, idx: number) => {
+      const amt = (item.quantity * item.unit_price).toFixed(2);
+      let itemHtml = isTemplateTag
+        ? elem.inner
+        : elem.selfClosing ? cleanTag : (cleanTag + elem.inner + `</${elem.tagName}>`);
+      itemHtml = itemHtml
+        .replace(fcRe, (__, key: string) => {
+          if (key === 'unit_price') return fc(item.unit_price.toFixed(2));
+          if (key === 'amount') return fc(amt);
+          return '';
+        })
+        .replace(valRe, (__, key: string) => {
+          if (key === 'amount') return fc(amt);
+          const val = (item as unknown as Record<string, unknown>)[key];
+          return val != null ? String(val) : '';
+        });
+      // Replace index variable with optional arithmetic (e.g. {{ index }}, {{ index + 1 }})
+      if (indexName) {
+        itemHtml = itemHtml.replace(
+          new RegExp(`\\{\\{\\s*${indexName}\\s*(?:([+-])\\s*(\\d+)\\s*)?\\}\\}`, 'g'),
+          (__, op?: string, num?: string) => {
+            if (op && num) return String(op === '+' ? idx + Number(num) : idx - Number(num));
+            return String(idx);
+          },
+        );
+      }
+      // Replace key variable with optional arithmetic (e.g. {{ key }}, {{ key + 1 }})
+      if (keyName) {
+        itemHtml = itemHtml.replace(
+          new RegExp(`\\{\\{\\s*${keyName}\\s*(?:([+-])\\s*(\\d+)\\s*)?\\}\\}`, 'g'),
+          (__, op?: string, num?: string) => {
+            if (op && num) return String(op === '+' ? idx + Number(num) : idx - Number(num));
+            return String(idx);
+          },
+        );
+      }
+      return itemHtml;
+    }).join('\n');
+
+    result = result.slice(0, pos) + repeated + result.slice(elem.endPos);
+  }
+  return result;
+}
+
+/**
+ * Process v-if / v-else-if / v-else directive chains.
+ */
+function processConditionals(
+  html: string,
+  ns: Record<string, Record<string, unknown>>,
+): string {
+  let result = html;
+  let iterations = 0;
+  while (iterations++ < 50) {
+    const m = result.match(/<\w[\w-]*\s+[^>]*?v-if\s*=\s*"/);
+    if (!m) break;
+    const startPos = m.index!;
+    const elem = extractElement(result, startPos);
+    if (!elem) break;
+    const condition = getAttr(elem.openTag, 'v-if');
+    if (condition === null) break;
+
+    type ChainItem = {
+      startPos: number;
+      elem: NonNullable<ReturnType<typeof extractElement>>;
+      type: 'if' | 'else-if' | 'else';
+      condition?: string;
+    };
+    const chain: ChainItem[] = [{ startPos, elem, type: 'if', condition }];
+
+    let scanPos = elem.endPos;
+    while (scanPos < result.length) {
+      const wsMatch = result.slice(scanPos).match(/^[\s\n]*/);
+      const nextPos = scanPos + (wsMatch ? wsMatch[0].length : 0);
+      if (nextPos >= result.length || result[nextPos] !== '<') break;
+      const nextElem = extractElement(result, nextPos);
+      if (!nextElem) break;
+      const elseIfVal = getAttr(nextElem.openTag, 'v-else-if');
+      if (elseIfVal !== null) {
+        chain.push({ startPos: nextPos, elem: nextElem, type: 'else-if', condition: elseIfVal });
+        scanPos = nextElem.endPos;
+        continue;
+      }
+      if (/\bv-else\b(?!-)/.test(nextElem.openTag)) {
+        chain.push({ startPos: nextPos, elem: nextElem, type: 'else' });
+        scanPos = nextElem.endPos;
+        break;
+      }
+      break;
+    }
+
+    // Determine which element to keep
+    let keepIdx = -1;
+    for (let j = 0; j < chain.length; j++) {
+      if (chain[j].type === 'else') { keepIdx = j; break; }
+      if (resolveCondition(chain[j].condition!, ns)) { keepIdx = j; break; }
+    }
+
+    let replacement = '';
+    if (keepIdx >= 0) {
+      const kept = chain[keepIdx];
+      if (kept.elem.tagName.toLowerCase() === 'template') {
+        // Fragment: render inner content only, strip the wrapper
+        replacement = kept.elem.inner;
+      } else {
+        let cleanTag = kept.elem.openTag;
+        if (kept.type === 'if') cleanTag = removeAttr(cleanTag, 'v-if');
+        else if (kept.type === 'else-if') cleanTag = removeAttr(cleanTag, 'v-else-if');
+        else cleanTag = removeAttr(cleanTag, 'v-else');
+        replacement = kept.elem.selfClosing ? cleanTag : (cleanTag + kept.elem.inner + `</${kept.elem.tagName}>`);
+      }
+    }
+
+    const chainEnd = chain[chain.length - 1].elem.endPos;
+    result = result.slice(0, startPos) + replacement + result.slice(chainEnd);
+  }
+  return result;
 }
 
 // ── Core engine ────────────────────────────────────────────────────
@@ -71,6 +349,7 @@ export function renderTemplate(
       logo_url: invoice.company?.logo_url,
       vat_number: invoice.company?.vat_number,
       coc_number: invoice.company?.coc_number,
+      bank_number: invoice.company?.bank_number,
     },
     customer: {
       name: invoice.customer_name,
@@ -117,45 +396,11 @@ export function renderTemplate(
   const invoiceMap = ns.invoice;
   let result = tpl;
 
-  // ── 1. {{#each <collection> in <var>}} ... {{/each}} ──
-  result = result.replace(
-    /\{\{#each\s+(\w+)\s+in\s+(\w+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
-    (_match, collection: string, varName: string, itemTpl: string) => {
-      if (collection !== 'items') return '';
-      // Pre-compile regexes once, reused across all items
-      const fcRe = new RegExp(`\\{\\{\\s*${varName}\\.fc\\.(\\w+)\\s*\\}\\}`, 'g');
-      const valRe = new RegExp(`\\{\\{\\s*${varName}\\.(\\w+)\\s*\\}\\}`, 'g');
-      return invoice.items.map((item: InvoiceItem) => {
-        const amt = (item.quantity * item.unit_price).toFixed(2);
-        return itemTpl
-          .replace(fcRe, (__, key: string) => {
-            if (key === 'unit_price') return fc(item.unit_price.toFixed(2));
-            if (key === 'amount') return fc(amt);
-            return '';
-          })
-          .replace(valRe, (__, key: string) => {
-            if (key === 'amount') return fc(amt);
-            const val = (item as unknown as Record<string, unknown>)[key];
-            return val != null ? String(val) : '';
-          });
-      }).join('');
-    }
-  );
+  // ── 1. v-for directives ──
+  result = processVFor(result, invoice.items, fc);
 
-  // ── 2. {{#if}}...{{else}}...{{/if}} — resolve innermost first ──
-  {
-    const ifRe = /\{\{#if\s+([\w.]+)\}\}((?:(?!\{\{#if)[\s\S])*?)\{\{\/if\}\}/g;
-    for (let i = 0; i < 20 && ifRe.test(result); i++) {
-      ifRe.lastIndex = 0;
-      result = result.replace(ifRe, (_, path: string, body: string) => {
-        const dot = path.indexOf('.');
-        const map = dot !== -1 ? ns[path.slice(0, dot)] : undefined;
-        const value = map ? map[path.slice(dot + 1)] : undefined;
-        const parts = body.split(/\{\{else\}\}/);
-        return (value && value !== '' && value !== 0) ? parts[0] : (parts[1] || '');
-      });
-    }
-  }
+  // ── 2. v-if / v-else-if / v-else directives ──
+  result = processConditionals(result, ns);
 
   // ── 3. All remaining {{ ns.key }} tags in a single pass ──
   result = result.replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, path: string) => {
@@ -215,6 +460,7 @@ export function translateCustomHtml(html: string, labels: Translations): string 
     ['Tax', 'fields.tax'],
     ['VAT:', 'preview.vatNumber', true],
     ['CoC:', 'preview.cocNumber', true],
+    ['Bank:', 'preview.bankNumber', true],
   ];
 
   let result = html;
@@ -367,6 +613,7 @@ export function customInvoiceHtml(bodyContent: string, options?: {
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <link rel="preconnect" href="https://fonts.googleapis.com">
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
       <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
       <style>
         @layer base {
@@ -374,7 +621,6 @@ export function customInvoiceHtml(bodyContent: string, options?: {
             padding: 0;
             margin: 0;
             box-sizing: border-box;
-            // outline: solid red 1px;
           }
           main > div:last-child {
             break-inside: avoid;
@@ -413,9 +659,7 @@ export function customInvoiceHtml(bodyContent: string, options?: {
 export const DEFAULT_TEMPLATE_STYLING = `
 <header class="absolute top-0 left-0 w-full bg-slate-900 px-[16mm] py-6 flex items-center justify-between">
   <div class="flex items-center gap-4">
-    {{#if company.logo_url}}
-      <img src="{{ company.logo_url }}" alt="Logo" class="h-12 brightness-0 invert" />
-    {{/if}}
+    <img v-if="company.logo_url" src="{{ company.logo_url }}" alt="Logo" class="h-12 brightness-0 invert" />
     <span class="text-xl font-bold text-white">{{ company.name }}</span>
   </div>
   <div class="text-right">
@@ -426,27 +670,23 @@ export const DEFAULT_TEMPLATE_STYLING = `
 <main class="w-full h-full bg-transparent flex flex-col gap-8 p-[16mm]">
   <div class="flex justify-between">
     <div class="flex flex-col">
-      {{#if company.street}}<p class="text-sm text-gray-600">{{ company.street }}</p>{{/if}}
-      {{#if company.city}}<p class="text-sm text-gray-600">{{ company.city }}{{#if company.zip_code}}, {{ company.zip_code }}{{/if}}</p>{{/if}}
-      {{#if company.country}}<p class="text-sm text-gray-600">{{ company.country }}</p>{{/if}}
-      {{#if company.email}}<p class="text-sm text-gray-600">{{ company.email }}</p>{{/if}}
-      {{#if company.phone}}<p class="text-sm text-gray-600">{{ company.phone }}</p>{{/if}}
-      {{#if company.vat_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>{{/if}}
-      {{#if company.coc_number}}<p class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>{{/if}}
+      <p v-if="company.street" class="text-sm text-gray-600">{{ company.street }}</p>
+      <p v-if="company.city" class="text-sm text-gray-600">{{ company.city }}<span v-if="company.zip_code">, {{ company.zip_code }}</span></p>
+      <p v-if="company.country" class="text-sm text-gray-600">{{ company.country }}</p>
+      <p v-if="company.email" class="text-sm text-gray-600">{{ company.email }}</p>
+      <p v-if="company.phone" class="text-sm text-gray-600">{{ company.phone }}</p>
+      <p v-if="company.vat_number" class="text-sm text-gray-600"><span class="font-semibold">{{ lang.vatNumber }}:</span> {{ company.vat_number }}</p>
+      <p v-if="company.coc_number" class="text-sm text-gray-600"><span class="font-semibold">{{ lang.cocNumber }}:</span> {{ company.coc_number }}</p>
     </div>
     <div class="flex flex-col gap-1">
-      {{#if invoice.issue_date}}
-        <div class="flex justify-end gap-3">
-          <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
-          <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
-        </div>
-      {{/if}}
-      {{#if invoice.due_date}}
-        <div class="flex justify-end gap-3">
-          <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
-          <span class="text-sm text-gray-900">{{ date.due_date }}</span>
-        </div>
-      {{/if}}
+      <div v-if="invoice.issue_date" class="flex justify-end gap-3">
+        <span class="text-sm font-semibold text-gray-600">{{ lang.issueDate }}:</span>
+        <span class="text-sm text-gray-900">{{ date.issue_date }}</span>
+      </div>
+      <div v-if="invoice.due_date" class="flex justify-end gap-3">
+        <span class="text-sm font-semibold text-gray-600">{{ lang.dueDate }}:</span>
+        <span class="text-sm text-gray-900">{{ date.due_date }}</span>
+      </div>
     </div>
   </div>
 
@@ -456,9 +696,9 @@ export const DEFAULT_TEMPLATE_STYLING = `
   <div class="flex flex-col">
     <h3 class="text-xs font-bold uppercase text-gray-600">{{ lang.billTo }}:</h3>
     <p class="text-lg font-semibold text-gray-900">{{ customer.name }}</p>
-    {{#if customer.street}}<p class="text-sm text-gray-600">{{ customer.street }}</p>{{/if}}
-    {{#if customer.city}}<p class="text-sm text-gray-600">{{ customer.city }}</p>{{/if}}
-    {{#if customer.country}}<p class="text-sm text-gray-600">{{ customer.country }}</p>{{/if}}
+    <p v-if="customer.street" class="text-sm text-gray-600">{{ customer.street }}</p>
+    <p v-if="customer.city" class="text-sm text-gray-600">{{ customer.city }}</p>
+    <p v-if="customer.country" class="text-sm text-gray-600">{{ customer.country }}</p>
   </div>
 
   <!-- Items Table -->
@@ -469,14 +709,12 @@ export const DEFAULT_TEMPLATE_STYLING = `
       <div class="col-span-2 text-sm font-bold uppercase text-right">{{ lang.rate }}</div>
       <div class="col-span-3 text-sm font-bold uppercase text-right">{{ lang.amount }}</div>
     </div>
-    {{#each items in item}}
-      <div class="grid grid-cols-12 px-2">
-        <span class="col-span-5 text-slate-700">{{ item.name }}</span>
-        <span class="col-span-2 text-slate-700 text-center">{{ item.quantity }}</span>
-        <span class="col-span-2 text-slate-700 text-right">{{ item.fc.unit_price }}</span>
-        <span class="col-span-3 text-slate-900 font-semibold text-right">{{ item.fc.amount }}</span>
-      </div>
-    {{/each}}
+    <div v-for="item in items" class="grid grid-cols-12 px-2">
+      <span class="col-span-5 text-slate-700">{{ item.name }}</span>
+      <span class="col-span-2 text-slate-700 text-center">{{ item.quantity }}</span>
+      <span class="col-span-2 text-slate-700 text-right">{{ item.fc.unit_price }}</span>
+      <span class="col-span-3 text-slate-900 font-semibold text-right">{{ item.fc.amount }}</span>
+    </div>
   </div>
 
   <div class="grid grid-cols-2 gap-8 grow content-end">
@@ -498,24 +736,18 @@ export const DEFAULT_TEMPLATE_STYLING = `
         <span class="font-semibold text-gray-700">{{ lang.subtotal }}:</span>
         <span class="font-semibold text-gray-900">{{ fc.subtotal_amount }}</span>
       </div>
-      {{#if invoice.discount_amount}}
-        <div class="flex justify-between text-slate-700">
-          <span class="text-gray-700">{{ lang.discount_label }}{{#if invoice.discount_is_percent}} ({{ invoice.discount }}){{/if}}:</span>
-          <span class="font-semibold text-gray-900">-{{ fc.discount_total_amount }}</span>
-        </div>
-      {{/if}}
-      {{#if invoice.tax_amount}}
-        <div class="flex justify-between text-slate-700">
-          <span class="text-gray-700">{{ lang.tax_label }}{{#if invoice.tax_is_percent}} ({{ invoice.tax }}){{/if}}:</span>
-          <span class="font-semibold text-gray-900">{{ fc.tax_total_amount }}</span>
-        </div>
-      {{/if}}
-      {{#if invoice.shipping_amount}}
-        <div class="flex justify-between text-slate-700">
-          <span class="text-gray-700">{{ lang.shipping_label }}{{#if invoice.shipping_is_percent}} ({{ invoice.shipping }}){{/if}}:</span>
-          <span class="font-semibold text-gray-900">{{ fc.shipping_total_amount }}</span>
-        </div>
-      {{/if}}
+      <div v-if="invoice.discount_amount" class="flex justify-between text-slate-700">
+        <span class="text-gray-700">{{ lang.discount_label }}<span v-if="invoice.discount_is_percent"> ({{ invoice.discount }})</span>:</span>
+        <span class="font-semibold text-gray-900">-{{ fc.discount_total_amount }}</span>
+      </div>
+      <div v-if="invoice.tax_amount" class="flex justify-between text-slate-700">
+        <span class="text-gray-700">{{ lang.tax_label }}<span v-if="invoice.tax_is_percent"> ({{ invoice.tax }})</span>:</span>
+        <span class="font-semibold text-gray-900">{{ fc.tax_total_amount }}</span>
+      </div>
+      <div v-if="invoice.shipping_amount" class="flex justify-between text-slate-700">
+        <span class="text-gray-700">{{ lang.shipping_label }}<span v-if="invoice.shipping_is_percent"> ({{ invoice.shipping }})</span>:</span>
+        <span class="font-semibold text-gray-900">{{ fc.shipping_total_amount }}</span>
+      </div>
       <div class="flex justify-between items-center pt-2 border-t">
         <span class="text-xl font-bold text-gray-900">{{ lang.total }}:</span>
         <span class="text-2xl font-bold text-gray-900">{{ fc.total_amount }}</span>
@@ -527,8 +759,8 @@ export const DEFAULT_TEMPLATE_STYLING = `
   <span>{{ company.name }}</span>
   <span>{{ page.number }} / {{ page.total }}</span>
   <div class="flex gap-4">
-    {{#if company.email}}<span>{{ company.email }}</span>{{/if}}
-    {{#if company.phone}}<span>{{ company.phone }}</span>{{/if}}
+    <span v-if="company.email">{{ company.email }}</span>
+    <span v-if="company.phone">{{ company.phone }}</span>
   </div>
 </footer>`.trim();
 

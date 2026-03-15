@@ -35,6 +35,7 @@
       "taxId": "Numri Fiskal",
       "vatNumber": "Numri i TVSH-së",
       "cocNumber": "Numri i Regjistrit Tregtar",
+      "bankNumber": "Numri Bankar",
       "taxPercent": "TVSH e Paracaktuar %",
       "logo": "Logo",
       "terms": "Kushtet e Paracaktuara",

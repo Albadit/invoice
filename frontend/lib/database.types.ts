@@ -27,6 +27,7 @@ export interface Companies {
   country: string | null
   vat_number: string | null
   coc_number: string | null
+  bank_number: string | null
   logo_url: string | null
   template_id: string | null
   currency_id: string | null

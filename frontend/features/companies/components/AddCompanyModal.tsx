@@ -10,7 +10,7 @@ interface AddCompanyModalProps {
   onClose: () => void;
   onSave: (companyData: {
     name: string; email: string; phone: string; street: string;
-    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string;
+    city: string; zipCode: string; country: string; vatNumber: string; cocNumber: string; bankNumber: string;
   }) => Promise<void>;
 }
 
@@ -25,22 +25,23 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
   const [companyCountry, setCompanyCountry] = useState('');
   const [companyVatNumber, setCompanyVatNumber] = useState('');
   const [companyCocNumber, setCompanyCocNumber] = useState('');
+  const [companyBankNumber, setCompanyBankNumber] = useState('');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     if (!companyName.trim()) return;
     setSaving(true);
     try {
-      await onSave({ name: companyName, email: companyEmail, phone: companyPhone, street: companyStreet, city: companyCity, zipCode: companyZipCode, country: companyCountry, vatNumber: companyVatNumber, cocNumber: companyCocNumber });
+      await onSave({ name: companyName, email: companyEmail, phone: companyPhone, street: companyStreet, city: companyCity, zipCode: companyZipCode, country: companyCountry, vatNumber: companyVatNumber, cocNumber: companyCocNumber, bankNumber: companyBankNumber });
       setCompanyName(''); setCompanyEmail(''); setCompanyPhone(''); setCompanyStreet('');
-      setCompanyCity(''); setCompanyZipCode(''); setCompanyCountry(''); setCompanyVatNumber(''); setCompanyCocNumber('');
+      setCompanyCity(''); setCompanyZipCode(''); setCompanyCountry(''); setCompanyVatNumber(''); setCompanyCocNumber(''); setCompanyBankNumber('');
     } finally { setSaving(false); }
   };
 
   const handleClose = () => {
     if (!saving) {
       setCompanyName(''); setCompanyEmail(''); setCompanyPhone(''); setCompanyStreet('');
-      setCompanyCity(''); setCompanyZipCode(''); setCompanyCountry(''); setCompanyVatNumber(''); setCompanyCocNumber('');
+      setCompanyCity(''); setCompanyZipCode(''); setCompanyCountry(''); setCompanyVatNumber(''); setCompanyCocNumber(''); setCompanyBankNumber('');
       onClose();
     }
   };
@@ -60,6 +61,7 @@ export function AddCompanyModal({ isOpen, onClose, onSave }: AddCompanyModalProp
         <Input label={t('companies.fields.vatNumber')} value={companyVatNumber} onChange={(e) => setCompanyVatNumber(e.target.value)} placeholder="NL123456789B01" disabled={saving} />
         <Input label={t('companies.fields.cocNumber')} value={companyCocNumber} onChange={(e) => setCompanyCocNumber(e.target.value)} placeholder="12345678" disabled={saving} />
       </div>
+      <Input label={t('companies.fields.bankNumber')} value={companyBankNumber} onChange={(e) => setCompanyBankNumber(e.target.value)} placeholder="NL91ABNA0417164300" disabled={saving} />
     </FormModal>
   );
 }
